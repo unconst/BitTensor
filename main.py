@@ -85,24 +85,31 @@ def main():
     num_steps = 10000
 
     # 1. Read file text2.zip into a words
-    print ('Load vocab file %s' % filename)
+    print ('Loading Vocab...')
+    print ('    file %s' % filename)
     words = read_data(filename)
-    print('Vocab size %d' % len(words))
+    print ('    size %d' % len(words))
+    print ('done. \n')
 
     # 2. Create a vocabulary dataset.
     data, count, dictionary, reverse_dictionary = build_dataset(words, vocabulary_size)
-    print ('Example vocab embedding:')
-    print ('words:', words[:5])
-    print ('indices',  data[:5])
+    print ('Building dataset...')
+    print ('    e.g.')
+    print ('        words:', words[:5])
+    print ('        indices',  data[:5])
     del words  # Hint to reduce memory.
+    print ('done. \n')
 
     # 3. Test generate batch function.
     batch, labels = generate_random_batch(data, 5)
-    print ('Example batch:')
-    print ('batch:', [reverse_dictionary[i] for i in batch.tolist()])
-    print ('label:', [reverse_dictionary[i] for i in labels.flatten().tolist()])
+    print ('Testing batch gen...')
+    print ('    e.g.:')
+    print ('        batch:', [reverse_dictionary[i] for i in batch.tolist()])
+    print ('        label:', [reverse_dictionary[i] for i in labels.flatten().tolist()])
+    print ('done. \n')
 
     # 4. Build Graph.
+    print ('Building graph...')
     graph = tf.Graph()
     with graph.as_default(), tf.device('/cpu:0'):
 
@@ -113,15 +120,16 @@ def main():
         # Variables.
         embeddings = tf.Variable(tf.random_uniform([vocabulary_size, embedding_size], -1.0, 1.0))
 
-        softmax_weights = tf.Variable(
-            tf.truncated_normal([vocabulary_size, embedding_size], stddev=1.0 / math.sqrt(embedding_size)))
-        softmax_biases = tf.Variable(tf.zeros([vocabulary_size]))
+        # Weights.
+        random_normal = tf.truncated_normal([vocabulary_size, embedding_size], stddev=1.0 / math.sqrt(embedding_size))
+        weights = tf.Variable(random_normal)
+        biases = tf.Variable(tf.zeros([vocabulary_size]))
 
-        # Model.
-        # Look up embeddings for inputs.
+        # Embeddings lookup.
         embed = tf.nn.embedding_lookup(embeddings, train_dataset)
+
         # Compute the softmax loss, using a sample of the negative labels each time.
-        loss = tf.reduce_mean(tf.nn.sampled_softmax_loss(softmax_weights, softmax_biases, train_labels, embed, num_sampled, vocabulary_size))
+        loss = tf.reduce_mean(tf.nn.sampled_softmax_loss(weights, biases, train_labels, embed, num_sampled, vocabulary_size))
 
         # Optimizer.
         optimizer = tf.train.AdagradOptimizer(1.0).minimize(loss)
@@ -129,35 +137,36 @@ def main():
         # Normalized Embeddings for TSNE.
         norm = tf.sqrt(tf.reduce_sum(tf.square(embeddings), 1, keepdims=True))
         normalized_embeddings = embeddings / norm
+    print ('done. \n')
 
     # 5. Train.
+    print ('Training ...')
     with tf.Session(graph=graph) as session:
 
-        # Init vars.
+        # Init.
         tf.global_variables_initializer().run()
-        print('Initialized')
 
+        # Train loop.
         average_loss = 0
         for step in range(num_steps):
 
-            # Generate batch and run graph.
+            # Train Step.
             batch_data, batch_labels = generate_random_batch(data, batch_size)
             feed_dict = {train_dataset : batch_data, train_labels : batch_labels}
             _, l = session.run([optimizer, loss], feed_dict=feed_dict)
             average_loss += l
 
-            # Progress notification on 2000 step.
-            if step % 2000 == 0:
-                if step > 0:
-                    average_loss = average_loss / 2000
-                # The average loss is an estimate of the loss over the last 2000 batches.
-                print('Average loss at step %d: %f' % (step, average_loss))
+            # Progress notification.
+            if step % 2000 == 1:
+                print('     Average loss at step %d: %f' % (step, average_loss))
                 average_loss = 0
 
         final_embeddings = normalized_embeddings.eval()
+    print ('done. \n')
 
 
     # 6. Visualize Embeddings using TSNE.
+    print ('TSNE...')
     tsne = TSNE(perplexity=30, n_components=2, init='pca', n_iter=5000)
     two_d_embeddings = tsne.fit_transform(final_embeddings[1:num_points+1, :])
     def plot(embeddings, labels):
@@ -170,8 +179,9 @@ def main():
         pylab.show()
 
     words = [reverse_dictionary[i] for i in range(1, num_points+1)]
+    print ('    plotting.')
     plot(two_d_embeddings, words)
-
+    print ('done. \n')
 
 if __name__ == "__main__":
     main()
