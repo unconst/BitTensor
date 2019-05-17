@@ -60,7 +60,7 @@ def generate_random_batch(data, batch_size):
     batch = np.ndarray(shape=(batch_size), dtype=np.int32)
     labels = np.ndarray(shape=(batch_size, 1), dtype=np.int32)
     for i in range(batch_size):
-        index = random.randint(0, len(data) - 1)
+        index = random.randint(0, len(data) - 2)
         batch[i] = data[index]
         labels[i] = data[index + 1]
     return batch, labels
@@ -77,15 +77,12 @@ def main():
     batch_size = 128 # Size of training batch.
     # Dimension of the embedding vector.
     embedding_size = 128
-    # Random set of words to evaluate similarity on.
-    # Only pick dev samples in the head of the distribution.
-    valid_size = 16
-    valid_window = 100
-    valid_examples = np.array(random.sample(range(valid_window), valid_size))
+    # Number of TSNE points.
+    num_points = 400
     # Number of negative examples to sample.
     num_sampled = 64
     # Number of training steps.
-    num_steps = 10
+    num_steps = 10000
 
     # 1. Read file text2.zip into a words
     print ('Load vocab file %s' % filename)
@@ -112,7 +109,6 @@ def main():
         # Input data.
         train_dataset = tf.placeholder(tf.int32, shape=[batch_size])
         train_labels = tf.placeholder(tf.int32, shape=[batch_size, 1])
-        valid_dataset = tf.constant(valid_examples, dtype=tf.int32)
 
         # Variables.
         embeddings = tf.Variable(tf.random_uniform([vocabulary_size, embedding_size], -1.0, 1.0))
@@ -130,48 +126,38 @@ def main():
         # Optimizer.
         optimizer = tf.train.AdagradOptimizer(1.0).minimize(loss)
 
-        # Compute the similarity between minibatch examples and all embeddings.
-        # We use the cosine distance:
-        norm = tf.sqrt(tf.reduce_sum(tf.square(embeddings), 1, keep_dims=True))
+        # Normalized Embeddings for TSNE.
+        norm = tf.sqrt(tf.reduce_sum(tf.square(embeddings), 1, keepdims=True))
         normalized_embeddings = embeddings / norm
-        valid_embeddings = tf.nn.embedding_lookup(
-        normalized_embeddings, valid_dataset)
-        similarity = tf.matmul(valid_embeddings, tf.transpose(normalized_embeddings))
 
     # 5. Train.
     with tf.Session(graph=graph) as session:
-        tf.initialize_all_variables().run()
+
+        # Init vars.
+        tf.global_variables_initializer().run()
         print('Initialized')
+
         average_loss = 0
         for step in range(num_steps):
+
+            # Generate batch and run graph.
             batch_data, batch_labels = generate_random_batch(data, batch_size)
             feed_dict = {train_dataset : batch_data, train_labels : batch_labels}
             _, l = session.run([optimizer, loss], feed_dict=feed_dict)
             average_loss += l
+
+            # Progress notification on 2000 step.
             if step % 2000 == 0:
                 if step > 0:
                     average_loss = average_loss / 2000
                 # The average loss is an estimate of the loss over the last 2000 batches.
                 print('Average loss at step %d: %f' % (step, average_loss))
                 average_loss = 0
-            # note that this is expensive (~20% slowdown if computed every 500 steps)
-            if step % 10000 == 0:
-                sim = similarity.eval()
-                for i in range(valid_size):
-                    valid_word = reverse_dictionary[valid_examples[i]]
-                    top_k = 8 # number of nearest neighbors
-                    nearest = (-sim[i, :]).argsort()[1:top_k+1]
-                    log = 'Nearest to %s:' % valid_word
-                    for k in range(top_k):
-                        close_word = reverse_dictionary[nearest[k]]
-                        log = '%s %s,' % (log, close_word)
-                        print(log)
+
         final_embeddings = normalized_embeddings.eval()
 
 
-    # 6. Visualize
-    num_points = 400
-
+    # 6. Visualize Embeddings using TSNE.
     tsne = TSNE(perplexity=30, n_components=2, init='pca', n_iter=5000)
     two_d_embeddings = tsne.fit_transform(final_embeddings[1:num_points+1, :])
     def plot(embeddings, labels):
