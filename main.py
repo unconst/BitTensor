@@ -60,7 +60,7 @@ def generate_random_batch(data, batch_size):
     batch = np.ndarray(shape=(batch_size), dtype=np.int32)
     labels = np.ndarray(shape=(batch_size, 1), dtype=np.int32)
     for i in range(batch_size):
-        index = random.randint(0, len(data) - 2)
+        index = random.randint(0, len(data) - 1)
         batch[i] = data[index]
         labels[i] = data[index + 1]
     return batch, labels
@@ -120,24 +120,38 @@ def main():
         # Variables.
         embeddings = tf.Variable(tf.random_uniform([vocabulary_size, embedding_size], -1.0, 1.0))
 
-        # Weights.
-        random_normal = tf.truncated_normal([vocabulary_size, embedding_size], stddev=1.0 / math.sqrt(embedding_size))
-        weights = tf.Variable(random_normal)
+        # Embedding Weights
+        weights = tf.Variable(tf.truncated_normal([vocabulary_size, embedding_size], stddev=1.0 / math.sqrt(embedding_size)))
         biases = tf.Variable(tf.zeros([vocabulary_size]))
 
-        # Embeddings lookup.
+        # Look up embeddings for inputs.
         embed = tf.nn.embedding_lookup(embeddings, train_dataset)
 
-        # Compute the softmax loss, using a sample of the negative labels each time.
-        loss = tf.reduce_mean(tf.nn.sampled_softmax_loss(weights, biases, train_labels, embed, num_sampled, vocabulary_size))
+        # Sampled Softmax Loss.
+        batch_loss = tf.nn.sampled_softmax_loss(
+            weights=weights,
+            biases=biases,
+            labels=train_labels,
+            inputs=embed,
+            num_sampled=num_sampled,
+            num_classes=vocabulary_size,
+            num_true=1,
+            sampled_values=None,
+            remove_accidental_hits=True,
+            partition_strategy='mod',
+            name='sampled_softmax_loss',
+            seed=None)
+
+        # Average loss.
+        loss = tf.reduce_mean(batch_loss)
 
         # Optimizer.
         optimizer = tf.train.AdagradOptimizer(1.0).minimize(loss)
 
-        # Normalized Embeddings for TSNE.
-        norm = tf.sqrt(tf.reduce_sum(tf.square(embeddings), 1, keepdims=True))
+        # Compute the similarity between minibatch examples and all embeddings.
+        # We use the cosine distance:
+        norm = tf.sqrt(tf.reduce_sum(tf.square(embeddings), 1, keep_dims=True))
         normalized_embeddings = embeddings / norm
-    print ('done. \n')
 
     # 5. Train.
     print ('Training ...')
@@ -157,8 +171,8 @@ def main():
             average_loss += l
 
             # Progress notification.
-            if step % 2000 == 1:
-                print('     Average loss at step %d: %f' % (step, average_loss))
+            if step % 2000 == 1 and step > 2000:
+                print('     Average loss at step %d: %f' % (step, average_loss/2000))
                 average_loss = 0
 
         final_embeddings = normalized_embeddings.eval()
