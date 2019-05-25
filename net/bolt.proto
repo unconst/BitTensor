@@ -1,0 +1,10 @@
+syntax = "proto3";
+
+
+service Bolt {
+    rpc Test(thing) returns (thing) {}
+}
+
+message thing {
+  string word = 1;
+}
