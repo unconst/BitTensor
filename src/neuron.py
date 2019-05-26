@@ -63,13 +63,16 @@ class Neuron():
 
         # Build Graph.
         print ('Building graph...')
+
+        self.is_training = tf.placeholder(tf.bool, shape=[], name='is_training')
     
         # Input words.
-        self.batch_words = tf.identity(tf.reshape((tf.placeholder(tf.string, shape=[None, 1])), [-1]), name="batch_input")
-        word_ids = tf.contrib.lookup.string_to_index(self.batch_words, mapping=tf.constant(self.string_map), default_value=0)
+        self.batch_words = tf.placeholder(tf.string, shape=[None, 1], name="batch_words")
+        batch_words_rs = tf.reshape(self.batch_words, [-1])
+        word_ids = tf.contrib.lookup.string_to_index(batch_words_rs, mapping=tf.constant(self.string_map), default_value=0)
 
         # Input labels.
-        self.batch_labels = tf.placeholder(tf.string, shape=[None, 1])
+        self.batch_labels = tf.placeholder(tf.string, shape=[None, 1], name="batch_labels")
         label_ids = tf.contrib.lookup.string_to_index(self.batch_labels, mapping=tf.constant(self.string_map), default_value=0)
 
         # Embeddings Lookup.
@@ -77,7 +80,7 @@ class Neuron():
         word_embeddings = tf.nn.embedding_lookup(embeddings, word_ids)
         
         # Remote features.
-        remote_inputs = self.dendrite.spike(tf.reshape(self.batch_words, [-1, 1]))
+        remote_inputs = self.dendrite.spike(self.is_training, tf.reshape(self.batch_words, [-1, 1]))
 
         # Hidden Layer
         l1 = tf.concat([word_embeddings, remote_inputs], axis=1)
@@ -113,7 +116,7 @@ class Neuron():
         self.optimizer = tf.train.AdagradOptimizer(1.0).minimize(self.loss)
 
         # Model Saver.
-        self.saver = tf.train.Saver(max_to_keep=1)
+        self.saver = tf.train.Saver(max_to_keep=2)
 
         print ('done. \n')
 
@@ -133,8 +136,8 @@ class Neuron():
             tf.tables_initializer().run()
 
             # Save the initial graph.
-            self.saver.save(self.session, './checkpoints/' + self.identity + '/checkpoint', global_step=0)
-
+            print ('save graph')
+            self.saver.save(self.session, './checkpoints/' + self.identity + '/model')
 
             # Train loop.
             average_loss = 0
@@ -148,19 +151,19 @@ class Neuron():
                 batch_labels = []
                 for i in range(self.batch_size):
                     index = random.randint(0, len(self.words) - 2)
-                    batch_words.append(self.words[index])
+                    batch_words.append([self.words[index]])
                     batch_labels.append([self.words[index + 1]])
 
                 # Train Step.
-                feed_dict = {self.batch_words: batch_words, self.batch_labels: batch_labels}
+                feed_dict = {self.batch_words: batch_words, self.batch_labels: batch_labels, self.is_training: True}
                 _, l = self.session.run([self.optimizer, self.loss], feed_dict=feed_dict)
                 average_loss += l
 
                 # Progress notification.
                 if step % 200 == 1 and step > 200:
-                    print('     Average loss at step %d: %f' % (step, average_loss/2000))
+                    print('     Average loss at step %d: %f' % (step, average_loss/200))
                     average_loss = 0
-                    self.saver.save(self.session, './checkpoints/' + self.identity + '/checkpoint', global_step=step)
+                    self.saver.save(self.session, './checkpoints/' + self.identity + '/model', write_meta_graph=False)
 
 
 

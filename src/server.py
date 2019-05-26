@@ -18,11 +18,14 @@ class BoltServicer(proto.bolt_pb2_grpc.BoltServicer):
     def __init__(self, identity):
         self.identity = identity
         self.session = tf.Session() 
-        self.saver = tf.train.import_meta_graph('./checkpoints/' + self.identity + '/checkpoint' + '-0.meta')
+        self.saver = tf.train.import_meta_graph('./checkpoints/' + self.identity + '/model.meta')
         self.saver.restore(self.session, tf.train.latest_checkpoint('./checkpoints/' + self.identity))
+        self.session.run(tf.global_variables_initializer())
+        self.session.run(tf.tables_initializer())
 
     def Spike(self, request, context):
-        embeddings = self.session.run("embedding_output", feed_dict={"batch_input": request.string_val})
+        batch_words = [[word] for word in request.string_val]
+        embeddings = self.session.run("embedding_output:0", feed_dict={"batch_words:0": batch_words, 'is_training:0': False})
         embed_proto = tf.make_tensor_proto(embeddings)
         return embed_proto
 
@@ -37,14 +40,15 @@ def serve():
     print ('dendrite_ip: ' + dendrite_ip)
 
     dend = dendrite.Dendrite(dendrite_ip)
-    nn = neuron.Neuron(identity, dend)
-    bolt = BoltServicer(identity)
 
+    nn = neuron.Neuron(identity, dend)
+    nn.start()
+    time.sleep(3)
+
+    bolt = BoltServicer(identity)
     server = grpc.server(futures.ThreadPoolExecutor(max_workers=10))
     proto.bolt_pb2_grpc.add_BoltServicer_to_server(bolt, server)
     server.add_insecure_port(my_ip)
-
-    nn.start()
     server.start()
 
     try:
