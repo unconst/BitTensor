@@ -17,6 +17,12 @@ _ONE_DAY_IN_SECONDS=60*60*24
 class BoltServicer(proto.bolt_pb2_grpc.BoltServicer):
     def __init__(self, identity):
         self.identity = identity
+        self.load_time = 5
+        self.load_graph()
+
+    def load_graph(self):
+        print ('reload graph')
+        self.since_last_load = time.time()
         self.session = tf.Session() 
         self.saver = tf.train.import_meta_graph('./checkpoints/' + self.identity + '/model.meta')
         self.saver.restore(self.session, tf.train.latest_checkpoint('./checkpoints/' + self.identity))
@@ -24,6 +30,10 @@ class BoltServicer(proto.bolt_pb2_grpc.BoltServicer):
         self.session.run(tf.tables_initializer())
 
     def Spike(self, request, context):
+
+        if time.time() - self.since_last_load > self.load_time:
+            self.load_graph()
+
         batch_words = [[word] for word in request.string_val]
         embeddings = self.session.run("embedding_output:0", feed_dict={"batch_words:0": batch_words, 'is_training:0': False})
         embed_proto = tf.make_tensor_proto(embeddings)

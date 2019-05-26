@@ -39,5 +39,5 @@ class Dendrite():
             return np_out
 
         except Exception as e:
-            print ('Neuron:spike fail' + str(e))
+            #print ('Neuron:spike fail' + str(e))
             return self._zeros()
