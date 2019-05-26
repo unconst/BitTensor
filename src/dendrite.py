@@ -13,11 +13,11 @@ class Dendrite():
         return tf.py_func(self.query, [words_tensor], tf.float32)
 
     def query(self, words):
-        return np.zeros((128, 128), dtype=np.float32)
-        # try:
-        #     stub = proto.bolt_pb2_grpc.BoltStub(self.channel)
-        #     words_proto = tf.make_tensor_proto(words)
-        #     response = stub.Spike(words_proto)
-        #     return response
-        # except:
-        #     return np.zeros(words.size, 128)
+        try:
+            stub = proto.bolt_pb2_grpc.BoltStub(self.channel)
+            words_proto = tf.make_tensor_proto(words)
+            response = stub.Spike(words_proto,  timeout=1)
+            return response
+        except:
+            print ('timeout')
+            return np.zeros((128, 128), dtype=np.float32)
