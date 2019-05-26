@@ -43,22 +43,6 @@ class Neuron():
         # Create TF Session.
         self.session = tf.Session(graph=self.graph)
 
-    def build_vocabulary(self):
-
-        print ('Building vocabulary...')
-        # Read textfile.
-        f = zipfile.ZipFile(self.filename)
-        for name in f.namelist():
-            self.words = tf.compat.as_str(f.read(name)).split()
-        f.close()
-
-        counts = [('UNK', -1)]
-        counts.extend(collections.Counter(self.words).most_common(self.vocabulary_size - 1))
-        self.string_map = [c[0] for c in counts]
-
-        #print (self.string_map)
-        print ('done. \n')
-
     def build_graph(self):
 
         # Build Graph.
@@ -115,9 +99,29 @@ class Neuron():
         # Optimizer.
         self.optimizer = tf.train.AdagradOptimizer(1.0).minimize(self.loss)
 
+        # Init vars.
+        self.var_init = tf.global_variables_initializer()
+        self.table_init = tf.tables_initializer(name='init_all_tables')
+
         # Model Saver.
         self.saver = tf.train.Saver(max_to_keep=2)
 
+        print ('done. \n')
+
+    def build_vocabulary(self):
+
+        print ('Building vocabulary...')
+        # Read textfile.
+        f = zipfile.ZipFile(self.filename)
+        for name in f.namelist():
+            self.words = tf.compat.as_str(f.read(name)).split()
+        f.close()
+
+        counts = [('UNK', -1)]
+        counts.extend(collections.Counter(self.words).most_common(self.vocabulary_size - 1))
+        self.string_map = [c[0] for c in counts]
+
+        #print (self.string_map)
         print ('done. \n')
 
     def start(self):
@@ -130,20 +134,20 @@ class Neuron():
 
     def _train(self):
         print ('Training ...')
+
         with self.session:
 
-            tf.global_variables_initializer().run()
-            tf.tables_initializer().run()
+            # Init tables and vars.
+            self.var_init.run()
+            self.table_init.run()
 
             # Save the initial graph.
-            print ('save graph')
             self.saver.save(self.session, './checkpoints/' + self.identity + '/model')
 
             # Train loop.
             average_loss = 0
             step = -1
             while self.running:
-
                 step += 1
 
                 # Build a random batch [feature = word_i, label = word_i+1]
