@@ -1,0 +1,7 @@
+syntax = "proto3";
+
+import "proto/tensorflow/core/framework/tensor.proto";
+
+service Bolt {
+	rpc Spike(bolttensorflow.TensorProto) returns (bolttensorflow.TensorProto) {}
+}
