@@ -15,11 +15,11 @@ embedding from that of your own during training.
 
 # To Run
 ```
-$ git clone https://github.com/unconst/SimpleWord2Vec
-$ cd SimpleWord2Vec
+$ git clone https://github.com/unconst/BitTensor
+$ cd BitTensor
 $ pip install -r requirements.txt
-$ python server.py '[::]:50501' '[::]:50502'
-$ python server.py '[::]:50502' '[::]:50501'
+$ python src/main.py '[::]:50501' '[::]:50502'
+$ python src/main.py '[::]:50502' '[::]:50501'
 ```
 
 # About Word Embeddings.

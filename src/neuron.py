@@ -32,7 +32,7 @@ class Neuron():
         self.embedding_size = 128
         # Number of negative examples to sample.
         self.num_sampled = 64
-      
+
         # Build Dataset.
         self.build_vocabulary()
 
@@ -48,7 +48,7 @@ class Neuron():
 
         # Build Graph.
         self.is_training = tf.placeholder(tf.bool, shape=[], name='is_training')
-    
+
         # Input words.
         self.batch_words = tf.placeholder(tf.string, shape=[None, 1], name="batch_words")
         batch_words_rs = tf.reshape(self.batch_words, [-1])
@@ -61,9 +61,9 @@ class Neuron():
         # Embeddings Lookup.
         embeddings = tf.Variable(tf.random_uniform([self.vocabulary_size, self.embedding_size], -1.0, 1.0))
         word_embeddings = tf.nn.embedding_lookup(embeddings, word_ids)
-        
+
         # Remote features.
-        remote_inputs = self.dendrite.spike(self.is_training, tf.reshape(self.batch_words, [-1, 1]))
+        remote_inputs = self.dendrite.spike(self.is_training, tf.reshape(self.batch_words, [-1, 1]), self.embedding_size)
 
         # Hidden Layer
         l1 = tf.concat([word_embeddings, remote_inputs], axis=1)
@@ -141,7 +141,7 @@ class Neuron():
             self.table_init.run()
 
             # Save the initial graph.
-            self.saver.save(self.session, './checkpoints/' + self.identity + '/model')
+            self.saver.save(self.session, '../checkpoints/' + self.identity + '/model')
 
             # Train loop.
             average_loss = 0
@@ -167,16 +167,11 @@ class Neuron():
                 if step % 200 == 1 and step > 200:
                     if average_loss < best_loss:
                         best_loss = average_loss
-                        self.saver.save(self.session, './checkpoints/' + self.identity + '/model', write_meta_graph=True)
+                        self.saver.save(self.session, '../checkpoints/' + self.identity + '/model', write_meta_graph=True)
 
-                    print('     Average loss at step %d: %f' % (step, average_loss/200))
+                    logger.debug('Average loss at step %d: %f' % (step, average_loss/200))
                     average_loss = 0
 
 
 
         print ('done. \n')
-
-
-
-
-
