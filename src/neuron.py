@@ -64,10 +64,11 @@ class Neuron():
 
         # Remote features.
         remote_inputs = self.dendrite.spike(self.is_training, tf.reshape(self.batch_words, [-1, 1]), self.embedding_size)
+        remote_inputs = tf.concat(remote_inputs, axis=1)
 
         # Hidden Layer
         l1 = tf.concat([word_embeddings, remote_inputs], axis=1)
-        w1 = tf.Variable(tf.random_uniform([self.embedding_size*2, self.embedding_size], -1.0, 1.0))
+        w1 = tf.Variable(tf.random_uniform([self.embedding_size * (self.dendrite.width + 1), self.embedding_size], -1.0, 1.0))
         b1 = tf.Variable(tf.zeros([self.embedding_size]))
         final_layer = tf.matmul(l1, w1) + b1
 
