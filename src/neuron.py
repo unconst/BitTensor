@@ -1,4 +1,5 @@
 import collections
+from loguru import logger
 import math
 from matplotlib import pylab
 import numpy as np
@@ -46,8 +47,6 @@ class Neuron():
     def build_graph(self):
 
         # Build Graph.
-        print ('Building graph...')
-
         self.is_training = tf.placeholder(tf.bool, shape=[], name='is_training')
     
         # Input words.
@@ -106,11 +105,10 @@ class Neuron():
         # Model Saver.
         self.saver = tf.train.Saver(max_to_keep=2)
 
-        print ('done. \n')
+        logger.success('Successfully built Neuron graph.')
 
     def build_vocabulary(self):
 
-        print ('Building vocabulary...')
         # Read textfile.
         f = zipfile.ZipFile(self.filename)
         for name in f.namelist():
@@ -122,7 +120,8 @@ class Neuron():
         self.string_map = [c[0] for c in counts]
 
         #print (self.string_map)
-        print ('done. \n')
+        logger.success('Successfully built Neuron vocabulary.')
+
 
     def start(self):
         self.running = True
@@ -133,7 +132,7 @@ class Neuron():
         self.train_thread.join()
 
     def _train(self):
-        print ('Training ...')
+        logger.info('Start Neuron training ...')
 
         with self.session:
 
@@ -146,6 +145,7 @@ class Neuron():
 
             # Train loop.
             average_loss = 0
+            best_loss = math.inf
             step = -1
             while self.running:
                 step += 1
@@ -163,12 +163,14 @@ class Neuron():
                 _, l = self.session.run([self.optimizer, self.loss], feed_dict=feed_dict)
                 average_loss += l
 
-                # Progress notification.
+                # Progress notification and model update.
                 if step % 200 == 1 and step > 200:
+                    if average_loss < best_loss:
+                        best_loss = average_loss
+                        self.saver.save(self.session, './checkpoints/' + self.identity + '/model', write_meta_graph=True)
+
                     print('     Average loss at step %d: %f' % (step, average_loss/200))
                     average_loss = 0
-                    self.saver.save(self.session, './checkpoints/' + self.identity + '/model', write_meta_graph=False)
-
 
 
 

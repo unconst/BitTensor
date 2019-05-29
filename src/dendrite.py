@@ -28,7 +28,6 @@ class Dendrite():
     def _zeros(self):
         return np.zeros((128, 128), dtype=np.float32)
 
-
     def query(self, words):
         try:
             stub = proto.bolt_pb2_grpc.BoltStub(self.channel)
