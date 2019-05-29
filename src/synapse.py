@@ -5,8 +5,8 @@ import tensorflow as tf
 import proto.bolt_pb2_grpc
 
 class BoltServicer(proto.bolt_pb2_grpc.BoltServicer):
-    def __init__(self, identity):
-        self.identity = identity
+    def __init__(self, metagraph):
+        self.identity = metagraph.this_identity
         self.load_time = 20
         self.since_last_load = -1
         self.since_last_attempted_load = -1
@@ -34,6 +34,8 @@ class BoltServicer(proto.bolt_pb2_grpc.BoltServicer):
 
 
     def Spike(self, request, context):
+        # TODO (const) The synapse should be competitively selecting which nodes
+        # are allowed to query us based on the Metagraph information.
         if time.time() - self.since_last_load > self.load_time and self.is_loading == False:
             self.is_loading = True
             self._load_graph()

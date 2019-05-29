@@ -14,8 +14,8 @@ import zipfile
 _ONE_DAY_IN_SECONDS = 60*60*24
 
 class Neuron():
-    def __init__(self, identity, dendrite):
-        self.identity = identity
+    def __init__(self, metagraph, dendrite):
+        self.metagraph = metagraph
         self.dendrite = dendrite
         self.train_thread = threading.Thread(target=self._train)
         self.train_thread.setDaemon(True)
@@ -46,7 +46,9 @@ class Neuron():
 
     def build_graph(self):
 
-        # Build Graph.
+        # Boolean flag which determines whether or not we spike our downstream
+        # nodes through the dendrite.
+        # TODO(const) Add distillation networks for each dendrite.
         self.is_training = tf.placeholder(tf.bool, shape=[], name='is_training')
 
         # Input words.
@@ -63,6 +65,8 @@ class Neuron():
         word_embeddings = tf.nn.embedding_lookup(embeddings, word_ids)
 
         # Remote features.
+        # TODO(const) Spike should return attribution information such as
+        # Fishers informaiton significance and success rate.
         remote_inputs = self.dendrite.spike(self.is_training, tf.reshape(self.batch_words, [-1, 1]), self.embedding_size)
         remote_inputs = tf.concat(remote_inputs, axis=1)
 
@@ -70,7 +74,7 @@ class Neuron():
         l1 = tf.concat([word_embeddings, remote_inputs], axis=1)
         w1 = tf.Variable(tf.random_uniform([self.embedding_size * (self.dendrite.width + 1), self.embedding_size], -1.0, 1.0))
         b1 = tf.Variable(tf.zeros([self.embedding_size]))
-        final_layer = tf.matmul(l1, w1) + b1
+        final_layer = tf.sigmoid(tf.matmul(l1, w1) + b1)
 
         self.output = tf.identity(final_layer, name="embedding_output")
 
@@ -142,7 +146,7 @@ class Neuron():
             self.table_init.run()
 
             # Save the initial graph.
-            self.saver.save(self.session, '../checkpoints/' + self.identity + '/model')
+            self.saver.save(self.session, '../checkpoints/' + self.metagraph.this_identity + '/model')
 
             # Train loop.
             average_loss = 0
@@ -168,7 +172,7 @@ class Neuron():
                 if step % 200 == 1 and step > 200:
                     if average_loss < best_loss:
                         best_loss = average_loss
-                        self.saver.save(self.session, '../checkpoints/' + self.identity + '/model', write_meta_graph=True)
+                        self.saver.save(self.session, '../checkpoints/' + self.metagraph.this_identity  + '/model', write_meta_graph=True)
 
                     logger.debug('Average loss at step %d: %f' % (step, average_loss/200))
                     average_loss = 0

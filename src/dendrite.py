@@ -14,18 +14,12 @@ def _bytes_to_np(in_bytes, shape):
     return out
 
 class Dendrite():
-    def __init__(self, ip_addresses):
+    def __init__(self, metagraph):
         self.channels = []
-        self.ip_addresses = ip_addresses
-        self.width = len(ip_addresses)
-        for addr in ip_addresses:
+        self.ip_addresses = metagraph.remote_neurons
+        self.width = len(self.ip_addresses)
+        for addr in self.ip_addresses:
             self.channels.append(grpc.insecure_channel(addr))
-
-
-    def spike(self, is_training, words_tensor, embedding_dim):
-        return tf.cond(tf.equal(is_training, tf.constant(True)),
-                    true_fn=lambda: self._run_spike(words_tensor, embedding_dim),
-                    false_fn=lambda: self._zeros(words_tensor, embedding_dim))
 
     def _run_spike(self, words_tensor, embedding_dim):
         return tf.py_func(self.query, [words_tensor, embedding_dim], [tf.float32 for _ in self.channels])
@@ -33,7 +27,16 @@ class Dendrite():
     def _zeros(self, words_tensor, embedding_dim):
         return [tf.zeros([tf.shape(words_tensor)[0], embedding_dim]) for _ in self.channels]
 
+    def spike(self, is_training, words_tensor, embedding_dim):
+        # TODO(const) Implement distillation here for inference.
+        # TODO(const) Implement sub networks for each dendrite.
+        return tf.cond(tf.equal(is_training, tf.constant(True)),
+                    true_fn=lambda: self._run_spike(words_tensor, embedding_dim),
+                    false_fn=lambda: self._zeros(words_tensor, embedding_dim))
+
     def query(self, words, embedding_dim):
+        # TODO(const) Currently this function is syncronous. Calls to the
+        # dendrite nodes should be async to save on time.
         result = []
         for i in range(self.width):
             channel = self.channels[i]
@@ -45,7 +48,7 @@ class Dendrite():
                 response = stub.Spike(words_proto)
 
                 # Deserialize response.
-                # TODO(const) This should be a special tfoperation.
+                # TODO(const) This should be a special tf.operation.
                 response_shape = [dim.size for dim in response.tensor_shape.dim]
                 assert(response_shape[1] == embedding_dim)
                 np_response = _bytes_to_np(response.tensor_content, response_shape)
