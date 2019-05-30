@@ -8,7 +8,6 @@ cd "$(dirname "$0")/docker/eos"
 
 if [ -e "data/initialized" ]
 then
-    echo "exists"
     script="./scripts/continue_blockchain.sh"
 else
     script="./scripts/init_blockchain.sh"

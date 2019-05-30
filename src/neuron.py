@@ -53,12 +53,12 @@ class Neuron():
 
         # Input words.
         self.batch_words = tf.placeholder(tf.string, shape=[None, 1], name="batch_words")
-        batch_words_rs = tf.reshape(self.batch_words, [-1])
-        word_ids = tf.contrib.lookup.string_to_index(batch_words_rs, mapping=tf.constant(self.string_map), default_value=0)
-
-        # Input labels.
         self.batch_labels = tf.placeholder(tf.string, shape=[None, 1], name="batch_labels")
-        label_ids = tf.contrib.lookup.string_to_index(self.batch_labels, mapping=tf.constant(self.string_map), default_value=0)
+        batch_words_rs = tf.reshape(self.batch_words, [-1])
+
+        vocabulary_table = tf.contrib.lookup.index_table_from_tensor(mapping=tf.constant(self.string_map), num_oov_buckets=1, default_value=0)
+        word_ids = vocabulary_table.lookup(batch_words_rs)
+        label_ids = vocabulary_table.lookup(self.batch_labels)
 
         # Embeddings Lookup.
         embeddings = tf.Variable(tf.random_uniform([self.vocabulary_size, self.embedding_size], -1.0, 1.0))
@@ -121,7 +121,7 @@ class Neuron():
         f.close()
 
         counts = [('UNK', -1)]
-        counts.extend(collections.Counter(self.words).most_common(self.vocabulary_size - 1))
+        counts.extend(collections.Counter(self.words).most_common(self.vocabulary_size - 2))
         self.string_map = [c[0] for c in counts]
 
         #print (self.string_map)
@@ -164,7 +164,7 @@ class Neuron():
                     batch_labels.append([self.words[index + 1]])
 
                 # Train Step.
-                feed_dict = {self.batch_words: batch_words, self.batch_labels: batch_labels, self.is_training: True}
+                feed_dict = {self.batch_words: batch_words, self.batch_labels: batch_labels, self.is_training: False}
                 _, l = self.session.run([self.optimizer, self.loss], feed_dict=feed_dict)
                 average_loss += l
 
