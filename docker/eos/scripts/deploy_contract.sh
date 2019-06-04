@@ -1,6 +1,11 @@
 #!/usr/bin/env bash
 set -o errexit
 
+# $1 smart contract name
+# $2 account holder name of the smart contract
+# $3 wallet for unlocking the account
+# $4 password for unlocking the wallet
+
 # set PATH
 PATH="$PATH:/opt/eosio/bin"
 
