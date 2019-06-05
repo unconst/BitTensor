@@ -8,11 +8,24 @@ from concurrent import futures
 from loguru import logger
 import sys
 import time
+from timeloop import Timeloop
+from datetime import timedelta
+
 
 import grpc
 import proto.bolt_pb2_grpc
 
 _ONE_DAY_IN_SECONDS=60*60*24
+
+def set_timed_loops(tl, metagraph, neuron, synapse, dendrite):
+
+    @tl.job(interval=timedelta(seconds=10))
+    def pull_metagraph():
+        metagraph.pull_metagraph()
+
+    @tl.job(interval=timedelta(seconds=15))
+    def load_graph():
+        synapse.load_graph()
 
 def serve():
 
@@ -34,8 +47,12 @@ def serve():
     # The synapse manages our connection to upstream nodes.
     synapse = BoltServicer(config)
 
-    # Serve the synapse.
+    # Start timed calls on Neuron.
+    tl = Timeloop()
+    set_timed_loops(tl, metagraph, neuron, synapse, dendrite)
+    tl.start(block=True)
 
+    # Serve the synapse.
     grpc_server = grpc.server(futures.ThreadPoolExecutor(max_workers=10))
     proto.bolt_pb2_grpc.add_BoltServicer_to_server(synapse, grpc_server)
     grpc_server.add_insecure_port(config.address)

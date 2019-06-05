@@ -1,3 +1,4 @@
+libeospy
 loguru
 matplotlib
 numpy

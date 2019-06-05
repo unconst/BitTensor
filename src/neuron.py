@@ -4,7 +4,6 @@ import math
 from matplotlib import pylab
 import numpy as np
 import random
-from sklearn.manifold import TSNE
 import tensorflow as tf
 import time
 import threading

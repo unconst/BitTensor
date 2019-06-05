@@ -7,14 +7,9 @@ import proto.bolt_pb2_grpc
 class BoltServicer(proto.bolt_pb2_grpc.BoltServicer):
     def __init__(self, config):
         self.identity = config.identity
-        self.load_time = 20
-        self.since_last_load = -1
-        self.since_last_attempted_load = -1
-        self.is_loading = False
-        self._load_graph()
+        self.load_graph()
 
-    def _load_graph(self):
-        self.since_last_attempted_load = time.time()
+    def load_graph(self):
         try:
             graph = tf.Graph()
             with graph.as_default(), tf.device('/cpu:0'):
@@ -30,17 +25,11 @@ class BoltServicer(proto.bolt_pb2_grpc.BoltServicer):
 
         logger.info('Successfully served new graph.')
         self.session = next_session
-        self.since_last_load = time.time()
 
 
     def Spike(self, request, context):
         # TODO (const) The synapse should be competitively selecting which nodes
         # are allowed to query us based on the Metagraph information.
-        if time.time() - self.since_last_load > self.load_time and self.is_loading == False:
-            self.is_loading = True
-            self._load_graph()
-            self.is_loading = False
-
         batch_words = [[word] for word in request.string_val]
         embeddings = self.session.run("embedding_output:0", feed_dict={"batch_words:0": batch_words, 'is_training:0': False})
         embed_proto = tf.make_tensor_proto(embeddings)
