@@ -16,11 +16,29 @@ def _bytes_to_np(in_bytes, shape):
 class Dendrite():
     def __init__(self, config, metagraph):
         self.config = config
+        self.metagraph = metagraph
         self.channels = [None for _ in range(self.config.k)]
+        self.channel_nodes = [None for _ in range(self.config.k)]
+        self.reselect_channels()
 
-        # self.ip_addresses = metagraph.remote_neurons
-        # for addr in self.ip_addresses:
-        #     self.channels.append(grpc.insecure_channel(addr))
+    def reselect_channels(self):
+        logger.info('reselect_channels')
+        nodes = self.metagraph.nodes
+        for i in range(self.config.k):
+            if self.channels[i] == None:
+                selected_node = None
+
+                for node in nodes:
+                    if node not in self.channel_nodes:
+                        selected_node = node
+                        break
+
+                if selected_node:
+                    logger.info('set node {} to channel {}', selected_node, i)
+                    address = node.address + ':' + node.port
+                    self.channels[i] = grpc.insecure_channel(address)
+                    self.channel_nodes[i] = selected_node
+
 
     def spike(self, is_training, words_tensor, embedding_dim):
         # TODO(const) Implement distillation here for inference.

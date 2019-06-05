@@ -25,6 +25,7 @@ RUN pip install --upgrade pip && \
   pip install numpy && \
   pip install sklearn && \
   pip install tensorflow && \
+  pip install timeloop && \
   pip install zipfile36
 
 # Copy BitTensor source to this image.

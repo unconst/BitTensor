@@ -27,13 +27,15 @@ def set_timed_loops(tl, metagraph, neuron, synapse, dendrite):
     def load_graph():
         synapse.load_graph()
 
-def serve():
+    @tl.job(interval=timedelta(seconds=10))
+    def reselect_channels():
+        dendrite.reselect_channels()
 
+def serve():
     config = Config()
     logger.info("Config: {}", config)
 
     # The metagrpah manages the global network state.
-    # TODO(const) Make this not a stub.
     metagraph = Metagraph(config)
 
     # The dendrite manages our connections to downstream nodes.
