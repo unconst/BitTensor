@@ -1,17 +1,17 @@
 #!/usr/bin/env bash
 set -o errexit
 
-source constant.sh
-
 # change to script's directory
 cd "$(dirname "$0")"
 
-if [ -e "data/initialized" ]
-then
-    script="./scripts/continue_blockchain.sh"
-else
-    script="./scripts/init_blockchain.sh"
-fi
+source constant.sh
+
+# if [ -e "data/initialized" ]
+# then
+# script="./scripts/continue_blockchain.sh"
+# else
+script="./scripts/init_blockchain.sh"
+# fi
 
 echo "=== run docker container from the $DOCKER_IMAGE_NAME:$DOCKER_IMAGE_TAG image ==="
 docker run --rm --name eosio_bittensor_container -d \

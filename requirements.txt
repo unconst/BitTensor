@@ -4,4 +4,3 @@ numpy
 sklearn
 tensorflow
 zipfile36
-

@@ -1,0 +1,8 @@
+
+
+
+# Default args.
+EOSURL=http://127.0.0.1:8888
+IDENTITY=aaaa
+ADDRESS=127.0.0.1
+PORT=9999
