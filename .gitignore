@@ -1,30 +1,17 @@
 
 # State folder for all neurons.
-# TODO(const) This folder should be set.
-data/*
+# TODO(const) This folder should be set with a var.
+**/data/*
 !data/.gitkeep
 
-__pycache__
-src/Untitled.ipynb
-.ipynb_checkpoints/
+**/__pycache__/
+**/.ipynb_checkpoints/
 *.pyc
-
-# dependencies
-node_modules/
-
-# testing
-/coverage
-
-# production
-frontend/build
 
 #compile contract files
 **/*.abi
 **/*.wasm
 **/*.wast
-
-#blockchain data
-**/data/*
 
 # misc
 .DS_Store
