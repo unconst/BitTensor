@@ -33,7 +33,7 @@ def set_timed_loops(tl, metagraph, neuron, synapse, dendrite):
 
 def serve():
     config = Config()
-    logger.info("Config: {}", config)
+    logger.debug("Config: {}", config)
 
     # The metagrpah manages the global network state.
     metagraph = Metagraph(config)
@@ -43,21 +43,25 @@ def serve():
 
     # The neuron manages our internal learner.
     neuron = Neuron(config, dendrite)
-    neuron.start()
-    time.sleep(3)
 
     # The synapse manages our connection to 'downstream' nodes.
     synapse = BoltServicer(config)
 
-    # Start timed calls on our Neuron.
+    # Start Neuron.
+    neuron.start()
+    time.sleep(3)
+
+    # Start timed calls.
     tl = Timeloop()
     set_timed_loops(tl, metagraph, neuron, synapse, dendrite)
-    tl.start(block=True)
+    tl.start(block=False)
 
     # Serve the synapse.
+    server_address = config.address + ":" + config.port
     grpc_server = grpc.server(futures.ThreadPoolExecutor(max_workers=10))
     proto.bolt_pb2_grpc.add_BoltServicer_to_server(synapse, grpc_server)
-    grpc_server.add_insecure_port(config.address)
+    grpc_server.add_insecure_port(server_address)
+    logger.debug('Serving synapse on: {}', server_address)
     grpc_server.start()
 
     try:

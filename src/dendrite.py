@@ -5,6 +5,7 @@ import proto.bolt_pb2_grpc
 import numpy as np
 import struct
 import tensorflow as tf
+import time
 
 def _bytes_to_np(in_bytes, shape):
     length = len(in_bytes)/4
@@ -37,6 +38,7 @@ class Dendrite():
             if selected_node:
                 logger.info('set node {} to channel {}', selected_node, i)
                 address = selected_node.address + ':' + selected_node.port
+                logger.info("connect to {}", address)
                 self.channels[i] = grpc.insecure_channel(address)
                 self.channel_nodes[i] = selected_node
 
@@ -65,14 +67,14 @@ class Dendrite():
             for i in range(self.config.k):
                 channel = self.channels[i]
                 if channel:
-                    res = self._send_spike(channel, words)
-                    if res:
+                    res = self._send_spike(channel, words, embedding_dim)
+                    if res is not None:
                         result[i] = res
 
         return result
 
 
-    def _send_spike(self, channel, words):
+    def _send_spike(self, channel, words, embedding_dim):
         try:
             # Build Stub and send spike.
             stub = proto.bolt_pb2_grpc.BoltStub(channel)
@@ -82,9 +84,11 @@ class Dendrite():
             # Deserialize response.
             # TODO(const) This should be a special tf.operation.
             response_shape = [dim.size for dim in response.tensor_shape.dim]
-            assert(response_shape[1] == embedding_dim)
             np_response = _bytes_to_np(response.tensor_content, response_shape)
             return np_response
 
-        except:
+        except Exception as error:
+            #logger.info('failed call {}', error)
+            #time.sleep(10)
+            #logger.info('.')
             return None

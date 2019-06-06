@@ -1,0 +1,3 @@
+executed transaction: 89ddad28c81a1734894d590d902dd4f0635a3ae70463a7613b250d66510733b8  104 bytes  2160 us
+warn  2019-06-06T17:43:57.746 thread-0  main.cpp:495                  print_result         ] warning: transaction executed locally, but may not be confirmed by the network yet
+#  bittensoracc <= bittensoracc::erase          {"user":"xeubzun"}

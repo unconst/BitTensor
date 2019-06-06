@@ -12,16 +12,14 @@ echo "PORT: " $PORT
 
 echo "=== run bittensor ==="
 
-echo -e "=== setup wallet: eosio ==="
-# First key import is for eosio system account
+# Check to see if eosio wallet exists.
+# If not, create eosio account and pull private keys to this wallet.
+PUBLIC_KEY=$(cleos -u $EOSURL wallet keys | tail -2 | head -n 1 | tr -d '"' | tr -d ' ')
 EOSIO_PRIVATE_KEY=5KQwrPbwdL6PhXujxW37FSSQZ1JiwsST4cqQzDeyXtP79zkvFD3
 EOSIO_PUBLIC_KEY=EOS6MRyAjQq8ud7hVNYcfnVPJqcVpscN5So8BhtHuGYqET5GDW5CV
-
-# Check to see if eosio wallet exists
-PUBLIC_KEY=$(cleos -u $EOSURL wallet keys | tail -2 | head -n 1 | tr -d '"' | tr -d ' ')
-
 if [[ $EOSIO_PUBLIC_KEY != $PUBLIC_KEY ]]; then
 
+  echo -e "=== setup wallet: eosio ==="
   echo -e "cleos -u $EOSURL wallet create -n eosio --to-console"
   cleos -u $EOSURL wallet create -n eosio
 
@@ -30,29 +28,51 @@ if [[ $EOSIO_PUBLIC_KEY != $PUBLIC_KEY ]]; then
 
 fi
 
-echo -e "=== create account ==="
+# Create our owned account to the EOS chain.
+echo -e "=== create account: $IDENTITY ==="
 echo -e "cleos -u $EOSURL create account eosio $IDENTITY $EOSIO_PUBLIC_KEY $EOSIO_PUBLIC_KEY"
-cleos -u $EOSURL create account eosio $IDENTITY $EOSIO_PUBLIC_KEY $EOSIO_PUBLIC_KEY
-echo -e "=== done create account ==="
+cleos -u $EOSURL create account eosio $IDENTITY $EOSIO_PUBLIC_KEY $EOSIO_PUBLIC_KEY &>bittensor.out
+
+if [ $? -eq 0 ]; then
+    echo "Successfuly created account: $IDENTITY"
+else
+    echo 'Failed to EOS account.'
+fi
 echo -e ''
 
-echo -e "=== publish account: $ADDRESS ==="
+# Publish our account to the Bittensor Contract.
+echo -e "=== publish account: $IDENTITY ==="
 TRANSACTION="["$IDENTITY", "$ADDRESS", "$PORT"]"
-echo $TRANSACTION
 echo -e "cleos -u $EOSURL push action bittensoracc upsert $TRANSACTION -p $ACCOUNT_NAME@active"
-cleos -u $EOSURL push action bittensoracc upsert "$TRANSACTION" -p $IDENTITY@active
-echo -e "=== done publishing peer address ==="
+cleos -u $EOSURL push action bittensoracc upsert "$TRANSACTION" -p $IDENTITY@active &>bittensor.out
+
+if [ $? -eq 0 ]; then
+    echo "Successfuly published account: $IDENTITY."
+else
+    echo 'Failed to published account.'
+fi
 echo -e ''
+
+
+# Deletes the stale account after shutdown.
+function delete_account {
+  echo -e "=== erase account: $IDENTITY ==="
+  TRANSACTION="["$IDENTITY"]"
+  echo $TRANSACTION
+  echo -e "cleos -u $EOSURL push action bittensoracc erase $TRANSACTION -p $IDENTITY@active"
+  cleos -u $EOSURL push action bittensoracc erase "$TRANSACTION" -p $IDENTITY@active &>bittensor.out
+  if [ $? -eq 0 ]; then
+      echo "Successfuly cleared account: $IDENTITY."
+  else
+      echo 'Failed to clear account.'
+  fi
+  echo -e ''
+}
+
+# Final call to clean account.
+trap delete_account EXIT
 
 echo -e "=== start neuron: $IDENTITY ==="
 mkdir checkpoints
 mkdir checkpoints/$IDENTITY
 python src/main.py $IDENTITY $ADDRESS $PORT $EOSURL
-
-echo -e "=== erase account: $IDENTITY ==="
-TRANSACTION="["$IDENTITY"]"
-echo $TRANSACTION
-echo -e "cleos -u $EOSURL push action bittensoracc erase $TRANSACTION -p $IDENTITY@active"
-cleos -u $EOSURL push action bittensoracc erase "$TRANSACTION" -p $IDENTITY@active
-echo -e "=== done publishing peer address ==="
-echo -e ''
