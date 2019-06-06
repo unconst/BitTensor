@@ -67,10 +67,12 @@ class Neuron():
         # TODO(const) Spike should return attribution information such as
         # Fishers informaiton significance and success rate.
         remote_inputs = self.dendrite.spike(self.is_training, tf.reshape(self.batch_words, [-1, 1]), self.embedding_size)
-        remote_inputs = tf.concat(remote_inputs, axis=1)
+
+        # full input layer.
+        full_inputs = [word_embeddings] + remote_inputs
+        l1 = tf.concat(full_inputs, axis=1)
 
         # Hidden Layer
-        l1 = tf.concat([word_embeddings, remote_inputs], axis=1)
         w1 = tf.Variable(tf.random_uniform([self.embedding_size * (self.config.k + 1), self.embedding_size], -1.0, 1.0))
         b1 = tf.Variable(tf.zeros([self.embedding_size]))
         final_layer = tf.sigmoid(tf.matmul(l1, w1) + b1)
@@ -96,11 +98,22 @@ class Neuron():
             name='sampled_softmax_loss',
             seed=None)
 
+        # FIM calculations
+        self.attributions = []
+        self.attribution_ops = []
+        ema = tf.train.ExponentialMovingAverage(decay=0.9)
+        for i in range(self.config.k + 1):
+            input_i = full_inputs[i]
+            input_attribution = tf.abs(tf.reduce_sum(tf.gradients(xs=[input_i], ys=self.output)))
+            self.attribution_ops.append(ema.apply([input_attribution]))
+            self.attributions.append(ema.average(input_attribution))
+
         # Average loss.
         self.loss = tf.reduce_mean(batch_loss)
 
         # Optimizer.
-        self.optimizer = tf.train.AdagradOptimizer(1.0).minimize(self.loss)
+        with tf.control_dependencies(self.attribution_ops):
+            self.optimizer = tf.train.AdagradOptimizer(1.0).minimize(self.loss)
 
         # Init vars.
         self.var_init = tf.global_variables_initializer()
@@ -164,8 +177,8 @@ class Neuron():
 
                 # Train Step.
                 feed_dict = {self.batch_words: batch_words, self.batch_labels: batch_labels, self.is_training: True}
-                _, l = self.session.run([self.optimizer, self.loss], feed_dict=feed_dict)
-                average_loss += l
+                out = self.session.run([self.optimizer, self.loss] + self.attributions, feed_dict=feed_dict)
+                average_loss += out[1]
 
                 # Progress notification and model update.
                 if step % 200 == 1 and step > 200:
@@ -173,7 +186,11 @@ class Neuron():
                         best_loss = average_loss
                         self.saver.save(self.session, 'data/' + self.config.identity  + '/model', write_meta_graph=True)
 
-                    logger.debug('Average loss at step %d: %f' % (step, average_loss/200))
+                    eval_attributions = []
+                    for val in out[2:]:
+                        eval_attributions.append(val)
+
+                    logger.debug('Average loss at step {}: {} -- attributions {}', step, average_loss/200, eval_attributions)
                     average_loss = 0
 
 
