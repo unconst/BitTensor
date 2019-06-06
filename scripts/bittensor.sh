@@ -10,6 +10,10 @@ echo "IDENTITY: " $IDENTITY
 echo "ADDRESS: " $ADDRESS
 echo "PORT: " $PORT
 
+# Make state folder and logs file.
+mkdir data/$IDENTITY
+touch data/$IDENTITY/bittensor_logs.out
+
 echo "=== run bittensor ==="
 
 # Check to see if eosio wallet exists.
@@ -31,7 +35,7 @@ fi
 # Create our owned account to the EOS chain.
 echo -e "=== create account: $IDENTITY ==="
 echo -e "cleos -u $EOSURL create account eosio $IDENTITY $EOSIO_PUBLIC_KEY $EOSIO_PUBLIC_KEY"
-cleos -u $EOSURL create account eosio $IDENTITY $EOSIO_PUBLIC_KEY $EOSIO_PUBLIC_KEY &>bittensor.out
+cleos -u $EOSURL create account eosio $IDENTITY $EOSIO_PUBLIC_KEY $EOSIO_PUBLIC_KEY >> data/$IDENTITY/bittensor_logs.out 2>&1
 
 if [ $? -eq 0 ]; then
     echo "Successfuly created account: $IDENTITY"
@@ -44,7 +48,7 @@ echo -e ''
 echo -e "=== publish account: $IDENTITY ==="
 TRANSACTION="["$IDENTITY", "$ADDRESS", "$PORT"]"
 echo -e "cleos -u $EOSURL push action bittensoracc upsert $TRANSACTION -p $ACCOUNT_NAME@active"
-cleos -u $EOSURL push action bittensoracc upsert "$TRANSACTION" -p $IDENTITY@active &>bittensor.out
+cleos -u $EOSURL push action bittensoracc upsert "$TRANSACTION" -p $IDENTITY@active >> data/$IDENTITY/bittensor_logs.out 2>&1
 
 if [ $? -eq 0 ]; then
     echo "Successfuly published account: $IDENTITY."
@@ -60,7 +64,7 @@ function delete_account {
   TRANSACTION="["$IDENTITY"]"
   echo $TRANSACTION
   echo -e "cleos -u $EOSURL push action bittensoracc erase $TRANSACTION -p $IDENTITY@active"
-  cleos -u $EOSURL push action bittensoracc erase "$TRANSACTION" -p $IDENTITY@active &>bittensor.out
+  cleos -u $EOSURL push action bittensoracc erase "$TRANSACTION" -p $IDENTITY@active >> data/$IDENTITY/bittensor_logs.out 2>&1
   if [ $? -eq 0 ]; then
       echo "Successfuly cleared account: $IDENTITY."
   else
@@ -73,6 +77,4 @@ function delete_account {
 trap delete_account EXIT
 
 echo -e "=== start neuron: $IDENTITY ==="
-mkdir checkpoints
-mkdir checkpoints/$IDENTITY
 python src/main.py $IDENTITY $ADDRESS $PORT $EOSURL

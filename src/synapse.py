@@ -13,9 +13,9 @@ class BoltServicer(proto.bolt_pb2_grpc.BoltServicer):
         try:
             graph = tf.Graph()
             with graph.as_default(), tf.device('/cpu:0'):
-                saver = tf.train.import_meta_graph('checkpoints/' + self.identity + '/model.meta')
+                saver = tf.train.import_meta_graph('data/' + self.identity + '/model.meta')
                 next_session = tf.Session()
-                saver.restore(next_session, tf.train.latest_checkpoint('checkpoints/' + self.identity))
+                saver.restore(next_session, tf.train.latest_checkpoint('data/' + self.identity))
                 next_session.run('init_all_tables')
                 next_session.run(tf.local_variables_initializer())
                 next_session.run("embedding_output:0", feed_dict={"batch_words:0": [['UNK']], 'is_training:0': False})
@@ -25,7 +25,6 @@ class BoltServicer(proto.bolt_pb2_grpc.BoltServicer):
 
         logger.info('Successfully served new graph.')
         self.session = next_session
-
 
     def Spike(self, request, context):
         # TODO (const) The synapse should be competitively selecting which nodes

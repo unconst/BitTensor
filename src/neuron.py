@@ -145,7 +145,7 @@ class Neuron():
             self.table_init.run()
 
             # Save the initial graph.
-            self.saver.save(self.session, 'checkpoints/' + self.config.identity + '/model')
+            self.saver.save(self.session, 'data/' + self.config.identity + '/model')
 
             # Train loop.
             average_loss = 0
@@ -171,7 +171,7 @@ class Neuron():
                 if step % 200 == 1 and step > 200:
                     if average_loss < best_loss:
                         best_loss = average_loss
-                        self.saver.save(self.session, 'checkpoints/' + self.config.identity  + '/model', write_meta_graph=True)
+                        self.saver.save(self.session, 'data/' + self.config.identity  + '/model', write_meta_graph=True)
 
                     logger.debug('Average loss at step %d: %f' % (step, average_loss/200))
                     average_loss = 0
