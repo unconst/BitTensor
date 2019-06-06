@@ -5,16 +5,19 @@ ADDRESS=$2
 PORT=$3
 EOSURL=$4
 
+echo -e ''
 echo "EOSURL: " $EOSURL
 echo "IDENTITY: " $IDENTITY
 echo "ADDRESS: " $ADDRESS
 echo "PORT: " $PORT
+echo -e ''
 
 # Make state folder and logs file.
 mkdir data/$IDENTITY
 touch data/$IDENTITY/bittensor_logs.out
 
-echo "=== run bittensor ==="
+echo -e "=== run bittensor ==="
+echo -e ''
 
 # Check to see if eosio wallet exists.
 # If not, create eosio account and pull private keys to this wallet.
