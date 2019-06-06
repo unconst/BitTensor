@@ -25,19 +25,22 @@ class Dendrite():
         logger.info('reselect_channels')
         nodes = self.metagraph.nodes
         for i in range(self.config.k):
-            if self.channels[i] == None:
-                selected_node = None
+            if self.channels[i] != None:
+                continue
 
-                for node in nodes:
-                    if node not in self.channel_nodes:
-                        selected_node = node
-                        break
+            selected_node = None
+            for node in nodes.values():
+                if node not in self.channel_nodes and node.identity != self.config.identity:
+                    selected_node = node
+                    break
 
-                if selected_node:
-                    logger.info('set node {} to channel {}', selected_node, i)
-                    address = node.address + ':' + node.port
-                    self.channels[i] = grpc.insecure_channel(address)
-                    self.channel_nodes[i] = selected_node
+            if selected_node:
+                logger.info('set node {} to channel {}', selected_node, i)
+                address = selected_node.address + ':' + selected_node.port
+                self.channels[i] = grpc.insecure_channel(address)
+                self.channel_nodes[i] = selected_node
+
+        logger.info("channels {}", self.channel_nodes)
 
 
     def spike(self, is_training, words_tensor, embedding_dim):
@@ -62,20 +65,26 @@ class Dendrite():
             for i in range(self.config.k):
                 channel = self.channels[i]
                 if channel:
-                    result[i] = self._send_spike(channel, words)
+                    res = self._send_spike(channel, words)
+                    if res:
+                        result[i] = res
 
         return result
 
 
-    def _send_spike(channel, words):
-        # Build Stub and send spike.
-        stub = proto.bolt_pb2_grpc.BoltStub(channel)
-        words_proto = tf.make_tensor_proto(words)
-        response = stub.Spike(words_proto)
+    def _send_spike(self, channel, words):
+        try:
+            # Build Stub and send spike.
+            stub = proto.bolt_pb2_grpc.BoltStub(channel)
+            words_proto = tf.make_tensor_proto(words)
+            response = stub.Spike(words_proto)
 
-        # Deserialize response.
-        # TODO(const) This should be a special tf.operation.
-        response_shape = [dim.size for dim in response.tensor_shape.dim]
-        assert(response_shape[1] == embedding_dim)
-        np_response = _bytes_to_np(response.tensor_content, response_shape)
-        return np_response
+            # Deserialize response.
+            # TODO(const) This should be a special tf.operation.
+            response_shape = [dim.size for dim in response.tensor_shape.dim]
+            assert(response_shape[1] == embedding_dim)
+            np_response = _bytes_to_np(response.tensor_content, response_shape)
+            return np_response
+
+        except:
+            return None

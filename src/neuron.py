@@ -163,7 +163,7 @@ class Neuron():
                     batch_labels.append([self.words[index + 1]])
 
                 # Train Step.
-                feed_dict = {self.batch_words: batch_words, self.batch_labels: batch_labels, self.is_training: False}
+                feed_dict = {self.batch_words: batch_words, self.batch_labels: batch_labels, self.is_training: True}
                 _, l = self.session.run([self.optimizer, self.loss], feed_dict=feed_dict)
                 average_loss += l
 

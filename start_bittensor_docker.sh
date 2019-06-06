@@ -4,25 +4,22 @@ set -o errexit
 # change to script's directory
 cd "$(dirname "$0")"
 
-source constant.sh
-
-script="./scripts/init.sh"
-
-identity=$(cat /dev/urandom | tr -dc 'a-zA-Z0-9' | fold -w 4 | head -n 1)
+identity=$(LC_CTYPE=C tr -dc 'a-z' < /dev/urandom | head -c 7 | xargs)
 address="127.0.0.1"
 port=$(jot -r 1  2000 65000)
-eosurl="http//127.0.0.0:8888"
+eosurl="http://127.0.0.1:8888"
+
+source constant.sh
+script="./scripts/bittensor.sh"
+COMMAND="$script $identity $address $port $eosurl"
+echo -e $COMMAND
 
 echo "=== run docker container from the $DOCKER_IMAGE_NAME:$DOCKER_IMAGE_TAG image ==="
-docker run --rm --name bittensor_container -d \
--e IDENTITY=$identity \
--e ADDRESS=$address \
--e PORT=$port \
--e EOSURL=$eosurl \
+docker run --rm --name bitensor-$identity -d \
 --network="host" \
 --mount type=bind,src="$(pwd)"/scripts,dst=/bittensor/scripts \
 --mount type=bind,src="$(pwd)"/src,dst=/bittensor/src \
-$DOCKER_IMAGE_NAME:$DOCKER_IMAGE_TAG /bin/bash -c "$script"
+$DOCKER_IMAGE_NAME:$DOCKER_IMAGE_TAG /bin/bash -c $COMMAND
 
 echo "=== follow bittensor_container logs ==="
-docker logs bittensor_container --follow
+docker logs bitensor-$identity --follow

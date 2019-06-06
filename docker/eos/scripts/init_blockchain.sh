@@ -56,12 +56,6 @@ echo "=== deploy smart contract ==="
 # $4 password for unlocking the wallet
 deploy_contract.sh bittensor bittensoracc bittensorwal $(cat bittensor_wallet_password.txt)
 
-echo "=== create user accounts ==="
-# script for create data into blockchain
-create_accounts.sh
-
-# * Replace the script with different form of data that you would pushed into the blockchain when you start your own project
-
 echo "=== end of setup blockchain accounts and smart contract ==="
 # create a file to indicate the blockchain has been initialized
 touch "/mnt/dev/data/initialized"

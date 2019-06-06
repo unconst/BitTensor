@@ -38,7 +38,7 @@ def serve():
     # The metagrpah manages the global network state.
     metagraph = Metagraph(config)
 
-    # The dendrite manages our connections to downstream nodes.
+    # The dendrite manages our connections to 'upstream' nodes.
     dendrite = Dendrite(config, metagraph)
 
     # The neuron manages our internal learner.
@@ -46,10 +46,10 @@ def serve():
     neuron.start()
     time.sleep(3)
 
-    # The synapse manages our connection to upstream nodes.
+    # The synapse manages our connection to 'downstream' nodes.
     synapse = BoltServicer(config)
 
-    # Start timed calls on Neuron.
+    # Start timed calls on our Neuron.
     tl = Timeloop()
     set_timed_loops(tl, metagraph, neuron, synapse, dendrite)
     tl.start(block=True)
@@ -64,8 +64,13 @@ def serve():
         while True:
             time.sleep(_ONE_DAY_IN_SECONDS)
     except KeyboardInterrupt:
+        logger.info('stop')
         grpc_server.stop(0)
         neuron.stop()
+        del metagraph
+        del dendrite
+        del synapse
+        del neuron
 
 if __name__ == '__main__':
     logger.info("BitTensor.")
