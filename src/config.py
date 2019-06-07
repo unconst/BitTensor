@@ -14,8 +14,8 @@ class Config():
         return self.__str__()
 
     def __str__(self):
-        return  "{\n\tidentity: " + self.identity + " \n" +\
+        return  "\nconfig = {\n\tidentity: " + self.identity + " \n" +\
                 "\taddress: " + self.address + " \n" +\
                 "\tport: " + self.port + "  \n" +\
                 "\tk: " + str(self.k) + "  \n" + \
-                "\teosurl: " + self.eosurl + " \n}"
+                "\teosurl: " + self.eosurl + " \n}."

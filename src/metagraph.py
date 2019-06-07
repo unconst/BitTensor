@@ -32,19 +32,26 @@ class Metagraph():
         self.config = config
         self.cleos = Cleos(url=config.eosurl)
         self.nodes = {}
-        # self.eoskey = "5KQwrPbwdL6PhXujxW37FSSQZ1JiwsST4cqQzDeyXtP79zkvFD3"
-        # self.announce_self()
         self.pull_metagraph()
-    #
-    # def __del__(self):
-    #     self.erase_self()
+        # self.eoskey = "5KQwrPbwdL6PhXujxW37FSSQZ1JiwsST4cqQzDeyXtP79zkvFD3"
 
     def pull_metagraph(self):
         table = self.cleos.get_table('bittensoracc', 'bittensoracc', 'peers')
         for entry in table['rows']:
             next_node = Node(entry)
             self.nodes[entry['identity']] = next_node
-        logger.debug('metagraph: {}', self.nodes)
+        logger.debug(self.__str__())
+
+    def __repr__(self):
+        return self.__str__()
+
+    def __str__(self):
+        str_rep = "\nmetagraph = {\n"
+        for node in self.nodes.values():
+            str_rep += ("\t" + str(node) + "\n")
+        str_rep += "}."
+        return  str_rep
+
 
     # def announce_self(self):
     #     logger.info('announce self')

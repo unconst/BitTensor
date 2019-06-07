@@ -33,7 +33,7 @@ def set_timed_loops(tl, metagraph, neuron, synapse, dendrite):
 
 def serve():
     config = Config()
-    logger.debug("config: {}.", config)
+    logger.debug(config)
 
     # The metagrpah manages the global network state.
     metagraph = Metagraph(config)

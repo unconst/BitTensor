@@ -10,7 +10,8 @@ EOSURL=$4
 # Creates the system eoisio wallet. This is used to build our unique account.
 # In the future the eosio account will be replaced with your own.
 function create_eosio(){
-  cleos -u $EOSURL wallet create -n eosio >> data/$IDENTITY/bittensor_logs.out 2>&1
+  trace "cleos -u $EOSURL wallet create -n eosio --to-console"
+  cleos -u $EOSURL wallet create -n eosio --to-console >> data/$IDENTITY/bittensor_logs.out 2>&1
   if [ $? -eq 0 ]; then
       success "created wallet: eosio."
   else
@@ -22,6 +23,7 @@ function create_eosio(){
 
 # Imports the eosio private key into the eosio wallet.
 function import_eosio() {
+  trace "cleos -u $EOSURL wallet import -n eosio --private-key $EOSIO_PRIVATE_KEY"
   cleos -u $EOSURL wallet import -n eosio --private-key $EOSIO_PRIVATE_KEY >> data/$IDENTITY/bittensor_logs.out 2>&1
   if [ $? -eq 0 ]; then
       success "imported eosio key."
@@ -35,6 +37,7 @@ function import_eosio() {
 # Unlocks the eosio wallet using the eosio wallet password.
 # In the future this will us your wallet own password.
 function unlock_eosio() {
+  trace "cleos -u http://0.0.0.0:8888 wallet unlock -n eosio --password $EOSIO_PASSWORD"
   cleos -u http://0.0.0.0:8888 wallet unlock -n eosio --password $EOSIO_PASSWORD >> data/$IDENTITY/bittensor_logs.out 2>&1
   if [ $? -eq 0 ]; then
       success "unlocked eosio."
@@ -47,6 +50,7 @@ function unlock_eosio() {
 # owner and active key giving us permission to tranfer it's funds and make
 # contract transactions at a later time.
 function create_account() {
+  trace "cleos -u $EOSURL create account eosio $IDENTITY $EOSIO_PUBLIC_KEY $EOSIO_PUBLIC_KEY"
   cleos -u $EOSURL create account eosio $IDENTITY $EOSIO_PUBLIC_KEY $EOSIO_PUBLIC_KEY >> data/$IDENTITY/bittensor_logs.out 2>&1
   if [ $? -eq 0 ]; then
       success "created account: $IDENTITY."
@@ -61,6 +65,7 @@ function create_account() {
 # our id, address, and port allowing other nodes to communicate with us.
 function publish_account() {
   TRANSACTION="["$IDENTITY", "$ADDRESS", "$PORT"]"
+  trace "cleos -u $EOSURL push action bittensoracc upsert "$TRANSACTION" -p $IDENTITY@active"
   cleos -u $EOSURL push action bittensoracc upsert "$TRANSACTION" -p $IDENTITY@active >> data/$IDENTITY/bittensor_logs.out 2>&1
   if [ $? -eq 0 ]; then
       success "published account: $IDENTITY."
@@ -75,6 +80,7 @@ function publish_account() {
 # the network also, it uncluters the network.
 function unpublish_account() {
   TRANSACTION="["$IDENTITY"]"
+  trace "cleos -u $EOSURL push action bittensoracc erase "$TRANSACTION" -p $IDENTITY@active"
   cleos -u $EOSURL push action bittensoracc erase "$TRANSACTION" -p $IDENTITY@active >> data/$IDENTITY/bittensor_logs.out 2>&1
   if [ $? -eq 0 ]; then
       success "unpublished account: $IDENTITY."
@@ -106,19 +112,22 @@ log "=== setup accounts ==="
 # should absolutely change.
 # Check to see if eosio wallet exists.
 # If not, create eosio account and pull private keys to this wallet.
-PUBLIC_KEY=$(cleos -u $EOSURL wallet keys | tail -2 | head -n 1 | tr -d '"' | tr -d ' ')
 EOSIO_PRIVATE_KEY=5KQwrPbwdL6PhXujxW37FSSQZ1JiwsST4cqQzDeyXtP79zkvFD3
 EOSIO_PUBLIC_KEY=EOS6MRyAjQq8ud7hVNYcfnVPJqcVpscN5So8BhtHuGYqET5GDW5CV
 EOSIO_PASSWORD=PW5JgJBjC1QXf8XoYPFY56qF5SJLLJNfjHbCai3DyC6We1FeBRL8q
+
+# Unlock eosio wallet. Silent failure on 'already unlocked error'.
+# or silent failure on does not exist.
+unlock_eosio
+
+# Pull the eosio pub key.
+PUBLIC_KEY=$(cleos -u $EOSURL wallet keys | tail -2 | head -n 1 | tr -d '"' | tr -d ' ')
 
 # Create eosio wallet if it does not exist.
 if [[ $EOSIO_PUBLIC_KEY != $PUBLIC_KEY ]]; then
   create_eosio
   import_eosio
 fi
-
-# Unlock eosio wallet. Silent failure on 'already unlocked error'.
-unlock_eosio
 
 # Create out Identity account on the EOS blockchain. Set ownership to eosio.
 create_account

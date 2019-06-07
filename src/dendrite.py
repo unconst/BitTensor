@@ -39,7 +39,23 @@ class Dendrite():
                 self.channels[i] = grpc.insecure_channel(address)
                 self.channel_nodes[i] = selected_node
 
-        logger.debug("dendrite: {}", self.channel_nodes)
+        logger.debug(self.__str__())
+
+    def __repr__(self):
+        return self.__str__()
+
+    def __str__(self):
+        str_rep = "\ndendrite = {\n"
+        i = 0
+        for node in self.channel_nodes:
+            if node:
+                str_rep += ('\t\t[' + str(i) + ']:' + str(node.identity) + "\n")
+            else:
+                str_rep += ('\t\t[' + str(i) + ']:' + "None" + "\n")
+            i+=1
+        str_rep += "}."
+        return  str_rep
+
 
 
     def spike(self, is_training, words_tensor, embedding_dim):
