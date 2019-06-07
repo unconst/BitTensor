@@ -19,15 +19,19 @@ _ONE_DAY_IN_SECONDS=60*60*24
 
 def set_timed_loops(tl, metagraph, neuron, synapse, dendrite):
 
-    @tl.job(interval=timedelta(seconds=10))
+    @tl.job(interval=timedelta(seconds=17))
     def pull_metagraph():
         metagraph.pull_metagraph()
+
+    @tl.job(interval=timedelta(seconds=12))
+    def pull_metagraph():
+        metagraph.publish_attributions()
 
     @tl.job(interval=timedelta(seconds=15))
     def load_graph():
         synapse.load_graph()
 
-    @tl.job(interval=timedelta(seconds=10))
+    @tl.job(interval=timedelta(seconds=13))
     def reselect_channels():
         dendrite.reselect_channels()
 

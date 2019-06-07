@@ -103,7 +103,7 @@ class Neuron():
         # FIM calculations
         self.attributions = []
         self.attribution_ops = []
-        ema = tf.train.ExponentialMovingAverage(decay=0.1)
+        ema = tf.train.ExponentialMovingAverage(decay=0.98)
         for i in range(self.config.k + 1):
             input_i = full_inputs[i]
             input_attribution = tf.abs(tf.reduce_sum(tf.gradients(xs=[input_i], ys=self.output)))
@@ -188,9 +188,12 @@ class Neuron():
                         best_loss = average_loss
                         self.saver.save(self.session, 'data/' + self.config.identity  + '/model', write_meta_graph=True)
 
+                    # TODO(const) this is sloppy. Should be called on a timed thread.
                     eval_attributions = []
                     for val in out[2:]:
                         eval_attributions.append(val)
+
+                    self.metagraph.set_attributions(self.dendrite.channel_nodes, eval_attributions)
 
                     logger.debug('average loss at step {}: {} -- attributions {}', step, average_loss/200, eval_attributions)
                     average_loss = 0
