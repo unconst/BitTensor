@@ -13,9 +13,11 @@ import zipfile
 _ONE_DAY_IN_SECONDS = 60*60*24
 
 class Neuron():
-    def __init__(self, config, dendrite):
+    def __init__(self, config, metagraph, dendrite):
         self.config = config
+        self.metagraph = metagraph
         self.dendrite = dendrite
+
         self.train_thread = threading.Thread(target=self._train)
         self.train_thread.setDaemon(True)
         self.running = False
@@ -101,7 +103,7 @@ class Neuron():
         # FIM calculations
         self.attributions = []
         self.attribution_ops = []
-        ema = tf.train.ExponentialMovingAverage(decay=0.9)
+        ema = tf.train.ExponentialMovingAverage(decay=0.1)
         for i in range(self.config.k + 1):
             input_i = full_inputs[i]
             input_attribution = tf.abs(tf.reduce_sum(tf.gradients(xs=[input_i], ys=self.output)))

@@ -5,8 +5,10 @@ import tensorflow as tf
 import proto.bolt_pb2_grpc
 
 class BoltServicer(proto.bolt_pb2_grpc.BoltServicer):
-    def __init__(self, config):
+    def __init__(self, config, metagraph):
         self.identity = config.identity
+        self.config = config
+        self.metegraph = metagraph
         self.load_graph()
 
     def load_graph(self):

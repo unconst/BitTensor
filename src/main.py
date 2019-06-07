@@ -42,14 +42,14 @@ def serve():
     dendrite = Dendrite(config, metagraph)
 
     # The neuron manages our internal learner.
-    neuron = Neuron(config, dendrite)
+    neuron = Neuron(config, metagraph, dendrite)
 
     # Start Neuron.
     neuron.start()
     time.sleep(3)
 
     # The synapse manages our connection to 'downstream' nodes.
-    synapse = BoltServicer(config)
+    synapse = BoltServicer(config, metagraph)
 
     # Start timed calls.
     tl = Timeloop()
