@@ -6,6 +6,7 @@ source constant.sh
 # change to script's directory
 cd "$(dirname "$0")"
 
+# Run under fake random ID and port for localhost testing.
 identity=$(LC_CTYPE=C tr -dc 'a-z' < /dev/urandom | head -c 7 | xargs)
 address="localhost"
 port=$(jot -r 1  2000 65000)
