@@ -1,6 +1,8 @@
 #!/usr/bin/env bash
 set -o errexit
 
+source constant.sh
+
 # change to script's directory
 cd "$(dirname "$0")"
 
@@ -13,5 +15,4 @@ source constant.sh
 script="./scripts/bittensor.sh"
 COMMAND="$script $identity $address $port $eosurl"
 
-echo -e $COMMAND
 eval $COMMAND

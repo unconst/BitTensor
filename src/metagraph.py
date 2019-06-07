@@ -40,12 +40,11 @@ class Metagraph():
     #     self.erase_self()
 
     def pull_metagraph(self):
-        logger.info('pull_metagraph')
         table = self.cleos.get_table('bittensoracc', 'bittensoracc', 'peers')
         for entry in table['rows']:
             next_node = Node(entry)
             self.nodes[entry['identity']] = next_node
-            logger.info(next_node)
+        logger.debug('metagraph: {}', self.nodes)
 
     # def announce_self(self):
     #     logger.info('announce self')

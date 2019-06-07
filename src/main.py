@@ -33,7 +33,7 @@ def set_timed_loops(tl, metagraph, neuron, synapse, dendrite):
 
 def serve():
     config = Config()
-    logger.debug("Config: {}", config)
+    logger.debug("config: {}.", config)
 
     # The metagrpah manages the global network state.
     metagraph = Metagraph(config)
@@ -61,14 +61,10 @@ def serve():
     grpc_server = grpc.server(futures.ThreadPoolExecutor(max_workers=10))
     proto.bolt_pb2_grpc.add_BoltServicer_to_server(synapse, grpc_server)
     grpc_server.add_insecure_port(server_address)
-    logger.debug('Serving synapse on: {}', server_address)
+    logger.debug('served synapse on: {}.', server_address)
     grpc_server.start()
 
-    try:
-        while True:
-            time.sleep(_ONE_DAY_IN_SECONDS)
-    except KeyboardInterrupt:
-        logger.info('stop')
+    def tear_down():
         grpc_server.stop(0)
         neuron.stop()
         del metagraph
@@ -76,6 +72,19 @@ def serve():
         del synapse
         del neuron
 
+    try:
+        while True:
+            time.sleep(_ONE_DAY_IN_SECONDS)
+
+    except KeyboardInterrupt:
+        logger.debug('keyboard interrupt.')
+        tear_down()
+
+    except:
+        logger.error('unknown interrupt.')
+        tear_down()
+
+
 if __name__ == '__main__':
-    logger.info("BitTensor.")
+    logger.debug("started neuron.")
     serve()

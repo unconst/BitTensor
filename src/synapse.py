@@ -20,10 +20,10 @@ class BoltServicer(proto.bolt_pb2_grpc.BoltServicer):
                 next_session.run(tf.local_variables_initializer())
                 next_session.run("embedding_output:0", feed_dict={"batch_words:0": [['UNK']], 'is_training:0': False})
         except Exception as e:
-            logger.error('Failed to server new graph. Exception {}', e)
+            logger.error('failed to server new graph. Exception {}', e)
             return
 
-        logger.info('Successfully served new graph.')
+        logger.debug('served new graph.')
         self.session = next_session
 
     def Spike(self, request, context):

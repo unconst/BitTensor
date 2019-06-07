@@ -23,7 +23,6 @@ class Dendrite():
         self.reselect_channels()
 
     def reselect_channels(self):
-        logger.info('reselect_channels')
         nodes = self.metagraph.nodes
         for i in range(self.config.k):
             if self.channels[i] != None:
@@ -36,13 +35,11 @@ class Dendrite():
                     break
 
             if selected_node:
-                logger.info('set node {} to channel {}', selected_node, i)
                 address = selected_node.address + ':' + selected_node.port
-                logger.info("connect to {}", address)
                 self.channels[i] = grpc.insecure_channel(address)
                 self.channel_nodes[i] = selected_node
 
-        logger.info("channels {}", self.channel_nodes)
+        logger.debug("dendrite: {}", self.channel_nodes)
 
 
     def spike(self, is_training, words_tensor, embedding_dim):

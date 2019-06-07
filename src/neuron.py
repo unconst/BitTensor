@@ -122,7 +122,7 @@ class Neuron():
         # Model Saver.
         self.saver = tf.train.Saver(max_to_keep=2)
 
-        logger.success('Successfully built Neuron graph.')
+        logger.debug('built neuron graph.')
 
     def build_vocabulary(self):
 
@@ -137,7 +137,7 @@ class Neuron():
         self.string_map = [c[0] for c in counts]
 
         #print (self.string_map)
-        logger.success('Successfully built Neuron vocabulary.')
+        logger.debug('built neuron vocabulary.')
 
 
     def start(self):
@@ -149,7 +149,7 @@ class Neuron():
         self.train_thread.join()
 
     def _train(self):
-        logger.info('Start Neuron training ...')
+        logger.debug('started neuron training.')
 
         with self.session:
 
@@ -190,9 +190,7 @@ class Neuron():
                     for val in out[2:]:
                         eval_attributions.append(val)
 
-                    logger.debug('Average loss at step {}: {} -- attributions {}', step, average_loss/200, eval_attributions)
+                    logger.debug('average loss at step {}: {} -- attributions {}', step, average_loss/200, eval_attributions)
                     average_loss = 0
 
-
-
-        print ('done. \n')
+        logger.debug('stopped neuron training.')
