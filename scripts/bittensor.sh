@@ -138,6 +138,9 @@ publish_account
 # Unpublish our account on script tear down. This uncluters the metegraph.
 trap unpublish_account EXIT
 
+# Build protos
+./src/build.sh
+
 # The main command.
 # Start our Neuron object training, server graph, open dendrite etc.
 log ""
