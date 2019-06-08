@@ -17,9 +17,24 @@ namespace eosio {
 
    using std::string;
 
-   class [[eosio::contract("bittensor")]] token : public contract {
+   class [[eosio::contract("bittensor")]] bittensor : public contract {
       public:
          using contract::contract;
+
+         bittensor(name receiver, name code, datastream<const char*> ds):contract(receiver, code, ds) {}
+
+         [[eosio::action]]
+         void upsert( name user,
+                      std::string address,
+                      std::string port);
+
+         [[eosio::action]]
+         void erase(name user);
+
+         [[eosio::action]]
+         void grade( name user,
+                     const std::vector<name>& edges,
+                     const std::vector<float>& attribution);
 
          [[eosio::action]]
          void create( name   issuer,
@@ -57,32 +72,46 @@ namespace eosio {
             return ac.balance;
          }
 
-         using create_action = eosio::action_wrapper<"create"_n, &token::create>;
-         using issue_action = eosio::action_wrapper<"issue"_n, &token::issue>;
-         using retire_action = eosio::action_wrapper<"retire"_n, &token::retire>;
-         using transfer_action = eosio::action_wrapper<"transfer"_n, &token::transfer>;
-         using open_action = eosio::action_wrapper<"open"_n, &token::open>;
-         using close_action = eosio::action_wrapper<"close"_n, &token::close>;
+         using upsert_action = eosio::action_wrapper<"upsert"_n, &bittensor::upsert>;
+         using grade_action = eosio::action_wrapper<"grade"_n, &bittensor::grade>;
+         using erase_action = eosio::action_wrapper<"erase"_n, &bittensor::erase>;
+         using create_action = eosio::action_wrapper<"create"_n, &bittensor::create>;
+         using issue_action = eosio::action_wrapper<"issue"_n, &bittensor::issue>;
+         using retire_action = eosio::action_wrapper<"retire"_n, &bittensor::retire>;
+         using transfer_action = eosio::action_wrapper<"transfer"_n, &bittensor::transfer>;
+         using open_action = eosio::action_wrapper<"open"_n, &bittensor::open>;
+         using close_action = eosio::action_wrapper<"close"_n, &bittensor::close>;
       private:
-         struct [[eosio::table]] account {
-            asset    balance;
 
-            uint64_t primary_key()const { return balance.symbol.code().raw(); }
-         };
+        struct [[eosio::table]] peer {
+          name identity;
+          std::string address;
+          std::string port;
+          std::vector<name> edges;
+          std::vector<float> attribution;
+          uint64_t primary_key() const { return identity.value;}
+        };
 
-         struct [[eosio::table]] currency_stats {
-            asset    supply;
-            asset    max_supply;
-            name     issuer;
+        struct [[eosio::table]] account {
+          asset    balance;
 
-            uint64_t primary_key()const { return supply.symbol.code().raw(); }
-         };
+          uint64_t primary_key()const { return balance.symbol.code().raw(); }
+        };
 
-         typedef eosio::multi_index< "accounts"_n, account > accounts;
-         typedef eosio::multi_index< "stat"_n, currency_stats > stats;
+        struct [[eosio::table]] currency_stats {
+          asset    supply;
+          asset    max_supply;
+          name     issuer;
 
-         void sub_balance( name owner, asset value );
-         void add_balance( name owner, asset value, name ram_payer );
+          uint64_t primary_key()const { return supply.symbol.code().raw(); }
+        };
+
+        typedef eosio::multi_index<"peers"_n, peer> peer_table;
+        typedef eosio::multi_index< "accounts"_n, account > accounts;
+        typedef eosio::multi_index< "stat"_n, currency_stats > stats;
+
+        void sub_balance( name owner, asset value );
+        void add_balance( name owner, asset value, name ram_payer );
    };
 
 } /// namespace eosio

@@ -3,12 +3,63 @@
  *  @copyright defined in eos/LICENSE.txt
  */
 
-#include <bittensor.hpp>
+#include "bittensor.hpp"
 
 namespace eosio {
 
-void token::create( name   issuer,
-                    asset  maximum_supply )
+
+void bittensor::upsert( name user,
+                        std::string address,
+                        std::string port)
+{
+    require_auth( user );
+    peer_table ptable(get_self(), get_code().value);
+    auto iterator = ptable.find(user.value);
+    if( iterator == ptable.end() )
+    {
+        ptable.emplace(user, [&]( auto& row ) {
+            row.identity = user;
+            row.address = address;
+            row.port = port;
+        });
+    }
+    else {
+        ptable.modify(iterator, user, [&]( auto& row ) {
+            row.identity = user;
+            row.address = address;
+            row.port = port;
+        });
+    }
+}
+
+void bittensor::grade( name user,
+                       const std::vector<name>& edges,
+                       const std::vector<float>& attribution)
+{
+  require_auth( user );
+  peer_table ptable(get_self(), get_code().value);
+  auto iterator = ptable.find(user.value);
+  check(iterator != ptable.end(), "Record does not exist");
+  ptable.modify(iterator, user, [&]( auto& row ) {
+      row.identity = row.identity;
+      row.address = row.address;
+      row.port = row.port;
+      row.edges = edges;
+      row.attribution = attribution;
+  });
+}
+
+void bittensor::erase( name user )
+{
+    require_auth(user);
+    peer_table ptable(get_self(), get_code().value);
+    auto iterator = ptable.find(user.value);
+    check(iterator != ptable.end(), "Record does not exist");
+    ptable.erase(iterator);
+}
+
+void bittensor::create( name   issuer,
+                        asset  maximum_supply )
 {
     require_auth( _self );
 
@@ -29,7 +80,7 @@ void token::create( name   issuer,
 }
 
 
-void token::issue( name to, asset quantity, string memo )
+void bittensor::issue( name to, asset quantity, string memo )
 {
     auto sym = quantity.symbol;
     check( sym.is_valid(), "invalid symbol name" );
@@ -60,7 +111,7 @@ void token::issue( name to, asset quantity, string memo )
     }
 }
 
-void token::retire( asset quantity, string memo )
+void bittensor::retire( asset quantity, string memo )
 {
     auto sym = quantity.symbol;
     check( sym.is_valid(), "invalid symbol name" );
@@ -84,7 +135,7 @@ void token::retire( asset quantity, string memo )
     sub_balance( st.issuer, quantity );
 }
 
-void token::transfer( name    from,
+void bittensor::transfer( name    from,
                       name    to,
                       asset   quantity,
                       string  memo )
@@ -110,7 +161,7 @@ void token::transfer( name    from,
     add_balance( to, quantity, payer );
 }
 
-void token::sub_balance( name owner, asset value ) {
+void bittensor::sub_balance( name owner, asset value ) {
    accounts from_acnts( _self, owner.value );
 
    const auto& from = from_acnts.get( value.symbol.code().raw(), "no balance object found" );
@@ -121,7 +172,7 @@ void token::sub_balance( name owner, asset value ) {
       });
 }
 
-void token::add_balance( name owner, asset value, name ram_payer )
+void bittensor::add_balance( name owner, asset value, name ram_payer )
 {
    accounts to_acnts( _self, owner.value );
    auto to = to_acnts.find( value.symbol.code().raw() );
@@ -136,7 +187,7 @@ void token::add_balance( name owner, asset value, name ram_payer )
    }
 }
 
-void token::open( name owner, const symbol& symbol, name ram_payer )
+void bittensor::open( name owner, const symbol& symbol, name ram_payer )
 {
    require_auth( ram_payer );
 
@@ -155,7 +206,7 @@ void token::open( name owner, const symbol& symbol, name ram_payer )
    }
 }
 
-void token::close( name owner, const symbol& symbol )
+void bittensor::close( name owner, const symbol& symbol )
 {
    require_auth( owner );
    accounts acnts( _self, owner.value );
@@ -167,4 +218,4 @@ void token::close( name owner, const symbol& symbol )
 
 } /// namespace eosio
 
-EOSIO_DISPATCH( eosio::token, (create)(issue)(transfer)(open)(close)(retire) )
+EOSIO_DISPATCH( eosio::bittensor, (upsert)(grade)(erase)(create)(issue)(transfer)(open)(close)(retire) )

@@ -1,5 +1,7 @@
 ## Unsupervised Peer-to-Peer Machine Learning.
 
+const <3
+
 # About.
 This is a research tool for working with unsuperivsed peer to peer Machine Learning systems. The goals is to find novel ways of combining computing
 resources which extend beyond a trusted computing boundary. The hope is that incentivization models like the ones in Bitcoin or BitTorrent can be used to
