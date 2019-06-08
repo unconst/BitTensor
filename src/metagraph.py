@@ -2,6 +2,7 @@ import ast
 from loguru import logger
 import sys
 
+import eospy.keys
 from eospy.cleos import Cleos
 
 class Node():

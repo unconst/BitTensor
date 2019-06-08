@@ -1,7 +1,9 @@
 #!/usr/bin/env bash
 set -o errexit
 
-echo "=== setup blockchain accounts and smart contract ==="
+source scripts/constant.sh
+
+log "=== setup blockchain accounts and smart contract ==="
 
 # set PATH
 PATH="$PATH:/opt/eosio/bin:/opt/eosio/bin/scripts"
@@ -29,12 +31,12 @@ done
 
 # Sleep for 2 to allow time 4 blocks to be created so we have blocks to reference when sending transactions
 sleep 2s
-echo "=== setup wallet: eosiomain ==="
+log "=== setup wallet: eosiomain ==="
 # First key import is for eosio system account
 cleos wallet create -n eosiomain --to-console | tail -1 | sed -e 's/^"//' -e 's/"$//' > eosiomain_wallet_password.txt
 cleos wallet import -n eosiomain --private-key 5KQwrPbwdL6PhXujxW37FSSQZ1JiwsST4cqQzDeyXtP79zkvFD3
 
-echo "=== setup wallet: bittensorwal ==="
+log "=== setup wallet: bittensorwal ==="
 # key for eosio account and export the generated password to a file for unlocking wallet later
 cleos wallet create -n bittensorwal --to-console | tail -1 | sed -e 's/^"//' -e 's/"$//' > bittensor_wallet_password.txt
 # Owner key for bittensorwal wallet
@@ -49,14 +51,14 @@ cleos create account eosio bittensoracc EOS6PUh9rs7eddJNzqgqDx1QrspSHLRxLMcRdwHZ
 
 # * Replace "bittensoracc" by your own account name when you start your own project
 
-echo "=== deploy smart contract ==="
+log "=== deploy smart contract ==="
 # $1 smart contract name
 # $2 account holder name of the smart contract
 # $3 wallet for unlock the account
 # $4 password for unlocking the wallet
 deploy_contract.sh bittensor bittensoracc bittensorwal $(cat bittensor_wallet_password.txt)
 
-echo "=== end of setup blockchain accounts and smart contract ==="
+log "=== end of setup blockchain accounts and smart contract ==="
 # create a file to indicate the blockchain has been initialized
 touch "/mnt/dev/data/initialized"
 

@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-source constant.sh
+source ./scripts/constant.sh
 
 # Arguments to this script.
 IDENTITY=$1

@@ -1,10 +1,10 @@
 #!/usr/bin/env bash
 set -o errexit
 
-source constant.sh
-
 # change to script's directory
 cd "$(dirname "$0")"
+
+source scripts/constant.sh
 
 identity=$(LC_CTYPE=C tr -dc 'a-z' < /dev/urandom | head -c 7 | xargs)
 address="127.0.0.1"
@@ -13,14 +13,14 @@ eosurl="http://127.0.0.1:8888"
 
 script="./scripts/bittensor.sh"
 COMMAND="$script $identity $address $port $eosurl"
-log $COMMAND
+log "$COMMAND"
 
 log "=== run docker container from the $DOCKER_IMAGE_NAME:$DOCKER_IMAGE_TAG image ==="
 docker run --rm --name bitensor-$identity -d \
 --network="host" \
 --mount type=bind,src="$(pwd)"/scripts,dst=/bittensor/scripts \
 --mount type=bind,src="$(pwd)"/src,dst=/bittensor/src \
-$DOCKER_IMAGE_NAME:$DOCKER_IMAGE_TAG /bin/bash -c $COMMAND
+$DOCKER_IMAGE_NAME:$DOCKER_IMAGE_TAG /bin/bash -c "$COMMAND"
 
 log "=== follow bittensor_container logs ==="
 docker logs bitensor-$identity --follow
