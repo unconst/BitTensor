@@ -1,3 +1,4 @@
+grpcio
 libeospy
 loguru
 matplotlib

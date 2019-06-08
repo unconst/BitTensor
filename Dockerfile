@@ -19,6 +19,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     rm -rf /var/lib/apt/lists/*
 
 RUN pip install --upgrade pip && \
+  pip install grpcio && \
   pip install libeospy && \
   pip install loguru && \
   pip install matplotlib && \
