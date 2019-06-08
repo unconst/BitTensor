@@ -9,7 +9,7 @@ set -o errexit
 # set PATH
 PATH="$PATH:/opt/eosio/bin"
 
-CONTRACTSPATH="$( pwd -P )/contracts"
+CONTRACTSPATH="$( pwd -P )/contract"
 
 # make new directory for compiled contract files
 mkdir -p ./compiled_contracts

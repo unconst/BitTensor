@@ -93,7 +93,7 @@ function unpublish_account() {
 
 # Create the state directory for logs and model checkpoints.
 # TODO(const) In the future this could be preset and contain our conf file.
-mkdir data/$IDENTITY
+mkdir -p data/$IDENTITY
 touch data/$IDENTITY/bittensor_logs.out
 
 # Intro logs.
