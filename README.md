@@ -1,6 +1,6 @@
 ## BitTensor Network Daemon
 
-<img src="mycellium.jpeg">
+<img src="assets/mycellium.jpeg">
 
 > Decentralized Machine Intelligence
 
@@ -8,6 +8,7 @@
 
 - [Overview](#overview)
 - [Motivation](#motivation)
+- [Incentive Structure](#incentivestructure)
 - [To Run](#torun)
 - [What is the state of this project](#project-state)
 - [About Word Embeddings](#word-embeddings)
@@ -25,13 +26,15 @@ Machine intelligence has been successfully mapped onto both distributed and [har
 
 Further more, these benefits are no stranger to intelligent systems in nature --such as the neural networks, societies at large, or plant structures like mycelium-- which run through the interaction of many self-interested parts rather than under centralized executive authority.
 
-## Approach     
+## Incentive Structure     
 
 Computing within a decentralized environment is necessarily more difficult than a traditional system since individual components may be non-existent, incompetent, or malicious. Examples like Bitcoin solve this problem by constructing a game theoretic structure governed by a protocol which rewards proper contribution, in this case, raw hashing power.
 
 A Machine Learning system requires a different form a contribution. Instead, BitTensor rewards the production of useful information, encoded as tensor projections, for instance a word embedding. Value determined by a web-of-trust like recommendation system where recommendations are based on attribution methods run on each host - ranking their neighbors using an information theoretic metric called Fishers Information. In total, these rankings, paired with stake, determine the likelihood of receiving emission rewards and this forms the incentive model.
 
-A note on the proper determination of use. Informational significance (determined by an attribution method) is calculated on a pair wise basis, from one node to another, in a subjective manner. However, subjectivity allows network nodes to falsify their attribution in order to gain a higher emission rewards (for themselves). To detect this, fair contributors within the network only communicate with nodes in the network which afford them recommendation -- hence forming a price allocating market for information.  
+<img src="assets/weboftrust.jpg">
+
+A note on the proper determination of use. Informational significance (determined by an attribution method) is calculated on a pair wise basis, from one node to another, in a subjective manner. However, subjectivity allows network nodes to falsify their attribution in order to gain a higher emission rewards (for themselves). 
 
 ---
 

@@ -4,6 +4,7 @@
  */
 
 #include "bittensor.hpp"
+#include "eosiolib/transaction.hpp"
 
 namespace eosio {
 
@@ -47,6 +48,8 @@ void bittensor::grade( name user,
       row.edges = edges;
       row.attribution = attribution;
   });
+
+  int block_num = tapos_block_num();
 }
 
 void bittensor::erase( name user )
