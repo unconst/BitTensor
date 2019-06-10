@@ -19,18 +19,24 @@ _ONE_DAY_IN_SECONDS=60*60*24
 
 def set_timed_loops(tl, metagraph, neuron, synapse, dendrite):
 
+    # Pull the updated graph state (Vertices, Edges, Weights)
     @tl.job(interval=timedelta(seconds=17))
     def pull_metagraph():
         metagraph.pull_metagraph()
 
+    # Publish attributions (Edges, Weights.)
     @tl.job(interval=timedelta(seconds=12))
     def pull_metagraph():
         metagraph.publish_attributions()
 
+    # Load an updated inference nn-tensorflow model.
     @tl.job(interval=timedelta(seconds=15))
     def load_graph():
         synapse.load_graph()
 
+    # Reselect downstream nodes.
+    # TODO(const) perhaps this should be removed. Instead downstream state is
+    # fixed at the start.
     @tl.job(interval=timedelta(seconds=13))
     def reselect_channels():
         dendrite.reselect_channels()
@@ -45,14 +51,15 @@ def serve():
     # The dendrite manages our connections to 'upstream' nodes.
     dendrite = Dendrite(config, metagraph)
 
-    # The neuron manages our internal learner.
+    # The neuron trains the NN object.
     neuron = Neuron(config, metagraph, dendrite)
 
-    # Start Neuron.
+    # Start the neuron.
     neuron.start()
     time.sleep(3)
 
-    # The synapse manages our connection to 'downstream' nodes.
+    # The synapse manages our connection to downstream nodes.
+    # TODO(const) Market driven bidding for neighbors with FAN-IN K value.
     synapse = BoltServicer(config, metagraph)
 
     # Start timed calls.
@@ -60,7 +67,7 @@ def serve():
     set_timed_loops(tl, metagraph, neuron, synapse, dendrite)
     tl.start(block=False)
 
-    # Serve the synapse.
+    # Serve the synapse on a grpc server.
     server_address = config.address + ":" + config.port
     grpc_server = grpc.server(futures.ThreadPoolExecutor(max_workers=10))
     proto.bolt_pb2_grpc.add_BoltServicer_to_server(synapse, grpc_server)

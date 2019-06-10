@@ -6,7 +6,6 @@
 
 #include <eosiolib/asset.hpp>
 #include <eosiolib/eosio.hpp>
-
 #include <string>
 
 namespace eosiosystem {
@@ -26,19 +25,19 @@ namespace eosio {
          [[eosio::action]]
          void upsert( name user,
                       std::string address,
-                      std::string port);
+                      std::string port );
 
          [[eosio::action]]
-         void erase(name user);
+         void erase( name user );
 
          [[eosio::action]]
-         void grade( name user,
+         void grade( name  user,
                      const std::vector<name>& edges,
-                     const std::vector<float>& attribution);
+                     const std::vector<float>& attribution );
 
          [[eosio::action]]
          void create( name   issuer,
-                      asset  maximum_supply);
+                      asset  maximum_supply );
 
          [[eosio::action]]
          void issue( name to, asset quantity, string memo );
@@ -81,6 +80,7 @@ namespace eosio {
          using transfer_action = eosio::action_wrapper<"transfer"_n, &bittensor::transfer>;
          using open_action = eosio::action_wrapper<"open"_n, &bittensor::open>;
          using close_action = eosio::action_wrapper<"close"_n, &bittensor::close>;
+
       private:
 
         struct [[eosio::table]] peer {

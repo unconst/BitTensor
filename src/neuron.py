@@ -45,6 +45,21 @@ class Neuron():
         # Create TF Session.
         self.session = tf.Session(graph=self.graph)
 
+    def build_vocabulary(self):
+
+        # Read textfile.
+        f = zipfile.ZipFile(self.filename)
+        for name in f.namelist():
+            self.words = tf.compat.as_str(f.read(name)).split()
+        f.close()
+
+        counts = [('UNK', -1)]
+        counts.extend(collections.Counter(self.words).most_common(self.vocabulary_size - 2))
+        self.string_map = [c[0] for c in counts]
+
+        #print (self.string_map)
+        logger.debug('built neuron vocabulary.')
+
     def build_graph(self):
 
         # Boolean flag which determines whether or not we spike our downstream
@@ -65,12 +80,10 @@ class Neuron():
         embeddings = tf.Variable(tf.random_uniform([self.vocabulary_size, self.embedding_size], -1.0, 1.0))
         word_embeddings = tf.nn.embedding_lookup(embeddings, word_ids)
 
-        # Remote features.
-        # TODO(const) Spike should return attribution information such as
-        # Fishers informaiton significance and success rate.
+        # Get remote inputs. Blocking RPC which multicast queries upstream nodes.
         remote_inputs = self.dendrite.spike(self.is_training, tf.reshape(self.batch_words, [-1, 1]), self.embedding_size)
 
-        # full input layer.
+        # Full input layer.
         full_inputs = [word_embeddings] + remote_inputs
         l1 = tf.concat(full_inputs, axis=1)
 
@@ -79,6 +92,7 @@ class Neuron():
         b1 = tf.Variable(tf.zeros([self.embedding_size]))
         final_layer = tf.sigmoid(tf.matmul(l1, w1) + b1)
 
+        # Embedding output.
         self.output = tf.identity(final_layer, name="embedding_output")
 
         # Embedding Weights
@@ -100,7 +114,7 @@ class Neuron():
             name='sampled_softmax_loss',
             seed=None)
 
-        # FIM calculations
+        # FIM (attribution) calculations
         self.attributions = []
         self.attribution_ops = []
         ema = tf.train.ExponentialMovingAverage(decay=0.98)
@@ -125,22 +139,6 @@ class Neuron():
         self.saver = tf.train.Saver(max_to_keep=2)
 
         logger.debug('built neuron graph.')
-
-    def build_vocabulary(self):
-
-        # Read textfile.
-        f = zipfile.ZipFile(self.filename)
-        for name in f.namelist():
-            self.words = tf.compat.as_str(f.read(name)).split()
-        f.close()
-
-        counts = [('UNK', -1)]
-        counts.extend(collections.Counter(self.words).most_common(self.vocabulary_size - 2))
-        self.string_map = [c[0] for c in counts]
-
-        #print (self.string_map)
-        logger.debug('built neuron vocabulary.')
-
 
     def start(self):
         self.running = True

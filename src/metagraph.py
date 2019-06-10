@@ -7,10 +7,15 @@ from eospy.cleos import Cleos
 
 class Node():
     def __init__(self, entry):
+        # EOS account name.
         self.identity = entry['identity']
+        # IP address.
         self.address = entry['address']
+        # Port number.
         self.port = entry['port']
+        # List of EOS accounts.
         self.edges = entry['edges']
+        # List of edge weights. Including in loop.
         self.attributions = entry['attribution']
 
     def __repr__(self):
@@ -37,7 +42,7 @@ class Metagraph():
         self.cleos = Cleos(url=config.eosurl)
         self.nodes = {}
         self.pull_metagraph()
-        # TODO(const) this should be our own key.
+        # TODO(const) this should be our own key. NOT EOSMAIN.
         self.eoskey = "5KQwrPbwdL6PhXujxW37FSSQZ1JiwsST4cqQzDeyXtP79zkvFD3"
 
     def pull_metagraph(self):
@@ -47,24 +52,13 @@ class Metagraph():
             self.nodes[entry['identity']] = next_node
         logger.debug(self.__str__())
 
-    def publish_attributions(self, attributions):
-        table = self.cleos.get_table('bittensoracc', 'bittensoracc', 'peers')
-        for entry in table['rows']:
-            next_node = Node(entry)
-            self.nodes[entry['identity']] = next_node
-        logger.debug(self.__str__())
-
-
     def clean_attributions(self, edge_nodes, edge_attrs):
-
-        #logger.info(edge_nodes)
-        #logger.info(edge_attrs)
+        # TODO(const) sloppy.
 
         # Fill out the two lists.
         self_node = self.nodes[self.config.identity]
         edge_nodes = [self_node] + edge_nodes
 
-        # TODO(const) sloppy.
         # edge_attrs is k + 1 vector.
         # edge_nodes is a k length vector.
         # We are going to normalize the attributions 0-1 but only over non null values.
@@ -82,17 +76,14 @@ class Metagraph():
 
         return result_ids, result_attrs
 
+    # Function is set by the neuron object.
     def set_attributions(self, edge_nodes, attributions):
         self.edge_ids, self.edge_attrs = self.clean_attributions(edge_nodes, attributions)
 
+    # Push attribution scores.
     def publish_attributions(self):
-
-        #logger.info('publish attribuions. {} {}', edge_ids, edge_attrs )
         transaction = self.publish_attributions_trx(self.edge_ids, self.edge_attrs)
-
-        #logger.info(transaction)
         resp = self.cleos.push_transaction(transaction, self.eoskey, broadcast=True)
-        #logger.info(resp)
 
     def publish_attributions_trx(self, edge_ids, edge_attrs):
 

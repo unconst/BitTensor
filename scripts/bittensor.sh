@@ -91,59 +91,64 @@ function unpublish_account() {
   fi
 }
 
-# Create the state directory for logs and model checkpoints.
-# TODO(const) In the future this could be preset and contain our conf file.
-mkdir -p data/$IDENTITY
-touch data/$IDENTITY/bittensor_logs.out
+function main() {
+  # Create the state directory for logs and model checkpoints.
+  # TODO(const) In the future this could be preset and contain our conf file.
+  mkdir -p data/$IDENTITY
+  touch data/$IDENTITY/bittensor_logs.out
 
-# Intro logs.
-log "=== BitTensor ==="
-log "Args {"
-log "   EOSURL: $EOSURL"
-log "   IDENTITY: $IDENTITY"
-log "   ADDRESS: $ADDRESS"
-log "   PORT: $PORT"
-log "}"
-log ""
-log "=== setup accounts ==="
+  # Intro logs.
+  log "=== BitTensor ==="
+  log "Args {"
+  log "   EOSURL: $EOSURL"
+  log "   IDENTITY: $IDENTITY"
+  log "   ADDRESS: $ADDRESS"
+  log "   PORT: $PORT"
+  log "}"
+  log ""
+  log "=== setup accounts ==="
 
 
-# TODO(const) These are currently hard coded to eosio main. In prodution this
-# should absolutely change.
-# Check to see if eosio wallet exists.
-# If not, create eosio account and pull private keys to this wallet.
-EOSIO_PRIVATE_KEY=5KQwrPbwdL6PhXujxW37FSSQZ1JiwsST4cqQzDeyXtP79zkvFD3
-EOSIO_PUBLIC_KEY=EOS6MRyAjQq8ud7hVNYcfnVPJqcVpscN5So8BhtHuGYqET5GDW5CV
-EOSIO_PASSWORD=PW5JgJBjC1QXf8XoYPFY56qF5SJLLJNfjHbCai3DyC6We1FeBRL8q
+  # TODO(const) These are currently hard coded to eosio main. In prodution this
+  # should absolutely change.
+  # Check to see if eosio wallet exists.
+  # If not, create eosio account and pull private keys to this wallet.
+  EOSIO_PRIVATE_KEY=5KQwrPbwdL6PhXujxW37FSSQZ1JiwsST4cqQzDeyXtP79zkvFD3
+  EOSIO_PUBLIC_KEY=EOS6MRyAjQq8ud7hVNYcfnVPJqcVpscN5So8BhtHuGYqET5GDW5CV
+  EOSIO_PASSWORD=PW5JgJBjC1QXf8XoYPFY56qF5SJLLJNfjHbCai3DyC6We1FeBRL8q
 
-# Unlock eosio wallet. Silent failure on 'already unlocked error'.
-# or silent failure on does not exist.
-unlock_eosio
+  # Unlock eosio wallet. Silent failure on 'already unlocked error'.
+  # or silent failure on does not exist.
+  unlock_eosio
 
-# Pull the eosio pub key.
-PUBLIC_KEY=$(cleos -u $EOSURL wallet keys | tail -2 | head -n 1 | tr -d '"' | tr -d ' ')
+  # Pull the eosio pub key.
+  PUBLIC_KEY=$(cleos -u $EOSURL wallet keys | tail -2 | head -n 1 | tr -d '"' | tr -d ' ')
 
-# Create eosio wallet if it does not exist.
-if [[ $EOSIO_PUBLIC_KEY != $PUBLIC_KEY ]]; then
-  create_eosio
-  import_eosio
-fi
+  # Create eosio wallet if it does not exist.
+  if [[ $EOSIO_PUBLIC_KEY != $PUBLIC_KEY ]]; then
+    create_eosio
+    import_eosio
+  fi
 
-# Create out Identity account on the EOS blockchain. Set ownership to eosio.
-create_account
+  # Create out Identity account on the EOS blockchain. Set ownership to eosio.
+  create_account
 
-# Publish our newly formed account to the eos blockchain.
-publish_account
+  # Publish our newly formed account to the eos blockchain.
+  publish_account
 
-# Unpublish our account on script tear down. This uncluters the metegraph.
-trap unpublish_account EXIT
+  # Unpublish our account on script tear down. This uncluters the metegraph.
+  trap unpublish_account EXIT
 
-# Build protos
-./src/build.sh
+  # Build protos
+  ./src/build.sh
 
-# The main command.
-# Start our Neuron object training, server graph, open dendrite etc.
-log ""
-log "=== start neuron ==="
-python src/main.py $IDENTITY $ADDRESS $PORT $EOSURL
-log "neuron shut down."
+  # The main command.
+  # Start our Neuron object training, server graph, open dendrite etc.
+  log ""
+  log "=== start neuron ==="
+  python src/main.py $IDENTITY $ADDRESS $PORT $EOSURL
+  log "neuron shut down."
+}
+
+# Run.
+main
