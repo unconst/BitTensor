@@ -18,7 +18,7 @@
 
 ## Overview
 
-BitTensor is a tool for building decentralized Machine Intelligence systems. When run, this software is built to fold your computing power into an p2p machine learning system. The network is aligned by an incentive model built on-top of the EOS blockchain which uses a recommendation system to reward computers for their informational product.
+BitTensor is a tool for building decentralized Machine Intelligence systems. When run, this software is built to fold your computing power into an p2p machine learning system. The network is aligned by an incentive model built on EOS, which uses a recommendation system to reward computers for their informational product.
 
 ## Motivation
 
