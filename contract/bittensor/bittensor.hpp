@@ -83,6 +83,8 @@ namespace eosio {
 
       private:
 
+        int last_inflation_block = -1
+
         struct [[eosio::table]] peer {
           name identity;
           std::string address;

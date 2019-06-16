@@ -28,13 +28,14 @@ Further more, these benefits are no stranger to intelligent systems in nature --
 
 ## Incentive Structure     
 
-Computing within a decentralized environment is necessarily more difficult than a traditional system since individual components may be non-existent, incompetent, or malicious. Examples like Bitcoin solve this problem by constructing a game theoretic structure governed by a protocol which rewards proper contribution, in this case, raw hashing power.
+The present incentive descriptions provides a method for ranking machine learning components in a linked p2p network. The ranking is derived from the attributions assigned to components from their neighbors. Attributions are assigned using any variety of Machine Learning techniques which provide us with a measure of the informational significance of the inputs to our model.
 
-A Machine Learning system requires a different form a contribution. Instead, BitTensor rewards the production of useful information, encoded as tensor projections, for instance a word embedding. Value determined by a web-of-trust like recommendation system where recommendations are based on attribution methods run on each host - ranking their neighbors using an information theoretic metric called Fishers Information. In total, these rankings, paired with stake, determine the likelihood of receiving emission rewards and this forms the incentive model.
+Intuitively, the network value of a component is transitive in nature, we need to look at the value assigned to you not just by your neighbors but at the value assigned to your neighbors neighbors to them. This implies a recursive definition of value: the value of a component is a function of the value of the components which sue it.
+
+We adapt Google's page rank for this effort.
+
 
 <img src="assets/weboftrust.jpg">
-
-A note on the proper determination of use. Informational significance (determined by an attribution method) is calculated on a pair wise basis, from one node to another, in a subjective manner. However, subjectivity allows network nodes to falsify their attribution in order to gain a higher emission rewards (for themselves). 
 
 ---
 

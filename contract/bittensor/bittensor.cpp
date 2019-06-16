@@ -49,7 +49,14 @@ void bittensor::grade( name user,
       row.attribution = attribution;
   });
 
-  int block_num = tapos_block_num();
+  float supply_inflation = 1.0;
+  if (last_inflation_block != -1){
+    int block_num = tapos_block_num();
+    supply_inflation = (float) (block_num - last_inflation_block);
+    last_inflation_block = block_num;
+  }
+
+
 }
 
 void bittensor::erase( name user )
