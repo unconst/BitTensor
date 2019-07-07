@@ -3,6 +3,12 @@
 using namespace std;
 
 int main(int argc, char * argv[]) {
-  BitTensor b;
+  BitTensor bt;
+
+  bt.subscribe(1);
+  bt.subscribe(2);
+  bt.subscribe(3);
+  bt.subscribe(4);
+
   return 0;
 }

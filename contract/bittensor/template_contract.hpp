@@ -49,8 +49,13 @@ class BitTensor
                   const unsigned int this_emission);
 };
 
+// Given a continuous compounding emission calculation P(t) = P(0)*e^rt.
+// r = SUPPLY_EMIT_RATE
+// t = blocks_since_emision / BLOCKS_TILL_EMIT
 const unsigned int BLOCKS_TILL_EMIT = 1;
 const float SUPPLY_EMIT_RATE = 0.01;
+
+// A limit on the number of outedges.
 const unsigned int MAX_ALLOWED_EDGES = 15;
 
 BitTensor::BitTensor() {
@@ -163,7 +168,7 @@ unsigned int BitTensor::_get_emission(const unsigned int this_identity,
 
   // Calcuate this node's emission.
   // NOTE(const): We assume continuous compounding interest. P(t) = P(0)*e^rt
-  const unsigned int this_emission = this_stake * exp(SUPPLY_EMIT_RATE * delta_blocks) - this_stake;
+  const unsigned int this_emission = this_stake * exp(SUPPLY_EMIT_RATE * (delta_blocks / BLOCKS_TILL_EMIT) ) - this_stake;
 
   return this_emission;
 }
@@ -211,14 +216,14 @@ void BitTensor::_do_emit(const unsigned int this_identity,
     for(;edge_itr != this_edges.end(); ++edge_itr) {
 
       // Calculate the emission along this edge.
-      unsigned int edge_identity = edge_itr->first;
-      float edge_weight = edge_itr->second;
-      unsigned int edge_emission = current_emission * edge_weight;
+      unsigned int next_identity = edge_itr->first;
+      float next_weight = edge_itr->second;
+      unsigned int next_emission = current_emission * next_weight;
 
       // Base case on zero emission. Can take a long time emission is large.
       // Fortunately each recursive call removes a token from the emission.
-      if (edge_emission > 0) {
-        emission_queue.push_back(make_pair(edge_identity, edge_emission));
+      if (next_emission > 0) {
+        emission_queue.push_back(make_pair(next_identity, next_emission));
       }
     }
   }
