@@ -52,12 +52,6 @@ class BitTensor
                   const unsigned int this_emission);
 };
 
-// Given a continuous compounding emission calculation P(t) = P(0)*e^rt.
-// r = SUPPLY_EMIT_RATE
-// t = blocks_since_emision / BLOCKS_TILL_EMIT
-const unsigned int BLOCKS_TILL_EMIT = 1;
-const float SUPPLY_EMIT_RATE = 0.01;
-
 // A limit on the number of outedges.
 const unsigned int MAX_ALLOWED_EDGES = 15;
 
@@ -158,6 +152,11 @@ void BitTensor::emit(const unsigned int this_identity,
 
 unsigned int BitTensor::_get_emission(const unsigned int this_identity,
                                       const unsigned int this_stake) {
+
+  // Constants for this emission system.
+  const unsigned int BLOCKS_TILL_EMIT = 1;
+  const float SUPPLY_EMIT_RATE = 1;
+
   // Get last emission block.
   unsigned int this_last_emit;
   map<unsigned int, unsigned int>::iterator last_emit_itr = last_emit_block.find(this_identity);
