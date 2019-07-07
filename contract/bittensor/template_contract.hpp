@@ -27,6 +27,9 @@ class BitTensor
     // Unsigned block eight counter.
     unsigned int block_num;
 
+    // Total token supply.
+    unsigned int total_supply;
+
     // Token stake map. From ID to stake ammount.
     map<unsigned int, unsigned int> stake;
 
@@ -60,6 +63,7 @@ const unsigned int MAX_ALLOWED_EDGES = 15;
 
 BitTensor::BitTensor() {
   block_num = 0;
+  total_supply = 0;
 }
 
 void BitTensor::subscribe(const unsigned int this_identity) {
@@ -68,6 +72,7 @@ void BitTensor::subscribe(const unsigned int this_identity) {
     // NOTE(const): We are emitting a single token on subscribe which opens up
     // potential sybil attacks. This may need to change, or protective measure
     // put into place.
+    total_supply += 1;
     stake.insert(make_pair(this_identity, 1));
 
     // NOTE(const) Subscriptions count as an emission.
@@ -166,12 +171,34 @@ unsigned int BitTensor::_get_emission(const unsigned int this_identity,
   // Calculate the number of blocks since this id's last emission.
   const unsigned int delta_blocks = this_last_emit - block_num;
 
-  // Calcuate this node's emission.
-  // NOTE(const): We assume continuous compounding interest. P(t) = P(0)*e^rt
-  const unsigned int this_emission = this_stake * exp(SUPPLY_EMIT_RATE * (delta_blocks / BLOCKS_TILL_EMIT) ) - this_stake;
+  unsigned int this_emission;
+  this_emission = SUPPLY_EMIT_RATE * delta_blocks * (log(this_stake) / log(total_supply));
 
   return this_emission;
 }
+
+// NOTE(const): Bellow is the old compounding interest emission system.
+// unsigned int BitTensor::_get_emission(const unsigned int this_identity,
+//                                       const unsigned int this_stake) {
+//   // Get last emission block.
+//   unsigned int this_last_emit;
+//   map<unsigned int, unsigned int>::iterator last_emit_itr = last_emit_block.find(this_identity);
+//   if (last_emit_itr != last_emit_block.end()) {
+//     this_last_emit = last_emit_itr->second;
+//   } else {
+//     // Node should exist.
+//     assert(false);
+//   }
+//
+//   // Calculate the number of blocks since this id's last emission.
+//   const unsigned int delta_blocks = this_last_emit - block_num;
+//
+//   // Calcuate this node's emission.
+//   // NOTE(const): We assume continuous compounding interest. P(t) = P(0)*e^rt
+//   const unsigned int this_emission = this_stake * exp(SUPPLY_EMIT_RATE * (delta_blocks / BLOCKS_TILL_EMIT) ) - this_stake;
+//
+//   return this_emission;
+// }
 
 
 void BitTensor::_do_emit(const unsigned int this_identity,
@@ -202,7 +229,12 @@ void BitTensor::_do_emit(const unsigned int this_identity,
     float current_inedge = this_edges.at(0).second;
     map<unsigned int, unsigned int>::iterator stake_itr = stake.find(this_identity);
     if (stake_itr != stake.end()) {
-      stake_itr->second += current_emission * current_inedge;
+
+      // NOTE(const): Here we increase the stake through our emission system.
+      unsigned int stake_addition = current_emission * current_inedge;
+      stake_itr->second += stake_addition;
+      total_supply += stake_addition;
+
     } else {
       // Node doesn't exist.
     }
