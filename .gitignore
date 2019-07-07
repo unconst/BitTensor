@@ -8,7 +8,10 @@
 **/.ipynb_checkpoints/
 *.pyc
 
-#compile contract files
+#compiled c++ files
+**/*.o
+
+#compiled contract files
 **/*.abi
 **/*.wasm
 **/*.wast
