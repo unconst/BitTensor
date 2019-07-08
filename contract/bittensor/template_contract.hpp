@@ -171,7 +171,7 @@ unsigned int BitTensor::_get_emission(const unsigned int this_identity,
   const unsigned int delta_blocks = this_last_emit - block_num;
 
   unsigned int this_emission;
-  this_emission = SUPPLY_EMIT_RATE * delta_blocks * (log(this_stake) / log(total_supply));
+  this_emission = SUPPLY_EMIT_RATE * delta_blocks * (this_stake / total_supply);
 
   return this_emission;
 }

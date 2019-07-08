@@ -22,18 +22,22 @@ namespace eosio {
 
          bittensor(name receiver, name code, datastream<const char*> ds):contract(receiver, code, ds) {}
 
-         [[eosio::action]]
-         void upsert( name user,
-                      std::string address,
-                      std::string port );
+
 
          [[eosio::action]]
-         void erase( name user );
+         void subscribe(  const name user,
+                          const std::string address,
+                          const std::string port );
+
+         [[eosio::action]]
+         void unsubscribe( const name user );
 
          [[eosio::action]]
          void grade( name  user,
                      const std::vector<name>& edges,
                      const std::vector<float>& attribution );
+
+
 
          [[eosio::action]]
          void create( name   issuer,
@@ -83,20 +87,18 @@ namespace eosio {
 
       private:
 
-        int last_inflation_block = -1
-
         struct [[eosio::table]] peer {
           name identity;
+          asset stake;
+          uint64_t last_emit;
+          std::vector<name> edges;
           std::string address;
           std::string port;
-          std::vector<name> edges;
-          std::vector<float> attribution;
           uint64_t primary_key() const { return identity.value;}
         };
 
         struct [[eosio::table]] account {
           asset    balance;
-
           uint64_t primary_key()const { return balance.symbol.code().raw(); }
         };
 

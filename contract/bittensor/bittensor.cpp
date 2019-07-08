@@ -8,55 +8,117 @@
 
 namespace eosio {
 
-
-void bittensor::upsert( name user,
-                        std::string address,
-                        std::string port)
+// Subscribes a new account to the metagraph.
+void bittensor::subscribe( const name user,
+                           const std::string address,
+                           const std::string port)
 {
+
+    // Require authority from the calling user.
     require_auth( user );
     peer_table ptable(get_self(), get_code().value);
     auto iterator = ptable.find(user.value);
+
+    // Add a new element to the graph with 0 stake.
     if( iterator == ptable.end() )
     {
+        // NOTE(const): Initially all nodes have a single edge to themselves.
+        vector<pair<user, float> > this_edges;
+        this_edges.push_back(make_pair(user, 1.0));
+
+        // NOTE(const): We are emitting a single token on subscribe which opens up
+        // potential sybil attacks. This may need to change, or protective measure
+        // put into place.
+        total_supply += 1;
         ptable.emplace(user, [&]( auto& row ) {
             row.identity = user;
-            row.address = address;
-            row.port = port;
-        });
-    }
-    else {
-        ptable.modify(iterator, user, [&]( auto& row ) {
-            row.identity = user;
+            row.stake = 1;
+            row.last_emit = tapos_block_num();
+            row.edges = this_edges;
             row.address = address;
             row.port = port;
         });
     }
 }
 
-void bittensor::grade( name user,
-                       const std::vector<name>& edges,
-                       const std::vector<float>& attribution)
-{
-  require_auth( user );
-  peer_table ptable(get_self(), get_code().value);
-  auto iterator = ptable.find(user.value);
-  check(iterator != ptable.end(), "Record does not exist");
-  ptable.modify(iterator, user, [&]( auto& row ) {
-      row.identity = row.identity;
-      row.address = row.address;
-      row.port = row.port;
-      row.edges = edges;
-      row.attribution = attribution;
-  });
+// Emits pending stake release to this node AND updates edge set.
+// NOTE(const): The release is applied assuming the previous edge
+// set was in place up until this block.
+void bittensor::emit(  const name this_user,
+                       const vector<pair<name, float> > this_edges)
 
-  float supply_inflation = 1.0;
-  if (last_inflation_block != -1){
-    int block_num = tapos_block_num();
-    supply_inflation = (float) (block_num - last_inflation_block);
-    last_inflation_block = block_num;
+{
+  // Requires caller authority.
+  require_auth( user );
+
+  // (1) Assert this_id is subscribed.
+  peer_table ptable(get_self(), get_code().value);
+  auto iterator = ptable.find(this_user.value);
+  check(iterator != ptable.end(), "Error: Node is not subscribed");
+  const auto& node = *iterator;
+  asset this_stake = node.stake
+
+  // (2) Assert edge set length.
+  if (this_edges.size() <= 0 || this_edges.size() > MAX_ALLOWED_EDGES) {
+    check(false, "Error: Edge set length must be >= 0 and <= MAX_ALLOWED_EDGES");
   }
 
+  // (3) Assert id is at position 0.
+  if (this_edges.at(0).second.value != this_user.value) {
+    check(false, "Error: First edge should point to self");
+  }
 
+  float sum = 0.0;
+  auto edge_itr = this_edges.begin();
+  for(;edge_itr != this_edges.end(); ++edge_itr) {
+    sum += edge_itr->second;
+    // (4) Assert all weights > 0.0
+    if (edge_itr->second > 0.0) {
+      check(false, "Error: Edges should > 0.0");
+    }
+  }
+  // (5) Assert weight sum == 1.0
+  if (sum != 1.0) {
+    check(false, "Edges should sum to 1.0");
+  }
+
+  // (6) Calculate the Emission total.
+  asset this_emission = _get_emission(this_user, this_stake);
+
+  // (7) Apply emission.
+  _do_emit(this_user, this_emission);
+
+  // (8) Set new state
+  ptable.modify(iterator, this_user, [&]( auto& row ) {
+    row.edges = this_edges;
+    row.last_emit = tapos_block_num();
+  });
+}
+
+unsigned int BitTensor::_get_emission(const unsigned int this_identity,
+                                      const unsigned int this_stake) {
+
+  // Constants for this emission system.
+  const unsigned int BLOCKS_TILL_EMIT = 1;
+  const float SUPPLY_EMIT_RATE = 1;
+
+  // Get last emission block.
+  unsigned int this_last_emit;
+  map<unsigned int, unsigned int>::iterator last_emit_itr = last_emit_block.find(this_identity);
+  if (last_emit_itr != last_emit_block.end()) {
+    this_last_emit = last_emit_itr->second;
+  } else {
+    // Node should exist.
+    assert(false);
+  }
+
+  // Calculate the number of blocks since this id's last emission.
+  const unsigned int delta_blocks = this_last_emit - block_num;
+
+  unsigned int this_emission;
+  this_emission = SUPPLY_EMIT_RATE * delta_blocks * (this_stake / total_supply);
+
+  return this_emission;
 }
 
 void bittensor::erase( name user )
