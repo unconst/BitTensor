@@ -41,6 +41,16 @@ void bittensor::subscribe( const name user,
     }
 }
 
+// Unsubscribes an element from the metagraph.
+void bittensor::unsubscribe( name user )
+{
+    require_auth(user);
+    peer_table ptable(get_self(), get_code().value);
+    auto iterator = ptable.find(user.value);
+    check(iterator != ptable.end(), "Record does not exist");
+    ptable.erase(iterator);
+}
+
 // Emits pending stake release to this node AND updates edge set.
 // NOTE(const): The release is applied assuming the previous edge
 // set was in place up until this block.
@@ -95,25 +105,16 @@ void bittensor::emit(  const name this_user,
   });
 }
 
-unsigned int BitTensor::_get_emission(const unsigned int this_identity,
-                                      const unsigned int this_stake) {
+unsigned int BitTensor::_get_emission(name this_user,
+                                      const asset this_last_emit,
+                                      const asset this_stake) {
 
   // Constants for this emission system.
   const unsigned int BLOCKS_TILL_EMIT = 1;
   const float SUPPLY_EMIT_RATE = 1;
 
-  // Get last emission block.
-  unsigned int this_last_emit;
-  map<unsigned int, unsigned int>::iterator last_emit_itr = last_emit_block.find(this_identity);
-  if (last_emit_itr != last_emit_block.end()) {
-    this_last_emit = last_emit_itr->second;
-  } else {
-    // Node should exist.
-    assert(false);
-  }
-
   // Calculate the number of blocks since this id's last emission.
-  const unsigned int delta_blocks = this_last_emit - block_num;
+  const uint64_t delta_blocks = this_last_emit - tapos_block_num();
 
   unsigned int this_emission;
   this_emission = SUPPLY_EMIT_RATE * delta_blocks * (this_stake / total_supply);
@@ -121,13 +122,58 @@ unsigned int BitTensor::_get_emission(const unsigned int this_identity,
   return this_emission;
 }
 
-void bittensor::erase( name user )
-{
-    require_auth(user);
-    peer_table ptable(get_self(), get_code().value);
-    auto iterator = ptable.find(user.value);
-    check(iterator != ptable.end(), "Record does not exist");
-    ptable.erase(iterator);
+void BitTensor::_do_emit(peer_table ptable,
+                         const name this_user,
+                         const asset this_emission) {
+
+  vector<pair<name, asset> > emission_queue;
+  emission_queue.push_back(make_pair(this_user, this_emission));
+
+  while (emission_queue.size() > 0) {
+    // Pop the next element.
+    auto current = emission_queue.back();
+    emission_queue.pop_back();
+    const name current_user = current.first;
+    const asset current_emission = current.second;
+
+    // Pull edge information.
+    auto iterator = ptable.find(current_user.value);
+    if (this_edges_itr == ptable.end()) {
+      continue;
+    }
+    const auto& current_node = *iterator;
+    const vector<pair<name, float> > current_edges = node.edges;
+
+    // Emit to self.
+    // NOTE(const): The assumption is that the inedge is stored at position 0.
+    float current_inedge = current_edges.at(0).second;
+    asset current_stake  = current_node.stake;
+    asset stake_addition = current_stake * current_inedge;
+    ptable.modify(iterator, this_user, [&]( auto& row ) {
+      row.stake = row.stake + stake_addition
+    });
+    total_supply += stake_addition;
+
+    // Emit to neighbors.
+    vector<pair<name float> >::iterator edge_itr = current_edges.begin();
+
+    // NOTE(const) Ignore the self-edge which was previously applied.
+    edge_itr++;
+
+    for(;edge_itr != this_edges.end(); ++edge_itr) {
+
+      // Calculate the emission along this edge.
+      const name next_user= edge_itr->first;
+      const float next_weight = edge_itr->second;
+      const asset next_emission = current_emission.value * next_weight;
+
+      // Base case on zero emission. Can take a long time emission is large.
+      // Fortunately each recursive call removes a token from the emission.
+      if (next_emission.value > 0) {
+        emission_queue.push_back(make_pair(next_user, next_emission));
+      }
+    }
+  }
 }
 
 void bittensor::create( name   issuer,
