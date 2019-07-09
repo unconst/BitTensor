@@ -4,6 +4,9 @@
 #include <map>
 #include <vector>
 
+// This file is a template of the Bittensor contract written in C++ for testing
+// purposes.
+
 using namespace std;
 
 class BitTensor

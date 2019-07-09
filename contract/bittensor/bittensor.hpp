@@ -22,11 +22,13 @@ namespace eosio {
 
          bittensor(name receiver, name code, datastream<const char*> ds):contract(receiver, code, ds) {}
 
+         // Subscribes a new user account to the Metagraph publishing a new endpoint.
          [[eosio::action]]
          void subscribe(  const name user,
-                          const std::string address,
-                          const std::string port );
+                          const string address,
+                          const string port );
 
+         // Unsubscribes a new user account to the Metagraph removing an endpoint.
          [[eosio::action]]
          void unsubscribe( const name user );
 
@@ -35,7 +37,7 @@ namespace eosio {
          // set was in place up until this block.
          [[eosio::action]]
          void emit(  const name this_user,
-                                const std::vector<std::pair<name, float> > this_edges);
+                     const std::vector<std::pair<name, float> > this_edges);
 
 
          [[eosio::action]]

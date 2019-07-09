@@ -36,6 +36,10 @@ class Node():
         return hash(str(self.identity))
 
 
+# TODO (const): Pull Token supply.
+# TODO (const): Call Token Emit.
+# TODO (const): Calculate attribution derivatives for synapse prunning.
+
 class Metagraph():
     def __init__(self, config):
         self.config = config

@@ -4,6 +4,8 @@ import time
 import tensorflow as tf
 import proto.bolt_pb2_grpc
 
+# TODO (const): Rate limit and block ip.
+
 class BoltServicer(proto.bolt_pb2_grpc.BoltServicer):
     def __init__(self, config, metagraph):
         self.identity = config.identity

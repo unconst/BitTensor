@@ -26,6 +26,10 @@ Machine intelligence has been successfully mapped onto both distributed and [har
 
 Further more, these benefits are no stranger to intelligent systems in nature --such as the neural networks, societies at large, or plant structures like mycelium-- which run through the interaction of many self-interested parts rather than under centralized executive authority.
 
+## Server
+
+[Dendrite] ---> [Soma] ---> [Synapse]
+
 ## Incentive Structure     
 
 The BitTensor meta-machine learning model is composed of a many interconnected machines, each running their own sub-machine learning models. The connections between these nodes reflect channels along with Tensors are passed containing, in the forward direction features, and in the reverse direction gradients. Client nodes communicate upstream to servers and while training their own, subjective objective function, produce attribution values, which are numerical evaluations of each connection. The manner in which these attributions are calculates is arbitrary, for instance, by calculating Fishers Information Metric.
@@ -89,8 +93,6 @@ $ ./start_blockcahin.sh
 # ./start_bittensor.sh
 
 ```
-
-
 
 # About Word Embeddings
 

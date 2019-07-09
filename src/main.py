@@ -1,7 +1,7 @@
 from config import Config
 from dendrite import Dendrite
 from metagraph import Metagraph
-from neuron import Neuron
+from soma import Soma
 from synapse import BoltServicer
 
 from concurrent import futures
@@ -51,8 +51,8 @@ def serve():
     # The dendrite manages our connections to 'upstream' nodes.
     dendrite = Dendrite(config, metagraph)
 
-    # The neuron trains the NN object.
-    neuron = Neuron(config, metagraph, dendrite)
+    # The soma trains the NN object.
+    soma = Soma(config, metagraph, dendrite)
 
     # Start the neuron.
     neuron.start()

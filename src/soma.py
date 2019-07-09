@@ -12,7 +12,7 @@ import zipfile
 
 _ONE_DAY_IN_SECONDS = 60*60*24
 
-class Neuron():
+class Soma():
     def __init__(self, config, metagraph, dendrite):
         self.config = config
         self.metagraph = metagraph
@@ -90,6 +90,7 @@ class Neuron():
         # Hidden Layer
         w1 = tf.Variable(tf.random_uniform([self.embedding_size * (self.config.k + 1), self.embedding_size], -1.0, 1.0))
         b1 = tf.Variable(tf.zeros([self.embedding_size]))
+
         final_layer = tf.sigmoid(tf.matmul(l1, w1) + b1)
 
         # Embedding output.

@@ -1,3 +1,15 @@
 
 CITATION INFLUENCE FOR JOURNAL AGGREGATES OF SCIENTIFIC PUBLICATIONS: THEORY, WITH APPLICATION TO THE LITERATURE OF PHYSICS?
 https://sci2s.ugr.es/sites/default/files/files/TematicWebSites/hindex/PinskiNarin1976.pdf
+
+Brain-derived neurotrophic factor and its clinical implications
+https://www.ncbi.nlm.nih.gov/pmc/articles/PMC4697050/
+
+# TODO (const): Outrageously large NNs Shazeer
+# TODO (const): Multitask learning Gomez
+# TODO (const): AHAH computing
+# TODO (const): distillation
+# TODO (const): Fishers information pruning
+# TODO (const): Catastrophic forgetting.
+# TODO (const): Bitcoin & Ethereum & EOS
+# TODO (const): IPFS, BitTorrent

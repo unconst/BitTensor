@@ -14,6 +14,9 @@ def _bytes_to_np(in_bytes, shape):
     out = np.reshape(data_array, shape)
     return out
 
+
+# TODO (const): Negotiate channels with upstream nodes.
+
 class Dendrite():
     def __init__(self, config, metagraph):
         self.config = config
