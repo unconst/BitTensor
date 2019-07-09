@@ -12,7 +12,7 @@ import zipfile
 
 _ONE_DAY_IN_SECONDS = 60*60*24
 
-class Soma():
+class Nucleus():
     def __init__(self, config, metagraph, dendrite):
         self.config = config
         self.metagraph = metagraph

@@ -1,7 +1,8 @@
 from config import Config
-from dendrite import Dendrite
+
 from metagraph import Metagraph
-from soma import Soma
+from dendrite import Dendrite
+from nucleus import Nucleus
 from synapse import BoltServicer
 
 from concurrent import futures
@@ -17,7 +18,7 @@ import proto.bolt_pb2_grpc
 
 _ONE_DAY_IN_SECONDS=60*60*24
 
-def set_timed_loops(tl, metagraph, neuron, synapse, dendrite):
+def set_timed_loops(tl, metagraph, nucleus, synapse, dendrite):
 
     # Pull the updated graph state (Vertices, Edges, Weights)
     @tl.job(interval=timedelta(seconds=17))
@@ -32,7 +33,7 @@ def set_timed_loops(tl, metagraph, neuron, synapse, dendrite):
     # Load an updated inference nn-tensorflow model.
     @tl.job(interval=timedelta(seconds=15))
     def load_graph():
-        synapse.load_graph()
+        synpase.load_graph()
 
     # Reselect downstream nodes.
     # TODO(const) perhaps this should be removed. Instead downstream state is
@@ -51,11 +52,11 @@ def serve():
     # The dendrite manages our connections to 'upstream' nodes.
     dendrite = Dendrite(config, metagraph)
 
-    # The soma trains the NN object.
-    soma = Soma(config, metagraph, dendrite)
+    # The nucleus trains the NN object.
+    nucleus = Nucleus(config, metagraph, dendrite)
 
-    # Start the neuron.
-    neuron.start()
+    # Start the soma.
+    nucleus.start()
     time.sleep(3)
 
     # The synapse manages our connection to downstream nodes.
@@ -64,7 +65,7 @@ def serve():
 
     # Start timed calls.
     tl = Timeloop()
-    set_timed_loops(tl, metagraph, neuron, synapse, dendrite)
+    set_timed_loops(tl, metagraph, nucleus, synapse, dendrite)
     tl.start(block=False)
 
     # Serve the synapse on a grpc server.
@@ -77,11 +78,11 @@ def serve():
 
     def tear_down():
         grpc_server.stop(0)
-        neuron.stop()
+        nucleus.stop()
         del metagraph
         del dendrite
+        del nucleus
         del synapse
-        del neuron
 
     try:
         while True:
