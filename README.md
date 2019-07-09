@@ -26,43 +26,89 @@ Machine intelligence has been successfully mapped onto both distributed and [har
 
 Further more, these benefits are no stranger to intelligent systems in nature --such as the neural networks, societies at large, or plant structures like mycelium-- which run through the interaction of many self-interested parts rather than under centralized executive authority.
 
-## Server
+## Daemon Organization
 
+```
+                 [EOS]
+                   |
+              [Metagraph]
+           /       |       \
 [Dendrite] ---> [Soma] ---> [Synapse]
+           \       |       /
+                [Main]
+```
+
+###### SOMA
+The main Tensorflow graph is defined and trained within the Soma object. As is, this class is training a self supervised word embedding over a dummy corpus of sentences in text8.zip. The result is a mapping which takes word to a 128 dimension vector, representing that word, and maintaining its semantic properties. This problem serves as a good starting place because of word embeddings [wide use] and generality in Artificial intelligence. In future versions of this code, this problems solved with be expanded to include sentence and paragraph embeddings, speech, image and video embeddings with the goal of training the network for general multitask.
+
+###### DENDRITE
+During training the Soma interacts with the rest of the network through its Dendrite, which maintains connections to upstream nodes. The Dendrite makes asynchronous calls using GRPC, passing protocol buffer serialized Tensors. During validation and inference the Dendrite is cut from the model and replaced by submodules which have been trained through distillation to approximate the incoming signals from the rest of the network.
+
+###### SYNAPSE
+This inference graphs being produced in training are served by the Synapse object. The Synapse is responsible for upstream connections. It is responsible for rate limiting, and through this,  negotiating for higher attribution within the Metagraph. Since the Synapse object is merely serving the inference graph, it is mostly detached from the Soma and Dendrite during training, only communicating with these objects by pulling the latest and best inference graph from the storage directory.
+
+###### METAGRAPH
+The Metagraph object acts an interface between the EOS blockchain and the rest of the neuron. Through the Metagraph, this node can post updated attributions and call timed token emission (which releases newly mined tokens) The Metagraph object also serves as a de-facto DHT which removes the need for a gossip protocol used by many standard p2p applications Bitcoin and BitTorrent not withstanding.
+
+###### EOS
+The EOS contract is separate from Dendrite. Soma, Synapse and Metagraph objects during execution. During testing, this class is run on a local EOS instance, but during production the contract is running in a decentralized manner across the EOS network.  
+
 
 ## Incentive Structure     
 
-The BitTensor meta-machine learning model is composed of a many interconnected machines, each running their own sub-machine learning models. The connections between these nodes reflect channels along with Tensors are passed containing, in the forward direction features, and in the reverse direction gradients. Client nodes communicate upstream to servers and while training their own, subjective objective function, produce attribution values, which are numerical evaluations of each connection. The manner in which these attributions are calculates is arbitrary, for instance, by calculating Fishers Information Metric.
+The BitTensor network, in aggregate, forms a single meta machine learning model composed of a many interconnected nodes, each running their own sub machine learning models. The connections between these nodes reflect channels along which Tensors are passed, containing, in the forward direction, features, and in the reverse direction gradients: No different than the individual layers of a standard Neural Network architecture.
 
-Attributions are posted discretely to the EOS blockchain and in total, construct a directed weighted graph (DWG) structure. See Figure 1, bellow for an example. Given the DWG we are able to calculate the attribution scores between the network and each node in the graph to produce a node ranking. The contract then emits newly minted tokens at a constant rate to nodes, in proportion to their value to the metagraph.
+Client nodes communicate upstream to servers and, while training their local objective function, produce attribution values, which are numerical evaluations of each connection. The manner in which these attributions are calculates is arbitrary (for instance, by calculating Fishers Information Metric), but
+the result is a directed weighted graph (DWG) structure. See Figure 1, bellow for an example.
 
 <img src="assets/weboftrust.jpg">
 
-The calculation for this can be viewed in python numpy format, with matrix multiplication in the file "Emission testing.ipynb". The actual emission system is an approxiation to this matrix based calculation, but instead splits the computation across each of the networks nodes. A python implementation can also be viewed in "Emission testing.ipynb", with the EOS c++ code writing in bittensor.cpp.
+The DWG is updated discretely through emit transactions, and are conglomerated on the EOS blockchain. In total, we are able to calculate a further attribution scores, between the network and each node, which reflects each node's global ranking.
 
-As is, the emission scheme is linear. Each EOS block emits 1 token to the network which is split between each member node in accordance to that node's overall network attribution.
+Our Token emission scheme is designed around these global rankings so that newly minted tokens are distributed in proportion to each node's value in the metagraph.
 
-For instance, the graph structure represented by the following values:
+The emission calculation in python-numpy format is seen bellow:
 
-in_edge_weights = [0.6 0.9 0.4 0.5 0.5  0.5 1. 1.  1.  1. ]
-initial_stake = [1. 1. 1. 1. 1. 1. 1. 1. 1. 1.]
-adjacency_weights =
-[[0. 0.1 0.3 0.2 0.  0.  0.  0.  0.  0. ],
-[0.1 0.  0.  0.1 0.  0.  0.  0.  0.  0. ],
-[0.1 0.  0.  0.2 0.  0.  0.  0.  0.  0. ],
-[0.2 0.  0.3 0.  0.  0.  0.  0.  0.  0. ],
-[0.  0.  0.  0.  0.  0.5  0.  0.  0.  0. ],
-[0.  0.  0.  0.  0.5  0.  0.  0.  0.  0. ],
-[0.  0.  0.  0.  0.  0.  0.  0.  0.  0. ],
-[0.  0.  0.  0.  0.  0.  0.  0.  0.  0. ],
-[0.  0.  0.  0.  0.  0.  0.  0.  0.  0. ],
-[0.  0.  0.  0.  0.  0.  0.  0.  0.  0. ]]
+```
+def bittensor_emission_simulation():
 
-Give the following attributions:
-Attributions: 0.04884 0.30159 0.01609 0.03348 0.10000 0.10000 0.10000 0.10000 0.10000 0.10000
+    # Stake vector.
+    S = [1.  1.  1.  1.  1.  1.  1.  1.  1.  1.]
 
-and the following Emissions after a single block.
-Emission: 0.04884 0.30159 0.01609 0.03348 0.10000 0.10000 0.10000 0.10000 0.10000 0.10000  --> sum = 1.0
+    # Loop-in edges.
+    N = [0.6 0.9 0.4 0.5 0.5 0.5  1.  1.  1.  1. ]
+
+    # Outgoing edges.
+    M =[[0.  0.1 0.3 0.2 0.  0.  0.  0.  0.  0. ]
+        [0.1 0.  0.  0.1 0.  0.  0.  0.  0.  0. ]
+        [0.1 0.  0.  0.2 0.  0.  0.  0.  0.  0. ]
+        [0.2 0.  0.3 0.  0.  0.  0.  0.  0.  0. ]
+        [0.  0.  0.  0.  0.  0.5 0.  0.  0.  0. ]
+        [0.  0.  0.  0.  0.5 0.  0.  0.  0.  0. ]
+        [0.  0.  0.  0.  0.  0.  0.  0.  0.  0. ]
+        [0.  0.  0.  0.  0.  0.  0.  0.  0.  0. ]
+        [0.  0.  0.  0.  0.  0.  0.  0.  0.  0. ]
+        [0.  0.  0.  0.  0.  0.  0.  0.  0.  0. ]]
+
+    # Loop over blocks.
+    n_blocks = 100
+    for _ in range(n_blocks):        
+
+        # Attribution calculation.
+        depth = 100
+        A = np.multiply(S, N)
+        T = np.matmul(M, S)
+        for _ in range(depth):
+            A += np.multiply(T, N)
+            T = np.matmul(M, T)
+
+        # Emission calculation.
+        tokens_per_block = 50
+        A = A / np.linalg.norm(A, 1)
+        E = A * tokens_per_block
+        S = S + E
+```
+
 
 ---
 
