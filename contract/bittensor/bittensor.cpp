@@ -9,72 +9,81 @@
 namespace eosio {
 
 // Subscribes a new account to the metagraph.
-void bittensor::subscribe( const name user,
-                           const std::string address,
-                           const std::string port)
+void bittensor::subscribe( const name this_user,
+                           const std::string this_address,
+                           const std::string this_port)
 {
 
     // Require authority from the calling user.
-    require_auth( user );
-    peer_table ptable(get_self(), get_code().value);
-    auto iterator = ptable.find(user.value);
+    require_auth( this_user );
+    metagraph graph(get_self(), get_code().value);
+    auto iterator = graph.find(this_user.value);
+
+    // TODO(const): We need to sub the balance from the bittensor pool
+    // and then add it to the staked balance.
 
     // Add a new element to the graph with 0 stake.
-    if( iterator == ptable.end() )
+    if( iterator == graph.end() )
     {
         // NOTE(const): Initially all nodes have a single edge to themselves.
-        vector<pair<user, float> > this_edges;
-        this_edges.push_back(make_pair(user, 1.0));
+        std::vector<std::pair<name, float> > this_edges;
+        this_edges.push_back(std::make_pair(this_user, 1.0));
 
         // NOTE(const): We are emitting a single token on subscribe which opens up
         // potential sybil attacks. This may need to change, or protective measure
         // put into place.
         total_supply += 1;
-        ptable.emplace(user, [&]( auto& row ) {
-            row.identity = user;
+        graph.emplace(this_user, [&]( auto& row ) {
+            row.identity = this_user;
             row.stake = 1;
             row.last_emit = tapos_block_num();
             row.edges = this_edges;
-            row.address = address;
-            row.port = port;
+            row.address = this_address;
+            row.port = this_port;
         });
     }
 }
 
 // Unsubscribes an element from the metagraph.
-void bittensor::unsubscribe( name user )
+void bittensor::unsubscribe( name this_user )
 {
-    require_auth(user);
-    peer_table ptable(get_self(), get_code().value);
-    auto iterator = ptable.find(user.value);
-    check(iterator != ptable.end(), "Record does not exist");
-    ptable.erase(iterator);
+    require_auth(this_user);
+    metagraph graph(get_self(), get_code().value);
+    auto iterator = graph.find(this_user.value);
+    check(iterator != graph.end(), "Record does not exist");
+    graph.erase(iterator);
+    total_supply += iterator->stake;
+
+    // TODO(const): We need to add the balance back into the bittensor pool
+    // and remove this user from the metagraph.
 }
 
 // Emits pending stake release to this node AND updates edge set.
 // NOTE(const): The release is applied assuming the previous edge
 // set was in place up until this block.
-void bittensor::emit(  const name this_user,
-                       const vector<pair<name, float> > this_edges)
+void bittensor::emit( const name this_user,
+                      const std::vector<std::pair<name, float> > this_edges )
 
 {
   // Requires caller authority.
-  require_auth( user );
+  require_auth( this_user );
 
   // (1) Assert this_id is subscribed.
-  peer_table ptable(get_self(), get_code().value);
-  auto iterator = ptable.find(this_user.value);
-  check(iterator != ptable.end(), "Error: Node is not subscribed");
+  metagraph graph(get_self(), get_code().value);
+  auto iterator = graph.find(this_user.value);
+  check(iterator != graph.end(), "Error: Node is not subscribed");
   const auto& node = *iterator;
-  asset this_stake = node.stake
+  asset this_stake = node.stake;
+  uint64_t this_last_emit = node.last_emit;
 
   // (2) Assert edge set length.
+  int MAX_ALLOWED_EDGES = 3;
   if (this_edges.size() <= 0 || this_edges.size() > MAX_ALLOWED_EDGES) {
     check(false, "Error: Edge set length must be >= 0 and <= MAX_ALLOWED_EDGES");
   }
 
   // (3) Assert id is at position 0.
-  if (this_edges.at(0).second.value != this_user.value) {
+  if (this_edges.at(0).first.value != this_user.value) {
     check(false, "Error: First edge should point to self");
   }
 
@@ -93,21 +102,21 @@ void bittensor::emit(  const name this_user,
   }
 
   // (6) Calculate the Emission total.
-  asset this_emission = _get_emission(this_user, this_stake);
+  asset this_emission = _get_emission(this_user, this_last_emit, this_stake);
 
   // (7) Apply emission.
-  _do_emit(this_user, this_emission);
+  _do_emit(graph, this_user, this_emission);
 
   // (8) Set new state
-  ptable.modify(iterator, this_user, [&]( auto& row ) {
+  graph.modify(iterator, this_user, [&]( auto& row ) {
     row.edges = this_edges;
     row.last_emit = tapos_block_num();
   });
 }
 
-unsigned int BitTensor::_get_emission(name this_user,
-                                      const asset this_last_emit,
-                                      const asset this_stake) {
+asset bittensor::_get_emission( const name this_user,
+                                const uint64_t this_last_emit,
+                                const asset this_stake ) {
 
   // Constants for this emission system.
   const unsigned int BLOCKS_TILL_EMIT = 1;
@@ -116,18 +125,20 @@ unsigned int BitTensor::_get_emission(name this_user,
   // Calculate the number of blocks since this id's last emission.
   const uint64_t delta_blocks = this_last_emit - tapos_block_num();
 
-  unsigned int this_emission;
+  uint64_t this_emission;
   this_emission = SUPPLY_EMIT_RATE * delta_blocks * (this_stake / total_supply);
 
-  return this_emission;
+  asset return_val;
+  return_val.value = this_emission
+  return return_val;
 }
 
-void BitTensor::_do_emit(peer_table ptable,
-                         const name this_user,
-                         const asset this_emission) {
+void bittensor::_do_emit( metagraph graph,
+                          const name this_user,
+                          const asset this_emission ) {
 
-  vector<pair<name, asset> > emission_queue;
-  emission_queue.push_back(make_pair(this_user, this_emission));
+  std::vector<std::pair<name, asset> > emission_queue;
+  emission_queue.push_back(std::make_pair(this_user, this_emission));
 
   while (emission_queue.size() > 0) {
     // Pop the next element.
@@ -137,25 +148,25 @@ void BitTensor::_do_emit(peer_table ptable,
     const asset current_emission = current.second;
 
     // Pull edge information.
-    auto iterator = ptable.find(current_user.value);
-    if (this_edges_itr == ptable.end()) {
+    auto iterator = graph.find(current_user.value);
+    if (iterator == graph.end()) {
       continue;
     }
     const auto& current_node = *iterator;
-    const vector<pair<name, float> > current_edges = node.edges;
+    const std::vector<std::pair<name, float> > current_edges = current_node.edges;
 
     // Emit to self.
     // NOTE(const): The assumption is that the inedge is stored at position 0.
     float current_inedge = current_edges.at(0).second;
     asset current_stake  = current_node.stake;
     asset stake_addition = current_stake * current_inedge;
-    ptable.modify(iterator, this_user, [&]( auto& row ) {
-      row.stake = row.stake + stake_addition
+    graph.modify(iterator, current_user, [&]( auto& row ) {
+      row.stake += stake_addition;
     });
     total_supply += stake_addition;
 
     // Emit to neighbors.
-    vector<pair<name float> >::iterator edge_itr = current_edges.begin();
+    std::vector<std::pair<name float> >::iterator edge_itr = current_edges.begin();
 
     // NOTE(const) Ignore the self-edge which was previously applied.
     edge_itr++;
@@ -170,7 +181,7 @@ void BitTensor::_do_emit(peer_table ptable,
       // Base case on zero emission. Can take a long time emission is large.
       // Fortunately each recursive call removes a token from the emission.
       if (next_emission.value > 0) {
-        emission_queue.push_back(make_pair(next_user, next_emission));
+        emission_queue.push_back(std::make_pair(next_user, next_emission));
       }
     }
   }

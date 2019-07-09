@@ -10,7 +10,7 @@ script="./scripts/init_blockchain.sh"
 
 log "=== run docker container from the $DOCKER_IMAGE_NAME:$DOCKER_IMAGE_TAG image ==="
 docker run --rm --name eosio_bittensor_container -d \
--p 8888:8888 -p 9876:9876 \
+-p 8889:8888 -p 9876:9876 \
 --mount type=bind,src="$(pwd)"/contract,dst=/opt/eosio/bin/contract \
 --mount type=bind,src="$(pwd)"/scripts,dst=/opt/eosio/bin/scripts \
 --mount type=bind,src="$(pwd)"/data,dst=/mnt/dev/data \

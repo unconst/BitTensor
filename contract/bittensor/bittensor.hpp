@@ -22,8 +22,6 @@ namespace eosio {
 
          bittensor(name receiver, name code, datastream<const char*> ds):contract(receiver, code, ds) {}
 
-
-
          [[eosio::action]]
          void subscribe(  const name user,
                           const std::string address,
@@ -32,11 +30,12 @@ namespace eosio {
          [[eosio::action]]
          void unsubscribe( const name user );
 
+         // Emits pending stake release to this node AND updates edge set.
+         // NOTE(const): The release is applied assuming the previous edge
+         // set was in place up until this block.
          [[eosio::action]]
-         void grade( name  user,
-                     const std::vector<name>& edges,
-                     const std::vector<float>& attribution );
-
+         void emit(  const name this_user,
+                                const std::vector<std::pair<name, float> > this_edges);
 
 
          [[eosio::action]]
@@ -75,9 +74,12 @@ namespace eosio {
             return ac.balance;
          }
 
-         using upsert_action = eosio::action_wrapper<"upsert"_n, &bittensor::upsert>;
-         using grade_action = eosio::action_wrapper<"grade"_n, &bittensor::grade>;
-         using erase_action = eosio::action_wrapper<"erase"_n, &bittensor::erase>;
+         // Metagraph functions.
+         using subscribe_action = eosio::action_wrapper<"subscribe"_n, &bittensor::subscribe>;
+         using unsubscribe_action = eosio::action_wrapper<"unsubscribe"_n, &bittensor::unsubscribe>;
+         using emit_action = eosio::action_wrapper<"emit"_n, &bittensor::emit>;
+
+         // EOS token functions.
          using create_action = eosio::action_wrapper<"create"_n, &bittensor::create>;
          using issue_action = eosio::action_wrapper<"issue"_n, &bittensor::issue>;
          using retire_action = eosio::action_wrapper<"retire"_n, &bittensor::retire>;
@@ -87,11 +89,13 @@ namespace eosio {
 
       private:
 
-        struct [[eosio::table]] peer {
+        asset total_supply;
+
+        struct [[eosio::table]] node {
           name identity;
           asset stake;
           uint64_t last_emit;
-          std::vector<name> edges;
+          std::vector<std::pair<name, float> > edges;
           std::string address;
           std::string port;
           uint64_t primary_key() const { return identity.value;}
@@ -110,12 +114,20 @@ namespace eosio {
           uint64_t primary_key()const { return supply.symbol.code().raw(); }
         };
 
-        typedef eosio::multi_index<"peers"_n, peer> peer_table;
+        typedef eosio::multi_index<"metagraph"_n, node> metagraph;
         typedef eosio::multi_index< "accounts"_n, account > accounts;
         typedef eosio::multi_index< "stat"_n, currency_stats > stats;
 
         void sub_balance( name owner, asset value );
         void add_balance( name owner, asset value, name ram_payer );
+
+        asset _get_emission(const name this_user,
+                               const uint64_t this_last_emit,
+                               const asset this_stake);
+
+        void _do_emit(metagraph graph,
+                      const name this_user,
+                      const uint64_t this_emission);
    };
 
 } /// namespace eosio
