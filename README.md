@@ -28,14 +28,37 @@ Further more, these benefits are no stranger to intelligent systems in nature --
 
 ## Incentive Structure     
 
-The present incentive descriptions provides a method for ranking machine learning components in a linked p2p network. The ranking is derived from the attributions assigned to components from their neighbors. Attributions are assigned using any variety of Machine Learning techniques which provide us with a measure of the informational significance of the inputs to our model.
+The BitTensor meta-machine learning model is composed of a many interconnected machines, each running their own sub-machine learning models. The connections between these nodes reflect channels along with Tensors are passed containing, in the forward direction features, and in the reverse direction gradients. Client nodes communicate upstream to servers and while training their own, subjective objective function, produce attribution values, which are numerical evaluations of each connection. The manner in which these attributions are calculates is arbitrary, for instance, by calculating Fishers Information Metric.
 
-Intuitively, the network value of a component is transitive in nature, we need to look at the value assigned to you not just by your neighbors but at the value assigned to your neighbors neighbors to them. This implies a recursive definition of value: the value of a component is a function of the value of the components which sue it.
-
-We adapt Google's page rank for this effort.
-
+Attributions are posted discretely to the EOS blockchain and in total, construct a directed weighted graph (DWG) structure. See Figure 1, bellow for an example. Given the DWG we are able to calculate the attribution scores between the network and each node in the graph to produce a node ranking. The contract then emits newly minted tokens at a constant rate to nodes, in proportion to their value to the metagraph.
 
 <img src="assets/weboftrust.jpg">
+
+The calculation for this can be viewed in python numpy format, with matrix multiplication in the file "Emission testing.ipynb". The actual emission system is an approxiation to this matrix based calculation, but instead splits the computation across each of the networks nodes. A python implementation can also be viewed in "Emission testing.ipynb", with the EOS c++ code writing in bittensor.cpp.
+
+As is, the emission scheme is linear. Each EOS block emits 1 token to the network which is split between each member node in accordance to that node's overall network attribution.
+
+For instance, the graph structure represented by the following values:
+
+in_edge_weights = [0.6 0.9 0.4 0.5 0.5  0.5 1. 1.  1.  1. ]
+initial_stake = [1. 1. 1. 1. 1. 1. 1. 1. 1. 1.]
+adjacency_weights =
+[[0. 0.1 0.3 0.2 0.  0.  0.  0.  0.  0. ],
+[0.1 0.  0.  0.1 0.  0.  0.  0.  0.  0. ],
+[0.1 0.  0.  0.2 0.  0.  0.  0.  0.  0. ],
+[0.2 0.  0.3 0.  0.  0.  0.  0.  0.  0. ],
+[0.  0.  0.  0.  0.  0.5  0.  0.  0.  0. ],
+[0.  0.  0.  0.  0.5  0.  0.  0.  0.  0. ],
+[0.  0.  0.  0.  0.  0.  0.  0.  0.  0. ],
+[0.  0.  0.  0.  0.  0.  0.  0.  0.  0. ],
+[0.  0.  0.  0.  0.  0.  0.  0.  0.  0. ],
+[0.  0.  0.  0.  0.  0.  0.  0.  0.  0. ]]
+
+Give the following attributions:
+Attributions: 0.04884 0.30159 0.01609 0.03348 0.10000 0.10000 0.10000 0.10000 0.10000 0.10000
+
+and the following Emissions after a single block.
+Emission: 0.04884 0.30159 0.01609 0.03348 0.10000 0.10000 0.10000 0.10000 0.10000 0.10000  --> sum = 1.0
 
 ---
 
