@@ -8,6 +8,7 @@
 
 - [Overview](#overview)
 - [Motivation](#motivation)
+- [Daemon Organization](#daemonorganization)
 - [Incentive Structure](#incentivestructure)
 - [To Run](#torun)
 - [What is the state of this project](#project-state)
@@ -18,9 +19,9 @@
 
 ## Overview
 
-BitTensor is a Machine Learning network which enables any computer in the world the ability to produce, and profit from, its ability to learn.
+BitTensor is a Machine Intelligence system which enables any computer in the world the ability to share, and profit from, its ability to learn.
 
-When this software is run, it is built to fold your computing power into a single p2p machine learning network. The network is aligned by an incentive model built on EOS, which uses a recommendation system to reward computers for their informational product -- and pays accordingly.
+When this software is run, it is built to fold your computing power into a single p2p machine learning network. The network is aligned by an incentive model built on EOS, which uses a recommendation system to reward computers for their informational product -- and pay accordingly.
 
 ## Motivation
 
