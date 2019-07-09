@@ -8,11 +8,14 @@
 
 - [Overview](#overview)
 - [Motivation](#motivation)
-- [Daemon Organization](#daemonorganization)
-- [Incentive Structure](#incentivestructure)
-- [To Run](#torun)
-- [What is the state of this project](#project-state)
-- [About Word Embeddings](#word-embeddings)
+- [Organization](#daemonorganization)
+  - [Nucleus](#nucleus)
+  - [Dendrite](#dendrite)
+  - [Synapse](#synapse)
+  - [Metagraph](#metagraph)
+- [Incentive](#incentivestructure)
+- [To-Run](#to-run)
+- [Word-Embeddings](#word-embeddings)
 - [License](#license)
 
 ---
@@ -35,7 +38,7 @@ The key to building such a system is the development of a suitable protocol, lan
 
 BitTensor uses an incentive model organized around a token emission scheme and recommendation network. (Explained under 'Incentive') The token we use, BDNF, is biologically inspired by its neurotransmitter namesake, which acts in the human central nervous system to stimulate neurogenesis and survival: 'The brain is a market, and BDNF is its currency.'
 
-## Daemon Organization
+## Organization
 
 ```
                  [EOS]
@@ -69,7 +72,7 @@ The Metagraph object acts as an interface between the EOS blockchain and the res
 The EOS contract is separate from Dendrite. Nucleus, Synapse and Metagraph objects during execution. During testing, this class is run on a local EOS instance, but during production the contract is running in a decentralized manner across the EOS network.  
 
 
-## Incentive Structure     
+## Incentive     
 
 The BitTensor network, in aggregate, forms a single meta machine learning model composed of a many interconnected nodes, each running their own sub machine learning models. The connections between these nodes reflect channels along which Tensors are passed, containing, in the forward direction, features, and in the reverse direction gradients: No different than the individual layers of a standard Neural Network architecture (or Tensorflow graph)
 
@@ -127,7 +130,7 @@ def bittensor_emission_simulation():
 
 ---
 
-## To Run
+## To-Run
 
 Required:
 1. [Docker](https://docs.docker.com/install/)
@@ -155,7 +158,7 @@ $ ./start_blockcahin.sh
 
 ```
 
-# About Word Embeddings
+## Word-Embeddings
 
 A word embedding is a projection from a word to a continuous vector space 'cat' --> [0,1, 0,9, ..., -1.2], which attempts to maintain the word's semantics. For instance, 'King' - 'Queen' = 'Male'. Word embeddings are highly useful first order projections for a number of Machine Learning problems which make them an ideal product for a network attempting to be useful for the largest number of individuals.
 
