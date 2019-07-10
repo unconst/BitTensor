@@ -110,7 +110,7 @@ namespace eosio {
           std::vector<std::pair<name, float> > edges;
           std::string address;
           std::string port;
-          uint64_t primary_key() const {return identity.value;}
+          uint64_t primary_key()const {return identity.value;}
         };
 
         typedef eosio::multi_index< "metagraph"_n, neuron> metagraph;
@@ -119,8 +119,7 @@ namespace eosio {
                                const uint64_t this_last_emit,
                                const uint64_t this_stake);
 
-        void _do_emit(metagraph graph,
-                      const name this_user,
+        void _do_emit(const name this_user,
                       const uint64_t this_emission);
 
         // -- BitTensor-- //

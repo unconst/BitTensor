@@ -105,7 +105,7 @@ void bittensor::emit( const name this_user,
   uint64_t this_emission = _get_emission(this_user, this_last_emit, this_stake);
 
   // (7) Apply emission.
-  _do_emit(graph, this_user, this_emission);
+  _do_emit(this_user, this_emission);
 
   // (8) Set new state
   graph.modify(iterator, this_user, [&]( auto& row ) {
@@ -131,10 +131,10 @@ uint64_t bittensor::_get_emission( const name this_user,
   return this_emission;
 }
 
-void bittensor::_do_emit( metagraph graph,
-                          const name this_user,
+void bittensor::_do_emit( const name this_user,
                           const uint64_t this_emission ) {
 
+  metagraph graph(get_self(), get_code().value);
   std::vector<std::pair<name, uint64_t> > emission_queue;
   emission_queue.push_back(std::make_pair(this_user, this_emission));
 
