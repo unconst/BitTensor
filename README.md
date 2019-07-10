@@ -8,12 +8,12 @@
 
 - [Overview](#overview)
 - [Motivation](#motivation)
-- [Organization](#daemonorganization)
+- [Organization](#organization)
   - [Nucleus](#nucleus)
   - [Dendrite](#dendrite)
   - [Synapse](#synapse)
   - [Metagraph](#metagraph)
-- [Incentive](#incentivestructure)
+- [Incentive](#incentive)
 - [To-Run](#to-run)
 - [Word-Embeddings](#word-embeddings)
 - [License](#license)
@@ -51,19 +51,19 @@ BitTensor uses an incentive model organized around a token emission scheme and r
 ```
 
 ###### Nucleus
-The main Tensorflow graph is defined and trained within the Soma object. As is, the class is training a self supervised word embedding over a dummy corpus of sentences in text8.zip. The result is a mapping which takes word to a 128 dimension vector, representing that word while maintaining its semantic properties.
+The main Tensorflow graph is defined and trained within the Nucleus object. As is, the class is training a self supervised word embedding over a dummy corpus of sentences in text8.zip. The result is a mapping which takes word to a 128 dimension vector, representing that word while maintaining its semantic properties.
 
 Although subject to future change, this problem serves as a good starting place because its generality and ubiquity within Artificial intelligence. In future versions of this code, this will be expanded to include sentence and paragraph embeddings, speech, image and video embeddings with the goal of training the network for general multitask.
 
 ###### Dendrite
-During training the Soma interacts with the rest of the network through its Dendrite. The Dendrite maintains connections to upstream nodes making asynchronous calls using GRPC, and passing serialized Tensor protocol buffers along the wire.
+During training the Nucleus interacts with the rest of the network through its Dendrite. The Dendrite maintains connections to upstream nodes making asynchronous calls using GRPC, and passing serialized Tensor protocol buffers along the wire.
 
 During validation and inference the Dendrite is cut from the model and replaced by submodules which have been trained through distillation to approximate the incoming signals from the rest of the network.
 
 ###### Synapse
 This inference graphs being produced in training are served by the Synapse object. The Synapse is responsible for upstream connections. It is responsible for rate limiting, and through this,  negotiating for higher attribution within the Metagraph.
 
-Since the Synapse object is merely serving the inference graph, it is mostly detached from the Soma and Dendrite during training, only communicating with these objects by pulling the latest and best inference graph from the storage directory.
+Since the Synapse object is merely serving the inference graph, it is mostly detached from the Nucleus and Dendrite during training, only communicating with these objects by pulling the latest and best inference graph from the storage directory.
 
 ###### Metagraph
 The Metagraph object acts as an interface between the EOS blockchain and the rest of the neuron. Through the Metagraph, this node can post updated attributions and call timed token emission (which releases newly mined tokens) The Metagraph object also serves as a de-facto DHT which removes the need for a gossip protocol used by many standard p2p applications Bitcoin and BitTorrent not withstanding.
