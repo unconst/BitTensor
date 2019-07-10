@@ -8,8 +8,7 @@ the sheer number of trials, is hard to fathom, much less compete with on a compu
 
 The development of techniques in Machine Learning which allow more computational power to bear on a problem domain seek to remedy this.
 For instance, distributed training, which allows us to break the problem across multiple computers, or, Learning-to-learn, as a tool for transfer training knowledge across time,
-and finally the development of new hardware which speeds up the training process.
-These all share the same objective: to increase the speed at which the computational structure which encodes intelligence can be found.
+and finally the development of new hardware which speeds up the training process; all share the same objective: to increase the speed at which the computational structure which encodes intelligence can be found.
 The search for a Decentralized Machine Intelligence system shares this objective.
 
 Why DMI?
@@ -19,8 +18,8 @@ However, by definition, central processing requires that the distributed state m
 the central authority must be able to read it all at once, or, it necessarily limits the speed at which updates can be achieved since the central authority must read it in sequence.
 
 A Neural network simulation running on a CPU will always suffer from a bottleneck between the state of the simulation and the part of the computer that updates that state.
-"The Von Neumann bottleneck". This differs substantially from it's natural counter part, the brain itself, which allows updates to its pieces (neurons), to occur, in realtime and in place.
-A rough estimate of the brain's scale is near 10 trillion synapses, all updating in realtime. A computer simulation of this architecture would require X number of machines
+This is known as the "The Von Neumann bottleneck". This differs substantially from its natural counter part, the brain itself, which allows updates to its pieces (neurons), to occur, in realtime and in place.
+Consider for instance, a rough estimate of the brain's scale is near 10 trillion synapses, all updating in realtime. A computer simulation of this architecture would require X number of machines
 and power consumption of New York.
 
 Attempts to distribute the computation is the beginning of a solution. Instead of a single CPU, single computer or single thread, the problem is distributed.
@@ -29,6 +28,15 @@ Regardless of dived and conquer method, there must eventually be an aggregation 
 This requires that all components must be waited for (as with synchronous training) or they may be allowed to update asynchronously.
 The former maintains a bottleneck and the later is limited in scale, since as the network broadens, asynchronous computing nodes come into disassociation.
 
-What is needed is a manner of stabilizing the training process without a single executive authority and a single state. This is no dfferenent from the move away from a command economy towards a free market.
+What is needed is a manner of stabilizing the training process without a single executive authority and a single state. This is no differentness from the move away from a command economy towards a free market.
 and it has in nature many example. The brain itself, is not a simulation, it the thing itself.
 Life on earth is distributed. Our body. Example range from Mycelium networks, to financial markets.
+
+How?
+
+The key to building such a system is the development of a suitable language of value which aligns the components of the system.
+In this way, assumptions about the self-interest of individual components may be enough to keep the system working as intended, as is the case with Bitcoin, (the largest super computer in the world) 
+without executive overhead.
+
+In the human brain for instance, the neurotransmitter BDNF, is used to signal this language of value. In a free market, demand is enough to shape the actions of Entrepreneurs.
+And at the molecular level the drive towards thermodynamic equilibrium -- enough to organize all known matter and possibly create the entirety of complexity around us.
