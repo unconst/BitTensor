@@ -22,13 +22,15 @@ namespace eosio {
 
          bittensor(name receiver, name code, datastream<const char*> ds):contract(receiver, code, ds) {}
 
-         // Subscribes a new user account to the Metagraph publishing a new endpoint.
+
+         // -- BitTensor-- //
+         // Subscribes a new neuron to the Metagraph, publishes a new endpoint.
          [[eosio::action]]
          void subscribe(  const name user,
                           const string address,
                           const string port );
 
-         // Unsubscribes a new user account to the Metagraph removing an endpoint.
+         // Unsubscribes a neuron to the Metagraph removing an endpoint.
          [[eosio::action]]
          void unsubscribe( const name user );
 
@@ -39,7 +41,15 @@ namespace eosio {
          void emit(  const name this_user,
                      const std::vector<std::pair<name, float> > this_edges);
 
+         // Metagraph functions.
+         using subscribe_action = eosio::action_wrapper<"subscribe"_n, &bittensor::subscribe>;
+         using unsubscribe_action = eosio::action_wrapper<"unsubscribe"_n, &bittensor::unsubscribe>;
+         using emit_action = eosio::action_wrapper<"emit"_n, &bittensor::emit>;
 
+         // -- BitTensor-- //
+
+
+         // -- EOS Token-- //
          [[eosio::action]]
          void create( name   issuer,
                       asset  maximum_supply );
@@ -76,11 +86,6 @@ namespace eosio {
             return ac.balance;
          }
 
-         // Metagraph functions.
-         using subscribe_action = eosio::action_wrapper<"subscribe"_n, &bittensor::subscribe>;
-         using unsubscribe_action = eosio::action_wrapper<"unsubscribe"_n, &bittensor::unsubscribe>;
-         using emit_action = eosio::action_wrapper<"emit"_n, &bittensor::emit>;
-
          // EOS token functions.
          using create_action = eosio::action_wrapper<"create"_n, &bittensor::create>;
          using issue_action = eosio::action_wrapper<"issue"_n, &bittensor::issue>;
@@ -89,19 +94,38 @@ namespace eosio {
          using open_action = eosio::action_wrapper<"open"_n, &bittensor::open>;
          using close_action = eosio::action_wrapper<"close"_n, &bittensor::close>;
 
+         // -- EOS Token-- //
+
+
       private:
 
-        asset total_supply;
+        // -- BitTensor-- //
 
-        struct [[eosio::table]] node {
+        uint64_t total_supply;
+
+        struct [[eosio::table]] neuron {
           name identity;
-          asset stake;
+          uint64_t stake;
           uint64_t last_emit;
           std::vector<std::pair<name, float> > edges;
           std::string address;
           std::string port;
-          uint64_t primary_key() const { return identity.value;}
+          uint64_t primary_key() const {return identity.value;}
         };
+
+        typedef eosio::multi_index< "metagraph"_n, neuron> metagraph;
+
+        uint64_t _get_emission(const name this_user,
+                               const uint64_t this_last_emit,
+                               const uint64_t this_stake);
+
+        void _do_emit(metagraph graph,
+                      const name this_user,
+                      const uint64_t this_emission);
+
+        // -- BitTensor-- //
+
+        // -- EOS Token-- //
 
         struct [[eosio::table]] account {
           asset    balance;
@@ -116,20 +140,13 @@ namespace eosio {
           uint64_t primary_key()const { return supply.symbol.code().raw(); }
         };
 
-        typedef eosio::multi_index<"metagraph"_n, node> metagraph;
         typedef eosio::multi_index< "accounts"_n, account > accounts;
         typedef eosio::multi_index< "stat"_n, currency_stats > stats;
 
         void sub_balance( name owner, asset value );
         void add_balance( name owner, asset value, name ram_payer );
 
-        asset _get_emission(const name this_user,
-                               const uint64_t this_last_emit,
-                               const asset this_stake);
-
-        void _do_emit(metagraph graph,
-                      const name this_user,
-                      const uint64_t this_emission);
+        // -- EOS Token-- //
    };
 
 } /// namespace eosio

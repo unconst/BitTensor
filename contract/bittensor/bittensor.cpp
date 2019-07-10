@@ -73,7 +73,7 @@ void bittensor::emit( const name this_user,
   auto iterator = graph.find(this_user.value);
   check(iterator != graph.end(), "Error: Node is not subscribed");
   const auto& node = *iterator;
-  asset this_stake = node.stake;
+  uint64_t this_stake = node.stake;
   uint64_t this_last_emit = node.last_emit;
 
   // (2) Assert edge set length.
@@ -102,7 +102,7 @@ void bittensor::emit( const name this_user,
   }
 
   // (6) Calculate the Emission total.
-  asset this_emission = _get_emission(this_user, this_last_emit, this_stake);
+  uint64_t this_emission = _get_emission(this_user, this_last_emit, this_stake);
 
   // (7) Apply emission.
   _do_emit(graph, this_user, this_emission);
@@ -114,9 +114,9 @@ void bittensor::emit( const name this_user,
   });
 }
 
-asset bittensor::_get_emission( const name this_user,
+uint64_t bittensor::_get_emission( const name this_user,
                                 const uint64_t this_last_emit,
-                                const asset this_stake ) {
+                                const uint64_t this_stake ) {
 
   // Constants for this emission system.
   const unsigned int BLOCKS_TILL_EMIT = 1;
@@ -128,16 +128,14 @@ asset bittensor::_get_emission( const name this_user,
   uint64_t this_emission;
   this_emission = SUPPLY_EMIT_RATE * delta_blocks * (this_stake / total_supply);
 
-  asset return_val;
-  return_val.value = this_emission
-  return return_val;
+  return this_emission;
 }
 
 void bittensor::_do_emit( metagraph graph,
                           const name this_user,
-                          const asset this_emission ) {
+                          const uint64_t this_emission ) {
 
-  std::vector<std::pair<name, asset> > emission_queue;
+  std::vector<std::pair<name, uint64_t> > emission_queue;
   emission_queue.push_back(std::make_pair(this_user, this_emission));
 
   while (emission_queue.size() > 0) {
@@ -145,7 +143,7 @@ void bittensor::_do_emit( metagraph graph,
     auto current = emission_queue.back();
     emission_queue.pop_back();
     const name current_user = current.first;
-    const asset current_emission = current.second;
+    const uint64_t current_emission = current.second;
 
     // Pull edge information.
     auto iterator = graph.find(current_user.value);
@@ -158,29 +156,29 @@ void bittensor::_do_emit( metagraph graph,
     // Emit to self.
     // NOTE(const): The assumption is that the inedge is stored at position 0.
     float current_inedge = current_edges.at(0).second;
-    asset current_stake  = current_node.stake;
-    asset stake_addition = current_stake * current_inedge;
+    uint64_t current_stake  = current_node.stake;
+    uint64_t stake_addition = current_stake * current_inedge;
     graph.modify(iterator, current_user, [&]( auto& row ) {
       row.stake += stake_addition;
     });
     total_supply += stake_addition;
 
     // Emit to neighbors.
-    std::vector<std::pair<name float> >::iterator edge_itr = current_edges.begin();
+    auto edge_itr = current_edges.begin();
 
     // NOTE(const) Ignore the self-edge which was previously applied.
     edge_itr++;
 
-    for(;edge_itr != this_edges.end(); ++edge_itr) {
+    for(;edge_itr != current_edges.end(); ++edge_itr) {
 
       // Calculate the emission along this edge.
       const name next_user= edge_itr->first;
       const float next_weight = edge_itr->second;
-      const asset next_emission = current_emission.value * next_weight;
+      const uint64_t next_emission = current_emission * next_weight;
 
       // Base case on zero emission. Can take a long time emission is large.
       // Fortunately each recursive call removes a token from the emission.
-      if (next_emission.value > 0) {
+      if (next_emission > 0) {
         emission_queue.push_back(std::make_pair(next_user, next_emission));
       }
     }
@@ -347,4 +345,4 @@ void bittensor::close( name owner, const symbol& symbol )
 
 } /// namespace eosio
 
-EOSIO_DISPATCH( eosio::bittensor, (upsert)(grade)(erase)(create)(issue)(transfer)(open)(close)(retire) )
+EOSIO_DISPATCH( eosio::bittensor, (subscribe)(unsubscribe)(emit)(create)(issue)(transfer)(open)(close)(retire) )

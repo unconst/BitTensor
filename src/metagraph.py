@@ -56,6 +56,32 @@ class Metagraph():
             self.nodes[entry['identity']] = next_node
         logger.debug(self.__str__())
 
+
+    # # TODO(const): set attributions.
+    # def set_attributions():
+    #     pass
+    #
+    # # TODO(const): refresh graph.
+    # # Read the EOS blockchain for an updated metagraph state.
+    # def refresh():
+    #     pass
+    #
+    # # TODO(const): emit token.
+    # # Call EOS emit to mint new tokens and post new attribution values.
+    # def emit():
+    #     pass
+    #
+    # # TODO(const): subscribe neuron.
+    # # Move this neuron onto the EOS metagraph.
+    # def subscribe():
+    #     pass
+    #
+    # # TODO(const): unsubscribe neuron.
+    # # Remove this neuron from the EOS metagraph.
+    # def unsubscribe():
+    #     pass
+
+
     def clean_attributions(self, edge_nodes, edge_attrs):
         # TODO(const) sloppy.
 

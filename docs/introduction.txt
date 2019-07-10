@@ -1,0 +1,34 @@
+
+
+Problem Def?
+
+At least 3 Billion years of evolutionary history went into the development of Modern Human intelligence.
+The scale of that development, measured in the number of organisms which have lived and died to achieve it,
+the sheer number of trials, is hard to fathom, much less compete with on a computational scale.
+
+The development of techniques in Machine Learning which allow more computational power to bear on a problem domain seek to remedy this.
+For instance, distributed training, which allows us to break the problem across multiple computers, or, Learning-to-learn, as a tool for transfer training knowledge across time,
+and finally the development of new hardware which speeds up the training process.
+These all share the same objective: to increase the speed at which the computational structure which encodes intelligence can be found.
+The search for a Decentralized Machine Intelligence system shares this objective.
+
+Why DMI?
+
+Computing in the 20th century has been primarily centralized. The CPU, for instance, which is the primary feature of almost all computing architectures, is in its name 'Central'.
+However, by definition, central processing requires that the distributed state must be brought into a single central point. This necessarily limits the scale of that state, since
+the central authority must be able to read it all at once, or, it necessarily limits the speed at which updates can be achieved since the central authority must read it in sequence.
+
+A Neural network simulation running on a CPU will always suffer from a bottleneck between the state of the simulation and the part of the computer that updates that state.
+"The Von Neumann bottleneck". This differs substantially from it's natural counter part, the brain itself, which allows updates to its pieces (neurons), to occur, in realtime and in place.
+A rough estimate of the brain's scale is near 10 trillion synapses, all updating in realtime. A computer simulation of this architecture would require X number of machines
+and power consumption of New York.
+
+Attempts to distribute the computation is the beginning of a solution. Instead of a single CPU, single computer or single thread, the problem is distributed.
+And split horizontally, using divide and conquer. See: Google's Map Reduce. This solution has worked tremendously, but remains a stop gap.
+Regardless of dived and conquer method, there must eventually be an aggregation of the total state.
+This requires that all components must be waited for (as with synchronous training) or they may be allowed to update asynchronously.
+The former maintains a bottleneck and the later is limited in scale, since as the network broadens, asynchronous computing nodes come into disassociation.
+
+What is needed is a manner of stabilizing the training process without a single executive authority and a single state. This is no dfferenent from the move away from a command economy towards a free market.
+and it has in nature many example. The brain itself, is not a simulation, it the thing itself.
+Life on earth is distributed. Our body. Example range from Mycelium networks, to financial markets.
