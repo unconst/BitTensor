@@ -77,16 +77,16 @@ The EOS contract is separate from Dendrite. Nucleus, Synapse and Metagraph objec
 
 ## Incentive     
 
-<img src="assets/knowm.png", width="600">
+<img src="assets/knowm.png" width="600" />
 
 The BitTensor network, in aggregate, forms a single meta machine learning model composed of a many interconnected nodes, each running their own sub machine learning models. The connections between these nodes reflect channels along which Tensors are passed, containing, in the forward direction, features, and in the reverse direction gradients: No different than the individual layers of a standard Neural Network architecture (or Tensorflow graph)
 
-<img src="assets/NN.jpeg", width="600">
+<img src="assets/NN.jpeg" width="600" />
 
 Client nodes communicate upstream to servers and, while training their local objective function, produce attribution values, which are numerical evaluations of each connection. The manner in which these attributions are calculatef is arbitrary (for instance, by calculating Fishers Information Metric), but
 the result is a directed weighted graph (DWG) structure. (Below)
 
-<img src="assets/weboftrust.jpg", width="600">
+<img src="assets/weboftrust.jpg" width="600" />
 
 The DWG is updated discretely through emit transactions, and are conglomerated on the EOS blockchain. In total, we are able to calculate a further attribution scores, between the network and each node, which reflects each node's global ranking.
 
