@@ -27,13 +27,13 @@ BitTensor is a Machine Intelligence system which enables any computer in the wor
 When this software is run, it is built to fold your computing power into a single p2p machine learning network. The network is aligned by an incentive model built on EOS, which uses a recommendation system to reward computers for their informational product -- and pay accordingly.
 
 ## Motivation
-<img src="assets/brain.png", width="600">
+<img src="assets/brain.png" width="600" />
 
 Machine intelligence has been successfully mapped onto both distributed and [hardware](https://knowm.org/) systems, but has not yet entered a decentralized environment. This setting has been harnessed by other technologies to bring considerable volumes of [computing power](https://digiconomist.net/bitcoin-energy-consumption) and a large and diverse number of [collaborators](https://en.wikipedia.org/wiki/BitTorrent) to bear on a problem domain. This is promising for Machine Learning in particular which requires large amounts of computing power and benefits from extending model [capacity](https://arxiv.org/abs/1701.06538), [diversity](https://arxiv.org/pdf/1611.05725.pdf), and [collaboration](https://en.wikipedia.org/wiki/Ensemble_learning).
 
 These benefits are no stranger to intelligent systems in nature --such as the neural networks, societies at large, or plant structures like mycelium-- which run through the interaction of many self-interested parts rather than under centralized executive authority.
 
-<img src="assets/brain_engineering_diagram.png", width="600">
+<img src="assets/brain_engineering_diagram.png" width="600" />
 
 There is a good reason for this: a centralized system requires (by definition) the aggregation of information, but for highly complex systems, like the brain, this is prohibitive. A system which can maintain organization without a central coordinator is capable of greater complexity, and diversity.
 
