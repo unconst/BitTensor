@@ -37,8 +37,8 @@ function import_eosio() {
 # Unlocks the eosio wallet using the eosio wallet password.
 # In the future this will us your wallet own password.
 function unlock_eosio() {
-  trace "cleos -u http://0.0.0.0:8888 wallet unlock -n eosio --password $EOSIO_PASSWORD"
-  cleos -u http://0.0.0.0:8888 wallet unlock -n eosio --password $EOSIO_PASSWORD >> data/$IDENTITY/bittensor_logs.out 2>&1
+  trace "cleos -u $EOSURL wallet unlock -n eosio --password $EOSIO_PASSWORD"
+  cleos -u $EOSURL wallet unlock -n eosio --password $EOSIO_PASSWORD >> data/$IDENTITY/bittensor_logs.out 2>&1
   if [ $? -eq 0 ]; then
       success "unlocked eosio."
   else
