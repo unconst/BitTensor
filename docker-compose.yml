@@ -1,0 +1,21 @@
+version: '3.3'
+services:
+
+    # EOS blockchain service
+    eos_service:
+        image: blockchain_image
+        build:
+            context: .
+        container_name: blockchain_container
+        restart: always
+        entrypoint: ["./start_blockcahin.sh"]
+
+
+    # Bittensor service
+    bittensor_service:
+        image: bittensor_image
+        build:
+            context: .
+        container_name: bittensor_container
+        restart: always
+        entrypoint: ["./start_bittensor.sh"]
