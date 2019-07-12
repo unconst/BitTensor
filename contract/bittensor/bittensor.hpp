@@ -22,7 +22,7 @@ namespace eosio {
       public:
          using contract::contract;
 
-         bittensor(name receiver, name code, datastream<const char*> ds):contract(receiver, code, ds), metavars(_self, _self) {}
+         bittensor(name receiver, name code, datastream<const char*> ds):contract(receiver, code, ds), global_state(_self, _self.value) {}
 
 
          // -- BitTensor-- //
@@ -112,16 +112,15 @@ namespace eosio {
           std::string port;
           uint64_t primary_key()const {return identity.value;}
         };
-
-        struct Metavars {
-          uint64_t total_stake = 0;
-        };
-
-        typedef eosio::singleton<N(bittensor_metavars), Metavars> singleton_metavars;
         typedef eosio::multi_index< "metagraph"_n, neuron> metagraph;
 
-        // Total stake in metagrpah.
-        singleton_metavars metavars;
+
+        struct [[eosio::table]] globaluint {
+          uint64_t value = 0;
+		    };
+
+        typedef eosio::singleton< "globaluint"_n, globaluint> globaluintt;
+        globaluintt global_state;
 
 
         uint64_t _get_emission(const name this_user,
