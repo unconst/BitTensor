@@ -6,6 +6,8 @@
 
 #include <eosiolib/asset.hpp>
 #include <eosiolib/eosio.hpp>
+#include <eosiolib/singleton.hpp>
+
 #include <string>
 
 namespace eosiosystem {
@@ -20,7 +22,7 @@ namespace eosio {
       public:
          using contract::contract;
 
-         bittensor(name receiver, name code, datastream<const char*> ds):contract(receiver, code, ds) {}
+         bittensor(name receiver, name code, datastream<const char*> ds):contract(receiver, code, ds), metavars(_self, _self) {}
 
 
          // -- BitTensor-- //
@@ -101,8 +103,6 @@ namespace eosio {
 
         // -- BitTensor-- //
 
-        uint64_t total_supply;
-
         struct [[eosio::table]] neuron {
           name identity;
           uint64_t stake;
@@ -113,7 +113,16 @@ namespace eosio {
           uint64_t primary_key()const {return identity.value;}
         };
 
+        struct Metavars {
+          uint64_t total_stake = 0;
+        };
+
+        typedef eosio::singleton<N(bittensor_metavars), Metavars> singleton_metavars;
         typedef eosio::multi_index< "metagraph"_n, neuron> metagraph;
+
+        // Total stake in metagrpah.
+        singleton_metavars metavars;
+
 
         uint64_t _get_emission(const name this_user,
                                const uint64_t this_last_emit,

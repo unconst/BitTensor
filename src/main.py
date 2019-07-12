@@ -26,14 +26,14 @@ def set_timed_loops(tl, metagraph, nucleus, synapse, dendrite):
         metagraph.pull_metagraph()
 
     # Publish attributions (Edges, Weights.)
-    @tl.job(interval=timedelta(seconds=12))
+    @tl.job(interval=timedelta(seconds=5))
     def pull_metagraph():
         metagraph.publish_attributions()
 
     # Load an updated inference nn-tensorflow model.
     @tl.job(interval=timedelta(seconds=15))
     def load_graph():
-        synpase.load_graph()
+        synapse.load_graph()
 
     # Reselect downstream nodes.
     # TODO(const) perhaps this should be removed. Instead downstream state is

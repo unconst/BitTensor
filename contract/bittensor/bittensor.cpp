@@ -5,6 +5,7 @@
 
 #include "bittensor.hpp"
 #include "eosiolib/transaction.hpp"
+#include <eosiolib/print.hpp>
 
 namespace eosio {
 
@@ -13,7 +14,8 @@ void bittensor::subscribe( const name this_user,
                            const std::string this_address,
                            const std::string this_port)
 {
-
+    eosio::print("subscribe");
+    eosio::print(this_user);
     // Require authority from the calling user.
     require_auth( this_user );
     metagraph graph(get_self(), get_code().value);
@@ -32,7 +34,6 @@ void bittensor::subscribe( const name this_user,
         // NOTE(const): We are emitting a single token on subscribe which opens up
         // potential sybil attacks. This may need to change, or protective measure
         // put into place.
-        total_supply += 1;
         graph.emplace(this_user, [&]( auto& row ) {
             row.identity = this_user;
             row.stake = 1;
@@ -41,18 +42,29 @@ void bittensor::subscribe( const name this_user,
             row.address = this_address;
             row.port = this_port;
         });
+
+        // Add a single stake to the metavars object.
+        auto mvars = metavars.get();
+        mvars.total_stake += 1;
+        metavars.set(mvars, this_user);
     }
 }
 
 // Unsubscribes an element from the metagraph.
 void bittensor::unsubscribe( name this_user )
 {
+    eosio::print("unsubscribe");
+    eosio::print(this_user);
     require_auth(this_user);
     metagraph graph(get_self(), get_code().value);
     auto iterator = graph.find(this_user.value);
     check(iterator != graph.end(), "Record does not exist");
     graph.erase(iterator);
-    total_supply += iterator->stake;
+
+    // Update total_stake.
+    auto mvars = metavars.get();
+    mvars.total_stake -= iterator->stake;
+    metavars.set(mvars, this_user);
 
     // TODO(const): We need to add the balance back into the bittensor pool
     // and remove this user from the metagraph.
@@ -65,6 +77,9 @@ void bittensor::emit( const name this_user,
                       const std::vector<std::pair<name, float> > this_edges )
 
 {
+  eosio::print("emit");
+  eosio::print(this_user);
+
   // Requires caller authority.
   require_auth( this_user );
 
@@ -91,9 +106,14 @@ void bittensor::emit( const name this_user,
   auto edge_itr = this_edges.begin();
   for(;edge_itr != this_edges.end(); ++edge_itr) {
     sum += edge_itr->second;
+
+    eosio::print('e:');
+    eosio::print(edge_itr->first);
+    eosio::print(edge_itr->second);
+
     // (4) Assert all weights > 0.0
-    if (edge_itr->second > 0.0) {
-      check(false, "Error: Edges should > 0.0");
+    if (edge_itr->second < 0.0) {
+      check(false, "Error: Edges should be > 0.0");
     }
   }
   // (5) Assert weight sum == 1.0
@@ -117,13 +137,20 @@ void bittensor::emit( const name this_user,
 uint64_t bittensor::_get_emission( const name this_user,
                                 const uint64_t this_last_emit,
                                 const uint64_t this_stake ) {
-
   // Constants for this emission system.
-  const unsigned int BLOCKS_TILL_EMIT = 1;
+  const uint64_t BLOCKS_TILL_EMIT = 1;
   const float SUPPLY_EMIT_RATE = 1;
+  const uint64_t total_supply = metavars.get().total_stake;
 
   // Calculate the number of blocks since this id's last emission.
   const uint64_t delta_blocks = this_last_emit - tapos_block_num();
+
+  eosio::print("_get_emission");
+  eosio::print(this_last_emit);
+  eosio::print(this_stake);
+  eosio::print(total_supply);
+  eosio::print(delta_blocks);
+  eosio::print(BLOCKS_TILL_EMIT);
 
   uint64_t this_emission;
   this_emission = SUPPLY_EMIT_RATE * delta_blocks * (this_stake / total_supply);
@@ -133,6 +160,10 @@ uint64_t bittensor::_get_emission( const name this_user,
 
 void bittensor::_do_emit( const name this_user,
                           const uint64_t this_emission ) {
+
+  eosio::print("_do_emit");
+  eosio::print(this_user);
+  eosio::print(this_emission);
 
   metagraph graph(get_self(), get_code().value);
   std::vector<std::pair<name, uint64_t> > emission_queue;
@@ -144,6 +175,10 @@ void bittensor::_do_emit( const name this_user,
     emission_queue.pop_back();
     const name current_user = current.first;
     const uint64_t current_emission = current.second;
+
+    eosio::print("dequeue");
+    eosio::print(current_user);
+    eosio::print(current_emission);
 
     // Pull edge information.
     auto iterator = graph.find(current_user.value);
@@ -161,7 +196,11 @@ void bittensor::_do_emit( const name this_user,
     graph.modify(iterator, current_user, [&]( auto& row ) {
       row.stake += stake_addition;
     });
-    total_supply += stake_addition;
+
+    // Increment the total_stake by this emission quantity.
+    auto mvars = metavars.get();
+    mvars.total_stake += stake_addition;
+    metavars.set(mvars, this_user);
 
     // Emit to neighbors.
     auto edge_itr = current_edges.begin();

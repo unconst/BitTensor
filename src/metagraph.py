@@ -9,20 +9,26 @@ class Node():
     def __init__(self, entry):
         # EOS account name.
         self.identity = entry['identity']
+        # Network Stake.
+        self.stake = entry['stake']
+        # Last emit.
+        self.last_emit = entry['last_emit']
         # IP address.
         self.address = entry['address']
         # Port number.
         self.port = entry['port']
-        # List of EOS accounts.
+        # List of tuples (edge name, edge weight)
         self.edges = entry['edges']
-        # List of edge weights. Including in loop.
-        self.attributions = entry['attribution']
 
     def __repr__(self):
         return self.__str__()
 
     def __str__(self):
-        return  "(" + self.identity + "|" + self.address + ":" + str(self.port) + '|' + str(self.edges) + "|" + str(self.attributions) + ")"
+        edge_str = []
+        for el in self.edges :
+            edge_str.append((el['first'], el['second']))
+        edge_str = str(edge_str)
+        return  "( " + self.identity + " | " + str(self.stake) + " | " + str(self.last_emit) + " | " + self.address + ":" + str(self.port) + ' | ' + edge_str + " )"
 
     def __eq__(self, other):
         if not other:
@@ -50,7 +56,7 @@ class Metagraph():
         self.eoskey = "5KQwrPbwdL6PhXujxW37FSSQZ1JiwsST4cqQzDeyXtP79zkvFD3"
 
     def pull_metagraph(self):
-        table = self.cleos.get_table('bittensoracc', 'bittensoracc', 'peers')
+        table = self.cleos.get_table('bittensoracc', 'bittensoracc', 'metagraph')
         for entry in table['rows']:
             next_node = Node(entry)
             self.nodes[entry['identity']] = next_node
@@ -116,15 +122,13 @@ class Metagraph():
         resp = self.cleos.push_transaction(transaction, self.eoskey, broadcast=True)
 
     def publish_attributions_trx(self, edge_ids, edge_attrs):
-
         arguments = {
-            "user": self.config.identity,
-            "edges": edge_ids,
-            "attribution": edge_attrs
+            "this_user": self.config.identity,
+            "this_edges": list(zip(edge_ids, edge_attrs)),
         }
         payload = {
             "account": "bittensoracc",
-            "name": "grade",
+            "name": "emit",
             "authorization": [{
                 "actor": self.config.identity,
                 "permission": "active",

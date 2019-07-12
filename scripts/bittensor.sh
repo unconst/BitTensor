@@ -61,16 +61,16 @@ function create_account() {
   fi
 }
 
-# Publish our newly formed account into the bittensoracc contract. We publish
+# Publish our newly formed account into the bittensoracc metagraph. We publish
 # our id, address, and port allowing other nodes to communicate with us.
-function publish_account() {
+function subscribe_account() {
   TRANSACTION="["$IDENTITY", "$ADDRESS", "$PORT"]"
   trace "cleos -u $EOSURL push action bittensoracc upsert "$TRANSACTION" -p $IDENTITY@active"
-  cleos -u $EOSURL push action bittensoracc upsert "$TRANSACTION" -p $IDENTITY@active >> data/$IDENTITY/bittensor_logs.out 2>&1
+  cleos -u $EOSURL push action bittensoracc subscribe "$TRANSACTION" -p $IDENTITY@active >> data/$IDENTITY/bittensor_logs.out 2>&1
   if [ $? -eq 0 ]; then
-      success "published account: $IDENTITY."
+      success "subscribe account: $IDENTITY."
   else
-      failure "failed to published account: $IDENTITY. Check your EOSURL connection."
+      failure "failed to subscribe account: $IDENTITY. Check your EOSURL connection."
       cat data/$IDENTITY/bittensor_logs.out 2>&1
       exit 1
   fi
@@ -78,17 +78,24 @@ function publish_account() {
 
 # Unpublish our account in the bittensoracc contract. This signals our leaving
 # the network also, it uncluters the network.
-function unpublish_account() {
+function unsubscribe_account() {
   TRANSACTION="["$IDENTITY"]"
   trace "cleos -u $EOSURL push action bittensoracc erase "$TRANSACTION" -p $IDENTITY@active"
-  cleos -u $EOSURL push action bittensoracc erase "$TRANSACTION" -p $IDENTITY@active >> data/$IDENTITY/bittensor_logs.out 2>&1
+  cleos -u $EOSURL push action bittensoracc unsubscribe "$TRANSACTION" -p $IDENTITY@active >> data/$IDENTITY/bittensor_logs.out 2>&1
   if [ $? -eq 0 ]; then
-      success "unpublished account: $IDENTITY."
+      success "unsubscribe account: $IDENTITY."
   else
-      failure "failed to unpublish account: $IDENTITY. Check your EOSURL connection."
+      failure "failed to unsubscribe account: $IDENTITY. Check your EOSURL connection."
       cat data/$IDENTITY/bittensor_logs.out 2>&1
       exit 1
   fi
+}
+
+# Prints the metagraph state to terminal.
+function print_metagraph() {
+  trace "cleos get table bittensoracc bittensoracc metagraph"
+  log "Metagraph:"
+  cleos -u $EOSURL get table bittensoracc bittensoracc metagraph
 }
 
 function main() {
@@ -134,10 +141,13 @@ function main() {
   create_account
 
   # Publish our newly formed account to the eos blockchain.
-  publish_account
+  subscribe_account
+
+  # Print metagraph.
+  print_metagraph
 
   # Unpublish our account on script tear down. This uncluters the metegraph.
-  trap unpublish_account EXIT
+  trap unsubscribe_account EXIT
 
   # Build protos
   ./src/build.sh
