@@ -44,7 +44,7 @@ void bittensor::subscribe( const name this_user,
         });
 
         // Add a single stake to the metavars object.
-        //total_stake.set(total_stake.get() + 1, this_user);
+        _total_stake.set(_total_stake.get() + 1, this_user);
     }
 }
 
@@ -60,9 +60,7 @@ void bittensor::unsubscribe( name this_user )
     graph.erase(iterator);
 
     // Update total_stake.
-    // auto mvars = metavars.get();
-    // mvars.total_stake -= iterator->stake;
-    // metavars.set(mvars, this_user);
+    _total_stake.set(_total_stake.get() - iterator->stake, this_user);
 
     // TODO(const): We need to add the balance back into the bittensor pool
     // and remove this user from the metagraph.
@@ -138,8 +136,7 @@ uint64_t bittensor::_get_emission( const name this_user,
   // Constants for this emission system.
   const uint64_t BLOCKS_TILL_EMIT = 1;
   const float SUPPLY_EMIT_RATE = 1;
-  //const uint64_t total_supply = metavars.get().total_stake;
-  const uint64_t total_supply = 0;
+  const uint64_t total_stake = _total_stake.get();
 
   // Calculate the number of blocks since this id's last emission.
   const uint64_t delta_blocks = this_last_emit - tapos_block_num();
@@ -147,12 +144,12 @@ uint64_t bittensor::_get_emission( const name this_user,
   eosio::print("_get_emission");
   eosio::print(this_last_emit);
   eosio::print(this_stake);
-  eosio::print(total_supply);
+  eosio::print(total_stake);
   eosio::print(delta_blocks);
   eosio::print(BLOCKS_TILL_EMIT);
 
   uint64_t this_emission;
-  this_emission = SUPPLY_EMIT_RATE * delta_blocks * (this_stake / total_supply);
+  this_emission = SUPPLY_EMIT_RATE * delta_blocks * (this_stake / total_stake);
 
   return this_emission;
 }
@@ -197,9 +194,7 @@ void bittensor::_do_emit( const name this_user,
     });
 
     // Increment the total_stake by this emission quantity.
-    // auto mvars = metavars.get();
-    // mvars.total_stake += stake_addition;
-    // metavars.set(mvars, this_user);
+    _total_stake.set(_total_stake.get() + stake_addition, this_user);
 
     // Emit to neighbors.
     auto edge_itr = current_edges.begin();
