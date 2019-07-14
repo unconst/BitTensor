@@ -21,12 +21,12 @@ _ONE_DAY_IN_SECONDS=60*60*24
 def set_timed_loops(tl, metagraph, nucleus, synapse, dendrite):
 
     # Pull the updated graph state (Vertices, Edges, Weights)
-    @tl.job(interval=timedelta(seconds=17))
+    @tl.job(interval=timedelta(seconds=7))
     def pull_metagraph():
         metagraph.pull_metagraph()
 
     # Publish attributions (Edges, Weights.)
-    @tl.job(interval=timedelta(seconds=5))
+    @tl.job(interval=timedelta(seconds=4))
     def pull_metagraph():
         metagraph.publish_attributions()
 

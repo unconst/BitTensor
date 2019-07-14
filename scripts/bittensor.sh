@@ -64,9 +64,8 @@ function create_account() {
 # Publish our newly formed account into the bittensoracc metagraph. We publish
 # our id, address, and port allowing other nodes to communicate with us.
 function subscribe_account() {
-  TRANSACTION="["$IDENTITY", "$ADDRESS", "$PORT"]"
-  trace "cleos -u $EOSURL push action bittensoracc upsert "$TRANSACTION" -p $IDENTITY@active"
-  cleos -u $EOSURL push action bittensoracc subscribe "$TRANSACTION" -p $IDENTITY@active >> data/$IDENTITY/bittensor_logs.out 2>&1
+  trace "cleos -u $EOSURL push action bittensoracc subscribe "["$IDENTITY", "$ADDRESS", "$PORT"]" -p $IDENTITY@active"
+  cleos -u $EOSURL push action bittensoracc subscribe "["$IDENTITY", "$ADDRESS", "$PORT"]" -p $IDENTITY@active >> data/$IDENTITY/bittensor_logs.out 2>&1
   if [ $? -eq 0 ]; then
       success "subscribe account: $IDENTITY."
   else
@@ -79,9 +78,8 @@ function subscribe_account() {
 # Unpublish our account in the bittensoracc contract. This signals our leaving
 # the network also, it uncluters the network.
 function unsubscribe_account() {
-  TRANSACTION="["$IDENTITY"]"
-  trace "cleos -u $EOSURL push action bittensoracc erase "$TRANSACTION" -p $IDENTITY@active"
-  cleos -u $EOSURL push action bittensoracc unsubscribe "$TRANSACTION" -p $IDENTITY@active >> data/$IDENTITY/bittensor_logs.out 2>&1
+  trace "cleos -u $EOSURL push action bittensoracc unsubscribe "["$IDENTITY"]" -p $IDENTITY@active"
+  cleos -u $EOSURL push action bittensoracc unsubscribe "["$IDENTITY"]" -p $IDENTITY@active >> data/$IDENTITY/bittensor_logs.out 2>&1
   if [ $? -eq 0 ]; then
       success "unsubscribe account: $IDENTITY."
   else
@@ -120,9 +118,17 @@ function main() {
   # should absolutely change.
   # Check to see if eosio wallet exists.
   # If not, create eosio account and pull private keys to this wallet.
+  echo "IDENTITY=$IDENTITY"
+  echo "EOSURL=$EOSURL"
+  echo "ADDRESS=$ADDRESS"
+  echo "PORT=$PORT"
+  echo "EOSIO_PRIVATE_KEY=5KQwrPbwdL6PhXujxW37FSSQZ1JiwsST4cqQzDeyXtP79zkvFD3"
+  echo "EOSIO_PUBLIC_KEY=EOS6MRyAjQq8ud7hVNYcfnVPJqcVpscN5So8BhtHuGYqET5GDW5CV"
+  echo "EOSIO_PASSWORD=PW5JgJBjC1QXf8XoYPFY56qF5SJLLJNfjHbCai3DyC6We1FeBRL8q"
   EOSIO_PRIVATE_KEY=5KQwrPbwdL6PhXujxW37FSSQZ1JiwsST4cqQzDeyXtP79zkvFD3
   EOSIO_PUBLIC_KEY=EOS6MRyAjQq8ud7hVNYcfnVPJqcVpscN5So8BhtHuGYqET5GDW5CV
   EOSIO_PASSWORD=PW5JgJBjC1QXf8XoYPFY56qF5SJLLJNfjHbCai3DyC6We1FeBRL8q
+
 
   # Unlock eosio wallet. Silent failure on 'already unlocked error'.
   # or silent failure on does not exist.

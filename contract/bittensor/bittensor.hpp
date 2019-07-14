@@ -22,8 +22,7 @@ namespace eosio {
       public:
          using contract::contract;
 
-         bittensor(name receiver, name code, datastream<const char*> ds):contract(receiver, code, ds), _total_stake(_self, _self.value) {}
-
+         bittensor(name receiver, name code, datastream<const char*> ds):contract(receiver, code, ds), global_state(_self, _self.value) {}
 
          // -- BitTensor-- //
          // Subscribes a new neuron to the Metagraph, publishes a new endpoint.
@@ -115,12 +114,17 @@ namespace eosio {
         typedef eosio::multi_index< "metagraph"_n, neuron> metagraph;
 
 
-        // struct [[eosio::table]] globaluint {
-        //   uint64_t value = 0;
-		    // };
+        struct [[eosio::table]] globaluint {
+          uint64_t total_stake = 0;
+		    };
 
-        typedef eosio::singleton< "globaluint"_n, uint64_t> globaluint;
-        globaluint _total_stake;
+        typedef eosio::singleton< "globaluint"_n, globaluint> globaluintt;
+
+        // This next typedef is only here because of this bug: https://github.com/EOSIO/eosio.cdt/issues/280
+	      // Once that's fixed this can be removed.
+	      typedef eosio::multi_index<"globaluint"_n, globaluint> globaluintt_for_abi;
+
+        globaluintt global_state;
 
 
         uint64_t _get_emission(const name this_user,

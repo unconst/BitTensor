@@ -44,7 +44,9 @@ void bittensor::subscribe( const name this_user,
         });
 
         // Add a single stake to the metavars object.
-        _total_stake.set(_total_stake.get() + 1, this_user);
+        auto global = global_state.get_or_create(_self);
+        global.total_stake += 1;
+        global_state.set(global, this_user);
     }
 }
 
@@ -60,7 +62,9 @@ void bittensor::unsubscribe( name this_user )
     graph.erase(iterator);
 
     // Update total_stake.
-    _total_stake.set(_total_stake.get() - iterator->stake, this_user);
+    auto global = global_state.get();
+    global.total_stake -= iterator->stake;
+    global_state.set(global, this_user);
 
     // TODO(const): We need to add the balance back into the bittensor pool
     // and remove this user from the metagraph.
@@ -121,7 +125,59 @@ void bittensor::emit( const name this_user,
   uint64_t this_emission = _get_emission(this_user, this_last_emit, this_stake);
 
   // (7) Apply emission.
-  _do_emit(this_user, this_emission);
+  std::vector<std::pair<name, uint64_t> > emission_queue;
+  emission_queue.push_back(std::make_pair(this_user, this_emission));
+
+  while (emission_queue.size() > 0) {
+    // Pop the next element.
+    auto current = emission_queue.back();
+    emission_queue.pop_back();
+    const name current_user = current.first;
+    const uint64_t current_emission = current.second;
+
+    // Pull edge information.
+    auto current_user_iterator = graph.find(current_user.value);
+    if (current_user_iterator == graph.end()) {
+      continue;
+    }
+    const auto& current_node = *current_user_iterator;
+    const std::vector<std::pair<name, float> > current_edges = current_node.edges;
+
+    // Emit to self.
+    // NOTE(const): The assumption is that the inedge is stored at position 0.
+    float current_inedge = current_edges.at(0).second;
+    uint64_t current_stake  = current_node.stake;
+    uint64_t stake_addition = (current_stake * current_inedge) + 1;
+    graph.modify(current_user_iterator, this_user, [&]( auto& row ) {
+      row.stake += stake_addition;
+    });
+
+    // Increment the total_stake by this emission quantity.
+    auto global = global_state.get();
+    global.total_stake += stake_addition;
+    global_state.set(global, this_user);
+
+    // Emit to neighbors.
+    auto edge_itr = current_edges.begin();
+
+    // NOTE(const) Ignore the self-edge which was previously applied.
+    edge_itr++;
+
+    for(;edge_itr != current_edges.end(); ++edge_itr) {
+
+      // Calculate the emission along this edge.
+      const name next_user= edge_itr->first;
+      const float next_weight = edge_itr->second;
+      const uint64_t next_emission = current_emission * next_weight;
+
+      // Base case on zero emission. Can take a long time emission is large.
+      // Fortunately each recursive call removes a token from the emission.
+      if (next_emission > 0) {
+        emission_queue.push_back(std::make_pair(next_user, next_emission));
+      }
+    }
+  }
+
 
   // (8) Set new state
   graph.modify(iterator, this_user, [&]( auto& row ) {
@@ -136,7 +192,7 @@ uint64_t bittensor::_get_emission( const name this_user,
   // Constants for this emission system.
   const uint64_t BLOCKS_TILL_EMIT = 1;
   const float SUPPLY_EMIT_RATE = 1;
-  const uint64_t total_stake = _total_stake.get();
+  const uint64_t total_stake = global_state.get().total_stake;
 
   // Calculate the number of blocks since this id's last emission.
   const uint64_t delta_blocks = this_last_emit - tapos_block_num();
@@ -151,7 +207,7 @@ uint64_t bittensor::_get_emission( const name this_user,
   uint64_t this_emission;
   this_emission = SUPPLY_EMIT_RATE * delta_blocks * (this_stake / total_stake);
 
-  return this_emission;
+  return this_emission + 1;
 }
 
 void bittensor::_do_emit( const name this_user,
@@ -188,13 +244,15 @@ void bittensor::_do_emit( const name this_user,
     // NOTE(const): The assumption is that the inedge is stored at position 0.
     float current_inedge = current_edges.at(0).second;
     uint64_t current_stake  = current_node.stake;
-    uint64_t stake_addition = current_stake * current_inedge;
+    uint64_t stake_addition = current_stake * current_inedge + 1;
     graph.modify(iterator, current_user, [&]( auto& row ) {
       row.stake += stake_addition;
     });
 
     // Increment the total_stake by this emission quantity.
-    _total_stake.set(_total_stake.get() + stake_addition, this_user);
+    auto global = global_state.get();
+    global.total_stake += stake_addition;
+    global_state.set(global, this_user);
 
     // Emit to neighbors.
     auto edge_itr = current_edges.begin();

@@ -118,6 +118,7 @@ class Metagraph():
 
     # Push attribution scores.
     def publish_attributions(self):
+        logger.debug('Publish attributions: ' + str(list(zip(self.edge_ids, self.edge_attrs))))
         transaction = self.publish_attributions_trx(self.edge_ids, self.edge_attrs)
         resp = self.cleos.push_transaction(transaction, self.eoskey, broadcast=True)
 
