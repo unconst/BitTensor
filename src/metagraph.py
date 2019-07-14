@@ -52,6 +52,8 @@ class Metagraph():
         self.cleos = Cleos(url=config.eosurl)
         self.nodes = {}
         self.pull_metagraph()
+        self.edge_ids = [config.identity]
+        self.edge_attrs = [1.0]
         # TODO(const) this should be our own key. NOT EOSMAIN.
         self.eoskey = "5KQwrPbwdL6PhXujxW37FSSQZ1JiwsST4cqQzDeyXtP79zkvFD3"
 
