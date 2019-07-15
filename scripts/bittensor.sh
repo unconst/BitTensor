@@ -6,6 +6,7 @@ IDENTITY=$1
 ADDRESS=$2
 PORT=$3
 EOSURL=$4
+LOGDIR=$5
 
 # Creates the system eoisio wallet. This is used to build our unique account.
 # In the future the eosio account will be replaced with your own.
@@ -162,7 +163,7 @@ function main() {
   # Start our Neuron object training, server graph, open dendrite etc.
   log ""
   log "=== start neuron ==="
-  python src/main.py $IDENTITY $ADDRESS $PORT $EOSURL
+  python src/main.py $IDENTITY $ADDRESS $PORT $EOSURL $LOGDIR
   log "neuron shut down."
 }
 

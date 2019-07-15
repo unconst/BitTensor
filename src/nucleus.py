@@ -124,9 +124,15 @@ class Nucleus():
             input_attribution = tf.abs(tf.reduce_sum(tf.gradients(xs=[input_i], ys=self.output)))
             self.attribution_ops.append(ema.apply([input_attribution]))
             self.attributions.append(ema.average(input_attribution))
+            tf.summary.scalar('attribution' + str(i), input_attribution)
+
 
         # Average loss.
         self.loss = tf.reduce_mean(batch_loss)
+        tf.summary.scalar('loss', self.loss)
+
+        self.merged_summaries = tf.summary.merge_all()
+        self.summary_writer = tf.summary.FileWriter(self.config.logdir, self.graph)
 
         # Optimizer.
         with tf.control_dependencies(self.attribution_ops):
@@ -178,7 +184,8 @@ class Nucleus():
 
                 # Train Step.
                 feed_dict = {self.batch_words: batch_words, self.batch_labels: batch_labels, self.is_training: True}
-                out = self.session.run([self.optimizer, self.loss] + self.attributions, feed_dict=feed_dict)
+                out = self.session.run([self.optimizer, self.loss, self.merged_summaries] + self.attributions, feed_dict=feed_dict)
+                self.summary_writer.add_summary(out[2], step)
                 average_loss += out[1]
 
                 # Progress notification and model update.
@@ -188,8 +195,9 @@ class Nucleus():
                         self.saver.save(self.session, 'data/' + self.config.identity  + '/model', write_meta_graph=True)
 
                     # TODO(const) this is sloppy. Should be called on a timed thread.
+                    # TODO(const) This is suppppper sloppy. Causing crash.
                     eval_attributions = []
-                    for val in out[2:]:
+                    for val in out[3:]:
                         eval_attributions.append(val)
 
                     self.metagraph.set_attributions(self.dendrite.channel_nodes, eval_attributions)

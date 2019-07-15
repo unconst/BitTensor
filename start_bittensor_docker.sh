@@ -10,9 +10,10 @@ identity=$(LC_CTYPE=C tr -dc 'a-z' < /dev/urandom | head -c 7 | xargs)
 address="127.0.0.1"
 port=$(jot -r 1  2000 65000)
 eosurl="http://127.0.0.1:8888"
+logdir=''
 
 script="./scripts/bittensor.sh"
-COMMAND="$script $identity $address $port $eosurl"
+COMMAND="$script $identity $address $port $eosurl $logdir"
 log "$COMMAND"
 
 log "=== run docker container from the $DOCKER_IMAGE_NAME:$DOCKER_IMAGE_TAG image ==="
