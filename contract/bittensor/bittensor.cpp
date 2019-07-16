@@ -2,7 +2,7 @@
  *  @file
  *  @copyright defined in eos/LICENSE.txt
  */
-
+#include <cmath>
 #include "bittensor.hpp"
 #include "eosiolib/transaction.hpp"
 #include <eosiolib/print.hpp>
@@ -14,8 +14,8 @@ void bittensor::subscribe( const name this_user,
                            const std::string this_address,
                            const std::string this_port)
 {
-    eosio::print("subscribe");
-    eosio::print(this_user);
+    eosio::print("subscribe \n");
+    eosio::print(this_user, "\n");
     // Require authority from the calling user.
     require_auth( this_user );
     metagraph graph(get_self(), get_code().value);
@@ -53,8 +53,8 @@ void bittensor::subscribe( const name this_user,
 // Unsubscribes an element from the metagraph.
 void bittensor::unsubscribe( name this_user )
 {
-    eosio::print("unsubscribe");
-    eosio::print(this_user);
+    eosio::print("unsubscribe \n");
+    eosio::print(this_user, "\n" );
     require_auth(this_user);
     metagraph graph(get_self(), get_code().value);
     auto iterator = graph.find(this_user.value);
@@ -77,8 +77,7 @@ void bittensor::emit( const name this_user,
                       const std::vector<std::pair<name, float> > this_edges )
 
 {
-  eosio::print("emit");
-  eosio::print(this_user);
+  eosio::print("emit, user:", this_user, "\n");
 
   // Requires caller authority.
   require_auth( this_user );
@@ -92,7 +91,7 @@ void bittensor::emit( const name this_user,
   uint64_t this_last_emit = node.last_emit;
 
   // (2) Assert edge set length.
-  int MAX_ALLOWED_EDGES = 3;
+  int MAX_ALLOWED_EDGES = 10;
   if (this_edges.size() <= 0 || this_edges.size() > MAX_ALLOWED_EDGES) {
     check(false, "Error: Edge set length must be >= 0 and <= MAX_ALLOWED_EDGES");
   }
@@ -102,23 +101,21 @@ void bittensor::emit( const name this_user,
     check(false, "Error: First edge should point to self");
   }
 
-  float sum = 0.0;
+  float edge_sum = 0.0;
   auto edge_itr = this_edges.begin();
   for(;edge_itr != this_edges.end(); ++edge_itr) {
-    sum += edge_itr->second;
-
-    eosio::print('e:');
-    eosio::print(edge_itr->first);
-    eosio::print(edge_itr->second);
+    edge_sum += edge_itr->second;
+    eosio::print("(", edge_itr->first, ",", edge_itr->second, ") \n");
 
     // (4) Assert all weights > 0.0
     if (edge_itr->second < 0.0) {
       check(false, "Error: Edges should be > 0.0");
     }
   }
-  // (5) Assert weight sum == 1.0
-  if (sum != 1.0) {
-    check(false, "Edges should sum to 1.0");
+
+  // (5) Assert weight sum ~= 1.0 +- 0.001
+  if (fabs(edge_sum - 1.0) > 0.001 ) {
+    check(false, "Edges should sum to 1.0:" );
   }
 
   // (6) Calculate the Emission total.
@@ -135,6 +132,10 @@ void bittensor::emit( const name this_user,
     const name current_user = current.first;
     const uint64_t current_emission = current.second;
 
+    eosio::print("dequeue", '\n');
+    eosio::print("current_user: ", current_user, "\n");
+    eosio::print("current_emission: ", current_emission, "\n");
+
     // Pull edge information.
     auto current_user_iterator = graph.find(current_user.value);
     if (current_user_iterator == graph.end()) {
@@ -146,8 +147,8 @@ void bittensor::emit( const name this_user,
     // Emit to self.
     // NOTE(const): The assumption is that the inedge is stored at position 0.
     float current_inedge = current_edges.at(0).second;
-    uint64_t current_stake  = current_node.stake;
-    uint64_t stake_addition = (current_stake * current_inedge) + 1;
+    uint64_t stake_addition = (current_emission * current_inedge) + 1;
+    eosio::print("stake_addition: ", stake_addition, "\n");
     graph.modify(current_user_iterator, this_user, [&]( auto& row ) {
       row.stake += stake_addition;
     });
@@ -169,6 +170,7 @@ void bittensor::emit( const name this_user,
       const name next_user= edge_itr->first;
       const float next_weight = edge_itr->second;
       const uint64_t next_emission = current_emission * next_weight;
+      eosio::print("next_emission: ", next_user,  ", ", next_emission, "\n");
 
       // Base case on zero emission. Can take a long time emission is large.
       // Fortunately each recursive call removes a token from the emission.
@@ -184,6 +186,7 @@ void bittensor::emit( const name this_user,
     row.edges = this_edges;
     row.last_emit = tapos_block_num();
   });
+  eosio::print("end", "\n");
 }
 
 uint64_t bittensor::_get_emission( const name this_user,
@@ -195,17 +198,23 @@ uint64_t bittensor::_get_emission( const name this_user,
   const uint64_t total_stake = global_state.get().total_stake;
 
   // Calculate the number of blocks since this id's last emission.
-  const uint64_t delta_blocks = this_last_emit - tapos_block_num();
+  const uint64_t delta_blocks = tapos_block_num() - this_last_emit;
 
-  eosio::print("_get_emission");
-  eosio::print(this_last_emit);
-  eosio::print(this_stake);
-  eosio::print(total_stake);
-  eosio::print(delta_blocks);
-  eosio::print(BLOCKS_TILL_EMIT);
+  eosio::print("_get_emission:", this_user, "\n");
+  eosio::print("last emit: ", this_last_emit, "\n");
+  eosio::print("stake: ", this_stake, "\n");
+  eosio::print("total stake: ", total_stake, "\n");
+  eosio::print("delta blocks: ", delta_blocks, "\n");
+  eosio::print("emit rate: ", SUPPLY_EMIT_RATE, "\n");
+
+  // TODO(const): This should be done in a way that keeps the precision of the
+  // two vars. i.e. shift the bits into the float decimal part.
+  float reinforcment_term = ((float)this_stake / (float)total_stake);
+  eosio::print("reinforcment_term: ", reinforcment_term, "\n");
 
   uint64_t this_emission;
-  this_emission = SUPPLY_EMIT_RATE * delta_blocks * (this_stake / total_stake);
+  this_emission = SUPPLY_EMIT_RATE * delta_blocks * reinforcment_term;
+  eosio::print("this_emission: ", this_emission, "\n");
 
   return this_emission + 1;
 }

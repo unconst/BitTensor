@@ -26,8 +26,8 @@ def set_timed_loops(tl, metagraph, nucleus, synapse, dendrite):
         metagraph.pull_metagraph()
 
     # Publish attributions (Edges, Weights.)
-    @tl.job(interval=timedelta(seconds=4))
-    def pull_metagraph():
+    @tl.job(interval=timedelta(seconds=2))
+    def publish_attributions():
         metagraph.publish_attributions()
 
     # Load an updated inference nn-tensorflow model.

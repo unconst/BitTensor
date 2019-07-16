@@ -52,8 +52,7 @@ class Metagraph():
         self.cleos = Cleos(url=config.eosurl)
         self.nodes = {}
         self.pull_metagraph()
-        self.edge_ids = [config.identity]
-        self.edge_attrs = [1.0]
+        self.attributions = [(config.identity, 1.0)]
         # TODO(const) this should be our own key. NOT EOSMAIN.
         self.eoskey = "5KQwrPbwdL6PhXujxW37FSSQZ1JiwsST4cqQzDeyXtP79zkvFD3"
 
@@ -89,45 +88,16 @@ class Metagraph():
     # def unsubscribe():
     #     pass
 
-
-    def clean_attributions(self, edge_nodes, edge_attrs):
-        # TODO(const) sloppy.
-
-        # Fill out the two lists.
-        self_node = self.nodes[self.config.identity]
-        edge_nodes = [self_node] + edge_nodes
-
-        # edge_attrs is k + 1 vector.
-        # edge_nodes is a k length vector.
-        # We are going to normalize the attributions 0-1 but only over non null values.
-        attr_sum = 0
-        for i in range(self.config.k + 1):
-            if edge_nodes[i] is not None:
-                attr_sum += edge_attrs[i]
-
-        result_ids = []
-        result_attrs = []
-        for i in range(self.config.k + 1):
-            if edge_nodes[i] is not None:
-                result_ids.append(edge_nodes[i].identity)
-                result_attrs.append(edge_attrs[i]/attr_sum)
-
-        return result_ids, result_attrs
-
-    # Function is set by the neuron object.
-    def set_attributions(self, edge_nodes, attributions):
-        self.edge_ids, self.edge_attrs = self.clean_attributions(edge_nodes, attributions)
-
     # Push attribution scores.
     def publish_attributions(self):
-        logger.debug('Publish attributions: ' + str(list(zip(self.edge_ids, self.edge_attrs))))
-        transaction = self.publish_attributions_trx(self.edge_ids, self.edge_attrs)
+        logger.debug('Publish attributions: ' + str(self.attributions))
+        transaction = self.publish_attributions_trx()
         resp = self.cleos.push_transaction(transaction, self.eoskey, broadcast=True)
 
-    def publish_attributions_trx(self, edge_ids, edge_attrs):
+    def publish_attributions_trx(self):
         arguments = {
             "this_user": self.config.identity,
-            "this_edges": list(zip(edge_ids, edge_attrs)),
+            "this_edges": [(attr[0], float(attr[1])) for attr in self.attributions],
         }
         payload = {
             "account": "bittensoracc",

@@ -117,15 +117,11 @@ class Nucleus():
 
         # FIM (attribution) calculations
         self.attributions = []
-        self.attribution_ops = []
-        ema = tf.train.ExponentialMovingAverage(decay=0.98)
         for i in range(self.config.k + 1):
             input_i = full_inputs[i]
             input_attribution = tf.abs(tf.reduce_sum(tf.gradients(xs=[input_i], ys=self.output)))
-            self.attribution_ops.append(ema.apply([input_attribution]))
-            self.attributions.append(ema.average(input_attribution))
+            self.attributions.append(input_attribution)
             tf.summary.scalar('attribution' + str(i), input_attribution)
-
 
         # Average loss.
         self.loss = tf.reduce_mean(batch_loss)
@@ -135,8 +131,7 @@ class Nucleus():
         self.summary_writer = tf.summary.FileWriter(self.config.logdir, self.graph)
 
         # Optimizer.
-        with tf.control_dependencies(self.attribution_ops):
-            self.optimizer = tf.train.AdagradOptimizer(1.0).minimize(self.loss)
+        self.optimizer = tf.train.AdagradOptimizer(1.0).minimize(self.loss)
 
         # Init vars.
         self.var_init = tf.global_variables_initializer()
@@ -155,8 +150,54 @@ class Nucleus():
         self.running = False
         self.train_thread.join()
 
+    def get_feeds(self):
+        # Build a random batch [feature = word_i, label = word_i+1]
+        batch_words = []
+        batch_labels = []
+        for i in range(self.batch_size):
+            index = random.randint(0, len(self.words) - 2)
+            batch_words.append([self.words[index]])
+            batch_labels.append([self.words[index + 1]])
+
+        # Build Feeds dictionary.
+        feeds = {
+            self.batch_words: batch_words,
+            self.batch_labels: batch_labels,
+            self.is_training: True
+        }
+        return feeds
+
+    def get_fetches(self):
+        # Build Fetches dictionary.
+        fetches = {
+            'optimizer': self.optimizer,
+            'loss': self.loss,
+            'summaries': self.merged_summaries,
+            'attributions': self.attributions
+        }
+        return fetches
+
+    def normalize_attributions(self, attributions):
+
+        attr_sum = attributions[0]
+        for i in range(len(self.dendrite.channels)):
+            node_i = self.dendrite.channels[i]
+            if node_i:
+                attr_sum += attributions[i+1]
+
+        # Normalize attributions across non null edges.
+        edges = [self.config.identity]
+        norm_attributions = [attributions[0]/attr_sum]
+        for i in range(len(self.dendrite.channel_nodes)):
+            node_i = self.dendrite.channel_nodes[i]
+            attr_i = attributions[i+1]/attr_sum
+            if node_i:
+                edges.append(node_i.identity)
+                norm_attributions.append(attr_i)
+        return list(zip(edges, norm_attributions))
+
     def _train(self):
-        logger.debug('started neuron training.')
+        logger.debug('Started Nucleus training.')
 
         with self.session:
 
@@ -168,41 +209,35 @@ class Nucleus():
             self.saver.save(self.session, 'data/' + self.config.identity + '/model')
 
             # Train loop.
-            average_loss = 0
+            step = 0
+            sum_loss = 0
             best_loss = math.inf
-            step = -1
             while self.running:
+                run_output = self.session.run(  fetches=self.get_fetches(),
+                                                feed_dict=self.get_feeds())
+
+                self.current_loss = run_output['loss']
+                self.metagraph.attributions = self.normalize_attributions(run_output['attributions'])
+                self.summary_writer.add_summary(run_output['summaries'], step)
                 step += 1
 
-                # Build a random batch [feature = word_i, label = word_i+1]
-                batch_words = []
-                batch_labels = []
-                for i in range(self.batch_size):
-                    index = random.randint(0, len(self.words) - 2)
-                    batch_words.append([self.words[index]])
-                    batch_labels.append([self.words[index + 1]])
+                # Step iteration check. Only update vars every 200 steps.
+                if step % 200 != 0 or step > 200:
+                    continue
 
-                # Train Step.
-                feed_dict = {self.batch_words: batch_words, self.batch_labels: batch_labels, self.is_training: True}
-                out = self.session.run([self.optimizer, self.loss, self.merged_summaries] + self.attributions, feed_dict=feed_dict)
-                self.summary_writer.add_summary(out[2], step)
-                average_loss += out[1]
+                logger.debug('Loss at step {}: {} -- attributions {}',
+                            step,
+                            self.current_loss,
+                            self.metagraph.attributions)
 
-                # Progress notification and model update.
-                if step % 200 == 1 and step > 200:
-                    if average_loss < best_loss:
-                        best_loss = average_loss
-                        self.saver.save(self.session, 'data/' + self.config.identity  + '/model', write_meta_graph=True)
+                # Log and save new inference graph if best.
+                if run_output['loss'] < best_loss:
+                    # Save new inference graph.
+                    best_loss = run_output['loss']
+                    self.saver.save(self.session,
+                                    'data/' + self.config.identity + '/model',
+                                    write_meta_graph=True)
 
-                    # TODO(const) this is sloppy. Should be called on a timed thread.
-                    # TODO(const) This is suppppper sloppy. Causing crash.
-                    eval_attributions = []
-                    for val in out[3:]:
-                        eval_attributions.append(val)
 
-                    self.metagraph.set_attributions(self.dendrite.channel_nodes, eval_attributions)
 
-                    logger.debug('average loss at step {}: {} -- attributions {}', step, average_loss/200, eval_attributions)
-                    average_loss = 0
-
-        logger.debug('stopped neuron training.')
+        logger.debug('Stopped Nucleus training.')
