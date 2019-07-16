@@ -6,13 +6,13 @@ cd "$(dirname "$0")"
 
 source scripts/constant.sh
 
-script="./scripts/init_blockchain.sh"
+script="./scripts/init_eos.sh"
 
-log "=== stopping blockchain ==="
-docker kill eosio_bittensor_container || true
+log "=== stopping eos ==="
+docker kill eos_container || true
 
 log "=== run docker container from the $DOCKER_IMAGE_NAME:$DOCKER_IMAGE_TAG image ==="
-docker run --rm --name eosio_bittensor_container -d \
+docker run --rm --name eos_container -d \
 -p 8888:8888 -p 9876:9876 \
 --mount type=bind,src="$(pwd)"/contract,dst=/opt/eosio/bin/contract \
 --mount type=bind,src="$(pwd)"/scripts,dst=/opt/eosio/bin/scripts \
@@ -22,6 +22,6 @@ docker run --rm --name eosio_bittensor_container -d \
 
 if [ "$1" != "--nolog" ]
 then
-    log "=== follow eosio_bittensor_container logs ==="
-    docker logs eosio_bittensor_container --follow
+    log "=== follow eos_container logs ==="
+    docker logs eos_container --follow
 fi

@@ -148,7 +148,7 @@ $ cd BitTensor
 $ pip install -r requirements.txt
 
 # Run EOS blockchain.
-$ ./start_blockcahin.sh
+$ ./start_eos.sh
 
 # Run Node 1.
 # ./start_bittensor.sh
