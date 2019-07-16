@@ -91,8 +91,11 @@ class Metagraph():
     # Push attribution scores.
     def publish_attributions(self):
         logger.debug('Publish attributions: ' + str(self.attributions))
-        transaction = self.publish_attributions_trx()
-        resp = self.cleos.push_transaction(transaction, self.eoskey, broadcast=True)
+        try:
+            transaction = self.publish_attributions_trx()
+            resp = self.cleos.push_transaction(transaction, self.eoskey, broadcast=True)
+        except:
+            logger.error('Failed to publish transaction', e)
 
     def publish_attributions_trx(self):
         arguments = {
