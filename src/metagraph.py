@@ -56,6 +56,14 @@ class Metagraph():
         # TODO(const) this should be our own key. NOT EOSMAIN.
         self.eoskey = "5KQwrPbwdL6PhXujxW37FSSQZ1JiwsST4cqQzDeyXtP79zkvFD3"
 
+    def get_my_stake(self):
+        return int(self.nodes[self.config.identity].stake)
+
+    # TODO(const): pull this from the eos chain under the var 'total stake'
+    # instead of doing a sum.
+    def get_total_stake(self):
+        return int(sum([ node.stake for node in self.nodes.values()]))
+
     def pull_metagraph(self):
         table = self.cleos.get_table('bittensoracc', 'bittensoracc', 'metagraph')
         for entry in table['rows']:

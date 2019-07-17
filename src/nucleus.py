@@ -62,6 +62,9 @@ class Nucleus():
 
     def build_graph(self):
 
+        # Global step.
+        self.global_step = tf.train.create_global_step()
+
         # Boolean flag which determines whether or not we spike our downstream
         # nodes through the dendrite.
         # TODO(const) Add distillation networks for each dendrite.
@@ -131,7 +134,7 @@ class Nucleus():
         self.summary_writer = tf.summary.FileWriter(self.config.logdir, self.graph)
 
         # Optimizer.
-        self.optimizer = tf.train.AdagradOptimizer(1.0).minimize(self.loss)
+        self.optimizer = tf.train.AdagradOptimizer(1.0).minimize(self.loss, global_step=self.global_step)
 
         # Init vars.
         self.var_init = tf.global_variables_initializer()
@@ -173,7 +176,8 @@ class Nucleus():
             'optimizer': self.optimizer,
             'loss': self.loss,
             'summaries': self.merged_summaries,
-            'attributions': self.attributions
+            'attributions': self.attributions,
+            'global_step': self.global_step
         }
         return fetches
 
@@ -218,7 +222,21 @@ class Nucleus():
 
                 self.current_loss = run_output['loss']
                 self.metagraph.attributions = self.normalize_attributions(run_output['attributions'])
-                self.summary_writer.add_summary(run_output['summaries'], step)
+
+                # Add Attribution summaries to tensorboard.
+                self.summary_writer.add_summary(run_output['summaries'], run_output['global_step'])
+
+                # Add stake summaries to Tensorboard.
+                my_stake = self.metagraph.get_my_stake()
+                total_stake = self.metagraph.get_total_stake()
+                stake_fraction = float(my_stake) / float(total_stake)
+                my_stake_summary = tf.Summary(value=[tf.Summary.Value(tag="My Stake", simple_value=my_stake)])
+                total_stake_summary = tf.Summary(value=[tf.Summary.Value(tag="Total Stake", simple_value=total_stake)])
+                stake_fraction_summary = tf.Summary(value=[tf.Summary.Value(tag="Stake Fraction", simple_value=stake_fraction)])
+                self.summary_writer.add_summary(my_stake_summary, run_output['global_step'])
+                self.summary_writer.add_summary(total_stake_summary, run_output['global_step'])
+                self.summary_writer.add_summary(stake_fraction_summary, run_output['global_step'])
+
                 step += 1
 
                 # Step iteration check. Only update vars every 200 steps.
