@@ -1,13 +1,14 @@
 import collections
 from loguru import logger
 import math
-from matplotlib import pylab
 import numpy as np
 import random
 import tensorflow as tf
 import time
 import threading
 import zipfile
+
+import visualization
 
 
 _ONE_DAY_IN_SECONDS = 60*60*24
@@ -36,6 +37,10 @@ class Nucleus():
 
         # Build Dataset.
         self.build_vocabulary()
+
+        # Build Metagraph state image.
+        figure = visualization.generate_edge_weight_plot(self.metagraph.nodes)
+        self.metagraph_state_buf = visualization.figure_to_buff(figure)
 
         # Build Graph.
         self.graph = tf.Graph()
@@ -130,6 +135,11 @@ class Nucleus():
         self.loss = tf.reduce_mean(batch_loss)
         tf.summary.scalar('loss', self.loss)
 
+        # Convert PNG buffer to TF image
+        image = tf.image.decode_png(self.metagraph_state_buf.getvalue(), channels=4)
+        image = tf.expand_dims(image, 0)
+        tf.summary.image("Metagraph State", image)
+
         self.merged_summaries = tf.summary.merge_all()
         self.summary_writer = tf.summary.FileWriter(self.config.logdir, self.graph)
 
@@ -213,18 +223,18 @@ class Nucleus():
             self.saver.save(self.session, 'data/' + self.config.identity + '/model')
 
             # Train loop.
-            step = 0
-            sum_loss = 0
+            self.train_step = 0
             best_loss = math.inf
             while self.running:
                 run_output = self.session.run(  fetches=self.get_fetches(),
                                                 feed_dict=self.get_feeds())
 
+                self.train_step = run_output['global_step']
                 self.current_loss = run_output['loss']
                 self.metagraph.attributions = self.normalize_attributions(run_output['attributions'])
 
                 # Add Attribution summaries to tensorboard.
-                self.summary_writer.add_summary(run_output['summaries'], run_output['global_step'])
+                self.summary_writer.add_summary(run_output['summaries'], self.train_step)
 
                 # Add stake summaries to Tensorboard.
                 my_stake = self.metagraph.get_my_stake()
@@ -233,18 +243,17 @@ class Nucleus():
                 my_stake_summary = tf.Summary(value=[tf.Summary.Value(tag="My Stake", simple_value=my_stake)])
                 total_stake_summary = tf.Summary(value=[tf.Summary.Value(tag="Total Stake", simple_value=total_stake)])
                 stake_fraction_summary = tf.Summary(value=[tf.Summary.Value(tag="Stake Fraction", simple_value=stake_fraction)])
-                self.summary_writer.add_summary(my_stake_summary, run_output['global_step'])
-                self.summary_writer.add_summary(total_stake_summary, run_output['global_step'])
-                self.summary_writer.add_summary(stake_fraction_summary, run_output['global_step'])
+                self.summary_writer.add_summary(my_stake_summary, self.train_step)
+                self.summary_writer.add_summary(total_stake_summary, self.train_step)
+                self.summary_writer.add_summary(stake_fraction_summary, self.train_step)
 
-                step += 1
 
                 # Step iteration check. Only update vars every 200 steps.
-                if step % 200 != 0 or step > 200:
+                if self.train_step % 200 != 0 or self.train_step < 200:
                     continue
 
                 logger.debug('Loss at step {}: {} -- attributions {}',
-                            step,
+                            self.train_step,
                             self.current_loss,
                             self.metagraph.attributions)
 

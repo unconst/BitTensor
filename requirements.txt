@@ -3,6 +3,7 @@ libeospy
 loguru
 matplotlib
 numpy
+pebble
 sklearn
 tensorflow
 timeloop
