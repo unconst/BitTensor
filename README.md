@@ -57,6 +57,9 @@ $ ./start_eos.sh
 ## Motivation
 <img src="assets/brain.png" width="600" />
 
+"It is commonly argued that recent progress in machine learning has been largely driven by a drastic increase in the complexity and ﬂexibility of the models used, both in terms of number of learnable parameters and the number of ﬂoating-point operations done by the model (e.g. [19]). This empirical observation that the increasing model size is generally rewarded by improved performance leads us to look for ways to scale training to even larger models than those currently in use today."
+-- Aidan Gomez (ARC Nets NIPS: 2019)
+
 Machine intelligence has been successfully mapped onto both distributed and [hardware](https://knowm.org/) systems, but has not yet entered a decentralized environment. This setting has been harnessed by other technologies to bring considerable volumes of [computing power](https://digiconomist.net/bitcoin-energy-consumption) and a large and diverse number of [collaborators](https://en.wikipedia.org/wiki/BitTorrent) to bear on a problem domain. This is promising for Machine Learning in particular which requires large amounts of computing power and benefits from extending model [capacity](https://arxiv.org/abs/1701.06538), [diversity](https://arxiv.org/pdf/1611.05725.pdf), and [collaboration](https://en.wikipedia.org/wiki/Ensemble_learning).
 
 These benefits are no stranger to intelligent systems in nature --such as the neural networks, societies at large, or plant structures like mycelium-- which run through the interaction of many self-interested parts rather than under centralized executive authority.
