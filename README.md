@@ -35,7 +35,7 @@ These benefits are no stranger to intelligent systems in nature --such as the ne
 
 <img src="assets/brain_engineering_diagram.png" width="600" />
 
-There is a good reason for this: a centralized system requires (by definition) the aggregation of information, but for highly complex systems, like the brain, this is prohibitive. A system which can maintain organization without a central coordinator is capable of greater complexity, and diversity.
+There is a good reason for this: a centralized system requires (by definition) the aggregation of information, but for highly complex systems, like the brain, this is prohibitive. A system which can maintain organization without a central coordinator is capable of greater complexity (network capacity), and diversity.
 
 The key to building such a system is the development of a suitable protocol, language of value, or culture, which aligns the components of the system. Assumptions about the self-interest of individual components may be enough to keep the system working as intended, as is the case with Bitcoin, without executive overhead.
 
