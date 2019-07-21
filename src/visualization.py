@@ -1,6 +1,6 @@
 from __future__ import division
 import matplotlib as mpl
-mpl.use('Agg')
+#mpl.use('Agg')
 import matplotlib.pyplot as plt
 import networkx as nx
 import numpy
@@ -23,81 +23,59 @@ def figure_to_buff(figure):
   plt.close(figure)
   buf.seek(0)
   return buf
-  # # Convert PNG buffer to TF image
-  # image = tf.image.decode_png(buf.getvalue(), channels=4)
-  # # Add the batch dimension
-  # image = tf.expand_dims(image, 0)
-  # return image
 
-# def load_image_to_tensor(config):
-#     # This portion is part of my test code
-#     print (os.getcwd())
-#
-#     try:
-#         byteImg = Image.open(str(os.getcwd()) + "/" + config.logdir + str("/metagraph_state.png")).tobytes()
-#     except:
-#         return None
-#
-#     # Non test code
-#     buf = io.BytesIO(byteImg)
-#     image = tf.image.decode_png(buf.getvalue(), channels=4)
-#
-#     # Add the batch dimension
-#     image = tf.expand_dims(image, 0)
-#     return image
-
-
-def generate_edge_weight_plot(nodes):
-    print (nodes)
+def generate_edge_weight_buffer(nodes):
     b_nodes = list(nodes.values())
     G = nx.DiGraph()
+
+    total_stake = sum([node.stake for node in b_nodes])
 
     node_sizes = []
     node_labels = {}
     for node in b_nodes:
         G.add_node(node.identity)
-        node_sizes.append(node.stake)
+        node_sizes.append(100 + 300*(node.stake/total_stake))
         node_labels[node.identity] = str(node.identity)
 
-    edge_colors = []
-    edge_alphas = []
+    edge_colors = {}
     edge_labels = {}
     for node in b_nodes:
         for edge in node.edges:
-            G.add_edge(node.identity, edge['first'])
-            edge_colors.append(float(edge['second']))
-            edge_alphas.append(float(edge['second']))
-            edge_labels[(node.identity, edge['first'])] = "%.3f" % float(edge['second'])
+            if (node.identity, edge['first']) not in edge_labels:
+                G.add_edge(node.identity, edge['first'])
+                edge_colors[(node.identity, edge['first'])] = float(edge['second'])
+                if node.identity != edge['first']:
+                    edge_labels[(node.identity, edge['first'])] = "%.3f" % float(edge['second'])
+                else:
+                    edge_labels[(node.identity, edge['first'])] = ""
 
-    print (edge_labels)
-    print (G.edges())
+    for u,v,d in G.edges(data=True):
+        d['weight'] = edge_colors[(u,v)]
+    edges,weights = zip(*nx.get_edge_attributes(G,'weight').items())
 
+    print (G.nodes())
+    print (weights)
+    print (node_sizes)
+
+    plt.cla()
+    plt.clf()
     figure = plt.figure(figsize=(20,15))
-
     pos = nx.layout.circular_layout(G)
     nodes = nx.draw_networkx_nodes(G, pos, node_size=node_sizes, node_color='blue')
-    edges = nx.draw_networkx_edges(G, pos, node_size=node_sizes, arrowstyle='->',
-                                   arrowsize=10, edge_color=edge_colors, edge_cmap=plt.cm.Blues, width=2)
+    edges = nx.draw_networkx_edges(G, pos, arrowstyle='->', arrowsize=15, edge_color=weights, edge_cmap=plt.cm.Blues, width=5)
 
-    edge_labels = nx.draw_networkx_edge_labels(G, pos, edge_labels=edge_labels, with_labels = True)
-
-    print (pos)
+    edge_labels = nx.draw_networkx_edge_labels(G, pos, edge_labels=edge_labels, with_labels = True, label_pos=0.7)
 
     for node in b_nodes:
         pos[node.identity] = pos[node.identity] + numpy.array([0, 0.1])
     labels = nx.draw_networkx_labels(G, pos, node_labels)
 
+    # Save the plot to a PNG in memory.
+    buf = io.BytesIO()
+    plt.savefig(buf, format='png')
+    # Closing the figure prevents it from being displayed directly inside
+    # the notebook.
+    plt.close(figure)
+    buf.seek(0)
 
-    # set alpha value for each edge
-    for i in range(len(b_nodes)):
-        edges[i].set_alpha(edge_alphas[i])
-
-
-    pc = mpl.collections.PatchCollection(edges, cmap=plt.cm.Blues)
-    pc.set_array(edge_colors)
-    plt.colorbar(pc)
-
-    ax = plt.gca()
-    ax.set_axis_off()
-
-    return figure
+    return buf

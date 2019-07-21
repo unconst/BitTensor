@@ -8,7 +8,6 @@ import visualization
 
 from concurrent import futures
 from loguru import logger
-from pebble import concurrent
 import sys
 import time
 from timeloop import Timeloop
@@ -17,7 +16,7 @@ from datetime import timedelta
 import grpc
 import proto.bolt_pb2_grpc
 
-_ONE_DAY_IN_SECONDS=60*60*24
+_ONE_DAY_IN_SECONDS=60*60*(23.93446989)
 
 def set_timed_loops(tl, metagraph, nucleus, synapse, dendrite):
 
@@ -42,18 +41,6 @@ def set_timed_loops(tl, metagraph, nucleus, synapse, dendrite):
     @tl.job(interval=timedelta(seconds=13))
     def reselect_channels():
         dendrite.reselect_channels()
-
-    @concurrent.process
-    def p_update_metagraph_image(arg):
-        figure = visualization.generate_edge_weight_plot(arg)
-        buff = visualization.figure_to_buff(figure)
-        return buff
-
-    @tl.job(interval=timedelta(seconds=5))
-    def update_metagraph_image():
-        buff = p_update_metagraph_image(metagraph.nodes).result()
-        nucleus.metagraph_state_buf = buff
-        logger.info('Updated metagraph image.')
 
 def serve():
     config = Config()
@@ -99,7 +86,10 @@ def serve():
 
     try:
         while True:
-            time.sleep(_ONE_DAY_IN_SECONDS)
+            image_buffer = visualization.generate_edge_weight_buffer(metagraph.nodes)
+            nucleus.update_metagraph_summary(image_buffer)
+            logger.info('Updated metagraph image.')
+            time.sleep(5)
 
     except KeyboardInterrupt:
         logger.debug('keyboard interrupt.')

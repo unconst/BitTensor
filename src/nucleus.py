@@ -1,4 +1,5 @@
 import collections
+import copy
 from loguru import logger
 import math
 import numpy as np
@@ -15,13 +16,26 @@ _ONE_DAY_IN_SECONDS = 60*60*24
 
 class Nucleus():
     def __init__(self, config, metagraph, dendrite):
+        """ The main Tensorflow graph is defined and trained within the Nucleus object.
+        As is, the class is training a self supervised word embedding over
+        a dummy corpus of sentences in text8.zip. The result is a mapping which
+        takes word to a 128 dimension vector, representing that word while
+        maintaining its semantic properties.
+
+        """
+        # A Bittensor config object.
         self.config = config
+        # A Metagraph object which maintains state about the bittensor network.
         self.metagraph = metagraph
+        # Dendrite object responsible for GRPC connections to other nodes.
         self.dendrite = dendrite
 
+        # A threading object which runs the training loop.
         self.train_thread = threading.Thread(target=self._train)
         self.train_thread.setDaemon(True)
+        # A boolean set when the nucleus is training.
         self.running = False
+        # A mutex object for protecting concurrent calls to the nucleus objects.
         self.mutex = threading.Lock()
 
         # Dataset zip file.
@@ -37,10 +51,6 @@ class Nucleus():
 
         # Build Dataset.
         self.build_vocabulary()
-
-        # Build Metagraph state image.
-        figure = visualization.generate_edge_weight_plot(self.metagraph.nodes)
-        self.metagraph_state_buf = visualization.figure_to_buff(figure)
 
         # Build Graph.
         self.graph = tf.Graph()
@@ -135,12 +145,14 @@ class Nucleus():
         self.loss = tf.reduce_mean(batch_loss)
         tf.summary.scalar('loss', self.loss)
 
-        # Convert PNG buffer to TF image
-        image = tf.image.decode_png(self.metagraph_state_buf.getvalue(), channels=4)
-        image = tf.expand_dims(image, 0)
-        tf.summary.image("Metagraph State", image)
-
+        # Merge sumaries.
         self.merged_summaries = tf.summary.merge_all()
+
+        # Convert PNG buffer to TF image
+        self.metagraph_image_placeholder = tf.placeholder(dtype=tf.string)
+        self.metagraph_image_buffer = tf.image.decode_png(self.metagraph_image_placeholder, channels=4)
+        self.metagraph_summary = tf.summary.image("Metagraph State", tf.expand_dims(self.metagraph_image_buffer, 0))
+
         self.summary_writer = tf.summary.FileWriter(self.config.logdir, self.graph)
 
         # Optimizer.
@@ -191,6 +203,10 @@ class Nucleus():
         }
         return fetches
 
+    def update_metagraph_summary(self, metagraph_buffer):
+        metagraph_summary = self.session.run(self.metagraph_summary, feed_dict={self.metagraph_image_placeholder: metagraph_buffer.getvalue()})
+        self.summary_writer.add_summary(metagraph_summary, self.train_step)
+
     def normalize_attributions(self, attributions):
 
         attr_sum = attributions[0]
@@ -225,6 +241,7 @@ class Nucleus():
             # Train loop.
             self.train_step = 0
             best_loss = math.inf
+            prev_image_buff = None
             while self.running:
                 run_output = self.session.run(  fetches=self.get_fetches(),
                                                 feed_dict=self.get_feeds())
@@ -233,29 +250,27 @@ class Nucleus():
                 self.current_loss = run_output['loss']
                 self.metagraph.attributions = self.normalize_attributions(run_output['attributions'])
 
-                # Add Attribution summaries to tensorboard.
-                self.summary_writer.add_summary(run_output['summaries'], self.train_step)
-
-                # Add stake summaries to Tensorboard.
-                my_stake = self.metagraph.get_my_stake()
-                total_stake = self.metagraph.get_total_stake()
-                stake_fraction = float(my_stake) / float(total_stake)
-                my_stake_summary = tf.Summary(value=[tf.Summary.Value(tag="My Stake", simple_value=my_stake)])
-                total_stake_summary = tf.Summary(value=[tf.Summary.Value(tag="Total Stake", simple_value=total_stake)])
-                stake_fraction_summary = tf.Summary(value=[tf.Summary.Value(tag="Stake Fraction", simple_value=stake_fraction)])
-                self.summary_writer.add_summary(my_stake_summary, self.train_step)
-                self.summary_writer.add_summary(total_stake_summary, self.train_step)
-                self.summary_writer.add_summary(stake_fraction_summary, self.train_step)
-
-
                 # Step iteration check. Only update vars every 200 steps.
-                if self.train_step % 200 != 0 or self.train_step < 200:
-                    continue
+                if self.train_step % 50 == 0:
+                    logger.debug('Loss at step {}: {} -- attributions {}',
+                                self.train_step,
+                                self.current_loss,
+                                self.metagraph.attributions)
 
-                logger.debug('Loss at step {}: {} -- attributions {}',
-                            self.train_step,
-                            self.current_loss,
-                            self.metagraph.attributions)
+                    # Add Attribution summaries to tensorboard.
+                    self.summary_writer.add_summary(run_output['summaries'], self.train_step)
+
+                    # Add stake summaries to Tensorboard.
+                    my_stake = self.metagraph.get_my_stake()
+                    total_stake = self.metagraph.get_total_stake()
+                    stake_fraction = float(my_stake) / float(total_stake)
+                    my_stake_summary = tf.Summary(value=[tf.Summary.Value(tag="My Stake", simple_value=my_stake)])
+                    total_stake_summary = tf.Summary(value=[tf.Summary.Value(tag="Total Stake", simple_value=total_stake)])
+                    stake_fraction_summary = tf.Summary(value=[tf.Summary.Value(tag="Stake Fraction", simple_value=stake_fraction)])
+                    self.summary_writer.add_summary(my_stake_summary, self.train_step)
+                    self.summary_writer.add_summary(total_stake_summary, self.train_step)
+                    self.summary_writer.add_summary(stake_fraction_summary, self.train_step)
+
 
                 # Log and save new inference graph if best.
                 if run_output['loss'] < best_loss:
