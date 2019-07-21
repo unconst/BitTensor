@@ -7,6 +7,7 @@
 ## Table of Contents
 
 - [Overview](#overview)
+- [To-Run](#to-run)
 - [Motivation](#motivation)
 - [Organization](#organization)
   - [Nucleus](#nucleus)
@@ -14,7 +15,6 @@
   - [Synapse](#synapse)
   - [Metagraph](#metagraph)
 - [Incentive](#incentive)
-- [To-Run](#to-run)
 - [Word-Embeddings](#word-embeddings)
 - [License](#license)
 
@@ -26,6 +26,34 @@ BitTensor is a Machine Intelligence system which enables any computer in the wor
 
 When this software is run, it is built to fold your computing power into a single p2p machine learning network. The network is aligned by an incentive model built on EOS, which uses a recommendation system to reward computers for their informational product -- and pay accordingly.
 
+## To-Run
+
+Required:
+1. [Docker](https://docs.docker.com/install/)
+1. [Python3.7](https://realpython.com/installing-python/)
+
+```
+$ git clone https://github.com/unconst/BitTensor
+$ cd BitTensor
+
+$ pip install -r requirements.txt
+
+# Run EOS blockchain.
+$ ./start_eos.sh
+
+# Run Node 1.
+# ./start_bittensor.sh
+
+# Run Node 2.
+# ./start_bittensor.sh
+
+...
+
+# Run Node N.
+# ./start_bittensor.sh
+
+```
+
 ## Motivation
 <img src="assets/brain.png" width="600" />
 
@@ -35,7 +63,7 @@ These benefits are no stranger to intelligent systems in nature --such as the ne
 
 <img src="assets/brain_engineering_diagram.png" width="600" />
 
-There is a good reason for this: a centralized system requires (by definition) the aggregation of information, but for highly complex systems, like the brain, this is prohibitive. A system which can maintain organization without a central coordinator is capable of greater complexity, and diversity.
+There is a good reason for this: a centralized system requires (by definition) the aggregation of information, but for highly complex systems, like the brain, this is prohibitive. A system which can maintain organization without a central coordinator is capable of greater complexity (network capacity), and diversity.
 
 The key to building such a system is the development of a suitable protocol, language of value, or culture, which aligns the components of the system. Assumptions about the self-interest of individual components may be enough to keep the system working as intended, as is the case with Bitcoin, without executive overhead.
 
@@ -83,14 +111,13 @@ The BitTensor network, in aggregate, forms a single meta machine learning model 
 
 <img src="assets/NN.jpeg" width="600" />
 
-Client nodes communicate upstream to servers and, while training their local objective function, produce attribution values, which are numerical evaluations of each connection. The manner in which these attributions are calculatef is arbitrary (for instance, by calculating Fishers Information Metric), but
-the result is a directed weighted graph (DWG) structure. (Below)
+Client nodes communicate upstream to servers and, while training their local objective function, produce attribution values, which are numerical evaluations of each connection. The manner in which these attributions are calculated is arbitrary (for instance, by calculating Fishers Information Metric). In total, aggregated attributions from the entire network describe a directed weighted graph (DWG) structure. (Below)
 
 <img src="assets/weboftrust.jpg" width="600" />
 
-The DWG is updated discretely through emit transactions, and are conglomerated on the EOS blockchain. In total, we are able to calculate a further attribution scores, between the network and each node, which reflects each node's global ranking.
+The DWG is updated discretely through emission transactions, and are conglomerated on the EOS blockchain. We are calculate an attribution score between the network and each node reflecting each node's global attribution.
 
-Our Token emission scheme is designed around these global rankings so that newly minted tokens are distributed in proportion to each node's value in the metagraph. The emission calculation in python-numpy format is seen bellow:
+New tokens are distributed in proportion to each node's attributuon within the metagraph. The emission calculation in python-numpy format is seen bellow:
 
 ```
 def bittensor_emission_simulation():
@@ -134,34 +161,6 @@ def bittensor_emission_simulation():
 
 
 ---
-
-## To-Run
-
-Required:
-1. [Docker](https://docs.docker.com/install/)
-1. [Python3.7](https://realpython.com/installing-python/)
-
-```
-$ git clone https://github.com/unconst/BitTensor
-$ cd BitTensor
-
-$ pip install -r requirements.txt
-
-# Run EOS blockchain.
-$ ./start_eos.sh
-
-# Run Node 1.
-# ./start_bittensor.sh
-
-# Run Node 2.
-# ./start_bittensor.sh
-
-...
-
-# Run Node N.
-# ./start_bittensor.sh
-
-```
 
 ## Word-Embeddings
 
