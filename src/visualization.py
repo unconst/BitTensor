@@ -34,7 +34,7 @@ def generate_edge_weight_buffer(nodes):
     node_labels = {}
     for node in b_nodes:
         G.add_node(node.identity)
-        node_sizes.append(100 + 300*(node.stake/total_stake))
+        node_sizes.append(25 + 500*(node.stake/total_stake))
         node_labels[node.identity] = str(node.identity)
 
     edge_colors = {}
@@ -64,7 +64,7 @@ def generate_edge_weight_buffer(nodes):
     nodes = nx.draw_networkx_nodes(G, pos, node_size=node_sizes, node_color='blue')
     edges = nx.draw_networkx_edges(G, pos, arrowstyle='->', arrowsize=15, edge_color=weights, edge_cmap=plt.cm.Blues, width=5)
 
-    edge_labels = nx.draw_networkx_edge_labels(G, pos, edge_labels=edge_labels, with_labels = True, label_pos=0.7)
+    edge_labels = nx.draw_networkx_edge_labels(G, pos, edge_labels=edge_labels, with_labels = True, label_pos=0.3)
 
     for node in b_nodes:
         pos[node.identity] = pos[node.identity] + numpy.array([0, 0.1])
