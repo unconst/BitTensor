@@ -60,7 +60,7 @@ $ ./start_eos.sh
 "It is commonly argued that recent progress in machine learning has been largely driven by a drastic increase in the complexity and ﬂexibility of the models used, both in terms of number of learnable parameters and the number of ﬂoating-point operations done by the model (e.g. [19]). This empirical observation that increasing model size is generally rewarded by improved performance leads us to look for ways to scale training to even larger models than those currently in use today."
 -- Aidan Gomez (ARC Nets NIPS: 2019)
 
-Scale is nonetheless limited by our training mechanism: Back-propogation attempts to optimize the loss with respect to the entirety of the model's weights at each step. This suffers from the ‘gradient locking problem’: each step an individual parameter of the network must wait for every other paremeter to update before moving on to its next movement.
+Scale is nonetheless limited by our training mechanism: each step, back-propogation attempts to optimize the loss with respect to the entirety of the model's weights. This suffers from the ‘gradient locking problem’: each step an individual parameter of the network must wait for every other paremeter to update before moving on to its next movement.
 
 Training networks composed of many 'local' loss functions allow us to train smaller subsections of the network independently, dividing and conquering the problem of large networks, and avoiding this issue: Learning is local and the update on each locality is not dependent on far off events. This is not dissimialr to the (decentralized) parrallel structure of natural systems, and has been succesffully applied to increase the scale of NNs into the Trillion parameter range. [Gomez 2019].
 
