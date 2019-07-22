@@ -57,20 +57,20 @@ $ ./start_eos.sh
 ## Motivation
 <img src="assets/brain.png" width="600" />
 
-"It is commonly argued that recent progress in machine learning has been largely driven by a drastic increase in the complexity and ﬂexibility of the models used, both in terms of number of learnable parameters and the number of ﬂoating-point operations done by the model (e.g. [19]). This empirical observation that the increasing model size is generally rewarded by improved performance leads us to look for ways to scale training to even larger models than those currently in use today."
+"It is commonly argued that recent progress in machine learning has been largely driven by a drastic increase in the complexity and ﬂexibility of the models used, both in terms of number of learnable parameters and the number of ﬂoating-point operations done by the model (e.g. [19]). This empirical observation that increasing model size is generally rewarded by improved performance leads us to look for ways to scale training to even larger models than those currently in use today."
 -- Aidan Gomez (ARC Nets NIPS: 2019)
 
-Machine intelligence has been successfully mapped onto both distributed and [hardware](https://knowm.org/) systems, but has not yet entered a decentralized environment. This setting has been harnessed by other technologies to bring considerable volumes of [computing power](https://digiconomist.net/bitcoin-energy-consumption) and a large and diverse number of [collaborators](https://en.wikipedia.org/wiki/BitTorrent) to bear on a problem domain. This is promising for Machine Learning in particular which requires large amounts of computing power and benefits from extending model [capacity](https://arxiv.org/abs/1701.06538), [diversity](https://arxiv.org/pdf/1611.05725.pdf), and [collaboration](https://en.wikipedia.org/wiki/Ensemble_learning).
+Scale is nonetheless limited by our training mechanism: Back-propogation attempts to optimize the loss with respect to the entirety of the model's weights at each step. This suffers from the ‘gradient locking problem’: each step an individual parameter of the network must wait for every other paremeter to update before moving on to its next movement.
 
-These benefits are no stranger to intelligent systems in nature --such as the neural networks, societies at large, or plant structures like mycelium-- which run through the interaction of many self-interested parts rather than under centralized executive authority.
+Training networks composed of many 'local' loss functions allow us to train smaller subsections of the network independently, dividing and conquering the problem of large networks, and avoiding this issue: Learning is local and the update on each locality is not dependent on far off events. This is not dissimialr to the (decentralized) parrallel structure of natural systems, and has been succesffully applied to increase the scale of NNs into the Trillion parameter range. [Gomez 2019].
+
+This change towards information and computation locallity, analogous to the removal of the Von Neuman bottleneck for Machine Learning, opens up the field towards new realms in computing. Importantly, towards decentralized computing, which has been harnessed by other technologies to bring considerable volumes of [computing power](https://digiconomist.net/bitcoin-energy-consumption) and a large and diverse number of [collaborators](https://en.wikipedia.org/wiki/BitTorrent) to bear on a problem domain. This is promising for Machine Learning in particular which requires large amounts of computing power and benefits from extending model [capacity](https://arxiv.org/abs/1701.06538), [diversity](https://arxiv.org/pdf/1611.05725.pdf), and [collaboration](https://en.wikipedia.org/wiki/Ensemble_learning).
+
+Within this new computing paradigm, components are organized around an incentive protocol which uses assumptions about the self-interested nature of the individual components to keep the system aligned with the global objective. Examples include the Bitcoin protocol, Filecoin, or Bittoren, all which run without executive overhead.
+
+This project uses an incentive model organized around a token emission scheme and recommendation network. (Explained under 'Incentive') The token we use, BDNF, is biologically inspired by its neurotransmitter namesake, which acts in the human central nervous system to stimulate neurogenesis and survival. We make the large analogous leap to conclude 'The brain is a market, and BDNF is its currency.'
 
 <img src="assets/brain_engineering_diagram.png" width="600" />
-
-There is a good reason for this: a centralized system requires (by definition) the aggregation of information, but for highly complex systems, like the brain, this is prohibitive. A system which can maintain organization without a central coordinator is capable of greater complexity (network capacity), and diversity.
-
-The key to building such a system is the development of a suitable protocol, language of value, or culture, which aligns the components of the system. Assumptions about the self-interest of individual components may be enough to keep the system working as intended, as is the case with Bitcoin, without executive overhead.
-
-BitTensor uses an incentive model organized around a token emission scheme and recommendation network. (Explained under 'Incentive') The token we use, BDNF, is biologically inspired by its neurotransmitter namesake, which acts in the human central nervous system to stimulate neurogenesis and survival: 'The brain is a market, and BDNF is its currency.'
 
 ## Organization
 
