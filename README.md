@@ -84,7 +84,7 @@ This project uses an incentive model organized around a token emission scheme an
 ```
 
 ###### Nucleus
-The main Tensorflow graph is defined and trained within the Nucleus object. As is, the class is training a self supervised word embedding over a dummy corpus of sentences in text8.zip. The result is a mapping which takes word to a 128 dimension vector, representing that word while maintaining its semantic properties.
+The main Tensorflow graph is defined and trained within the Nucleus object. As is, the class is training a self supervised word-embedding over a dummy corpus of sentences in text8.zip. The result is a mapping which takes word to a 128 dimension vector, representing that word while maintaining its semantic properties.
 
 Although subject to future change, this problem serves as a good starting place because its generality and ubiquity within Artificial intelligence. In future versions of this code, this will be expanded to include sentence and paragraph embeddings, speech, image and video embeddings with the goal of training the network for general multitask.
 
@@ -109,17 +109,17 @@ The EOS contract is separate from Dendrite. Nucleus, Synapse and Metagraph objec
 
 <img src="assets/knowm.png" width="600" />
 
-The BitTensor network, in aggregate, forms a single meta machine learning model composed of a many interconnected nodes, each running their own sub machine learning models. The connections between these nodes reflect channels along which Tensors are passed, containing, in the forward direction, features, and in the reverse direction gradients: No different than the individual layers of a standard Neural Network architecture (or Tensorflow graph)
+The BitTensor network, in aggregate, forms a single meta Machine Learning model composed of a many smaller interconnected sub-graphs. The connections between these nodes reflect channels along which tensors are passed, containing, in the forward direction, features, and in the reverse direction gradients: No different than the individual layers of a standard Neural Network architecture (or Tensorflow graph)
 
 <img src="assets/NN.jpeg" width="600" />
 
-Client nodes communicate upstream to servers and, while training their local objective function, produce attribution values, which are numerical evaluations of each connection. The manner in which these attributions are calculated is arbitrary (for instance, by calculating Fishers Information Metric). In total, aggregated attributions from the entire network describe a directed weighted graph (DWG) structure. (Below)
+Client nodes communicate upstream to servers and, while training their local objective function, produce attribution values, which are numerical evaluations of each connection. We use Fishers Information Metric to produce attributions in the standard code, but any method is sufficient. In total, aggregated attributions from the entire network describe a directed weighted graph (DWG) structure. (Below)
 
 <img src="assets/weboftrust.jpg" width="600" />
 
-The DWG is updated discretely through emission transactions, and are conglomerated on the EOS blockchain. We are calculate an attribution score between the network and each node reflecting each node's global attribution.
+The DWG is updated discretely through emission transactions, and are conglomerated on the EOS blockchain. This process produces global attribution scores: between the full-network and each sub-grph. New tokens are distributed in proportion to this global-attributuon. 
 
-New tokens are distributed in proportion to each node's attributuon within the metagraph. The emission calculation in python-numpy format is seen bellow:
+Below is a simulated version of that emission written in numpy:
 
 ```
 def bittensor_emission_simulation():
@@ -166,11 +166,13 @@ def bittensor_emission_simulation():
 
 ## Word-Embeddings
 
-A word embedding is a projection from a word to a continuous vector space 'cat' --> [0,1, 0,9, ..., -1.2], which attempts to maintain the word's semantics. For instance, 'King' - 'Queen' = 'Male'. Word embeddings are highly useful first order projections for a number of Machine Learning problems which make them an ideal product for a network attempting to be useful for the largest number of individuals.
+A word-embedding is a projection from a word to a continuous vector space representation of that word, which attempts to maintain the semantics under the projection, For instance, 'King' --> [0,1, 0,9, ..., -1.2], such that 'King' - 'Queen' = 'Male'. 
 
-Word embeddings can be trained in a self-supervised manner on a language corpus by attempting to find a projection which helps a classifier predict words in context. For example, the sentence 'The queen had long hair', may produce a number of supervised training examples ('queen' -> 'had'), or ('hair' -> 'long'). The ability to predict context requires an understanding of the relationships between words ('meaning' is relational quality). The assumption is that the meaning of a word is determined by the company it keeps been highly successful assumption in practice.
+Word-embeddings are highly useful initital projections for a large number of Machine Learning problems. This makes them an ideal product for our network. They can also be trained in an un-supervised fashion which is a requirment for the local-loss approach described above. 
 
-In the prototype node above, we train each NN using a standard skip gram model, to predict the following word from the previous, however any other embedding producing method is possible. The goal is diversity.
+During training we use a language corpus and find our projection by training a classifier to predict words in context. For example, the sentence 'The queen had long hair', may produce a number of supervised training examples ('queen' -> 'had'), or ('hair' -> 'long'). The ability to predict context requires an understanding of the relationships between words ('meaning' is a relational quality) -- a highly successful assumption in practice.
+
+In the prototype node above, we train each NN using a standard skip gram model, to predict the following word from the previous, however any other embedding producing method is possible -- indeed, the goal should be diversity.
 
 ## License
 
