@@ -1,7 +1,9 @@
+argparse
 grpcio
 libeospy
 loguru
 matplotlib
+miniupnpc
 numpy
 pebble
 sklearn
