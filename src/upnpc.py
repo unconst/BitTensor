@@ -6,6 +6,7 @@ parser = argparse.ArgumentParser(description='UPnP Tool.')
 parser.add_argument('--port')
 args = parser.parse_args()
 
+# A Tool for punching a hole in UPNPC enabled routers.
 def main(args):
     try:
         u = miniupnpc.UPnP()
