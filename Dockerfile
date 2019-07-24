@@ -26,10 +26,12 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 
 RUN pip install --upgrade pip && \
   pip install grpcio && \
+  pip install grpcio-tools && \
   pip install libeospy && \
   pip install loguru && \
   pip install matplotlib && \
   pip install numpy && \
+  pip install networkx && \
   pip install sklearn && \
   pip install tensorflow && \
   pip install timeloop && \

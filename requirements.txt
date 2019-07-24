@@ -1,9 +1,11 @@
 argparse
 grpcio
+grpcio-tools
 libeospy
 loguru
 matplotlib
 miniupnpc
+networkx
 numpy
 pebble
 sklearn

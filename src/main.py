@@ -16,8 +16,6 @@ from datetime import timedelta
 import grpc
 import proto.bolt_pb2_grpc
 
-_ONE_DAY_IN_SECONDS=60*60*(23.93446989)
-
 def set_timed_loops(tl, metagraph, nucleus, synapse, dendrite):
 
     # Pull the updated graph state (Vertices, Edges, Weights)
@@ -43,6 +41,8 @@ def set_timed_loops(tl, metagraph, nucleus, synapse, dendrite):
         dendrite.reselect_channels()
 
 def serve():
+
+    # TODO(const) Use Hparams and FLAGS like in ARC nets.
     config = Config()
     logger.debug(config)
 

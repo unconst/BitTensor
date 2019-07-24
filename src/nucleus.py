@@ -11,15 +11,12 @@ import zipfile
 
 import visualization
 
-
-_ONE_DAY_IN_SECONDS = 60*60*24
-
 class Nucleus():
     def __init__(self, config, metagraph, dendrite):
         """ The main Tensorflow graph is defined and trained within the Nucleus object.
-        As is, the class is training a self supervised word embedding over
+        As is, training a self-supervised word-embedding over
         a dummy corpus of sentences in text8.zip. The result is a mapping which
-        takes word to a 128 dimension vector, representing that word while
+        takes a word to a 128 dimension vector; representing that word while
         maintaining its semantic properties.
 
         """
@@ -31,12 +28,10 @@ class Nucleus():
         self.dendrite = dendrite
 
         # A threading object which runs the training loop.
-        self.main_thread = threading.Thread(target=self._train)
+        self.main_thread = threading.Thread(target=self._main)
         self.main_thread.setDaemon(True)
         # A boolean set when the nucleus is training.
         self.running = False
-        # A mutex object for protecting concurrent calls to the nucleus objects.
-        self.mutex = threading.Lock()
 
         # Dataset zip file.
         self.filename = 'text8.zip'
@@ -73,7 +68,10 @@ class Nucleus():
 
 
     def build_vocabulary(self):
-
+        """ Parses the dummy corpus into a single sequential array.
+        Each sentence is appended to each other. Also produces count dictionary
+        for each word in the corpus.
+        """
         # Read textfile.
         f = zipfile.ZipFile(self.filename)
         for name in f.namelist():
@@ -87,6 +85,8 @@ class Nucleus():
         logger.debug('Built Nucleus vocabulary.')
 
     def build_graph(self):
+        """ Builds the training and inference graphs.
+        """
 
         # Global step.
         self.global_step = tf.train.create_global_step()
@@ -170,6 +170,7 @@ class Nucleus():
         l1 = tf.concat(full_inputs, axis=1)
 
         # Hidden Layer
+        # TODO(const) More than one layer?
         w1 = tf.Variable(tf.random_uniform([self.embedding_size * (self.config.k + 1), self.embedding_size], -1.0, 1.0))
         b1 = tf.Variable(tf.zeros([self.embedding_size]))
 
@@ -217,6 +218,7 @@ class Nucleus():
         self.metagraph_image_buffer = tf.image.decode_png(self.metagraph_image_placeholder, channels=4)
         self.metagraph_summary = tf.summary.image("Metagraph State", tf.expand_dims(self.metagraph_image_buffer, 0))
 
+        # Summary writer for tensorboard.
         self.summary_writer = tf.summary.FileWriter(self.config.logdir, self.graph)
 
         # Optimizer.
@@ -232,6 +234,8 @@ class Nucleus():
         logger.debug('Built Nucleus graph.')
 
     def get_feeds(self):
+        """ Returns the feed dictionary for the preproccessing session thread.
+        """
         # Build a random batch [feature = word_i, label = word_i+1]
         batch_words = []
         batch_labels = []
@@ -250,6 +254,8 @@ class Nucleus():
         return feeds
 
     def get_fetches(self):
+        """ Returns the model fetches for the training session thread.
+        """
         # Build Fetches dictionary.
         fetches = {
             'optimizer': self.optimizer,
@@ -262,6 +268,11 @@ class Nucleus():
 
 
     def _preprocess_loop(self):
+        """ The _preprocess_loop is pulling batches from the vocabulary and
+        passing them into the graph. This process is making the dendrite RPC
+        calls into the network, the resulting inputs are appended to a FIFO
+        queue which is being consumed by the _train_loop.
+        """
         logger.info('Started preproccess thread.')
         try:
             with self.coord.stop_on_exception():
@@ -274,17 +285,30 @@ class Nucleus():
 
 
     def _train_loop(self):
+        """ The _train_loop is pulling batches from the dendrite queue (preproccessing)
+        these contain words, and the embeddings from upstread nodes int he network.
+        The examples are used to train a local langauge model.
+
+        The train loop also post summaries about training to the tensorboard
+        server pertaining to training loss attribution scores.
+        """
+        # TODO(const): Attribution scores should be posted to tensorboard
+        # through the validation thread, not through training.
         logger.info('Started training thread.')
         try:
             with self.coord.stop_on_exception():
                 # Train loop.
-                self.train_step = 0
                 best_loss = math.inf
                 while not self.coord.should_stop() and self.running:
                     run_output = self.session.run(  fetches=self.get_fetches(),
                                                     feed_dict=self.get_feeds())
+
+                    # Unpack run_output.
                     self.train_step = run_output['global_step']
                     self.current_loss = run_output['loss']
+
+                    # Set the attributions in the metagraph.
+                    # TODO(const) Problematic! This is not thead safe.
                     self.metagraph.attributions = self.normalize_attributions(run_output['attributions'])
 
                     # Step iteration check. Only update vars every 200 steps.
@@ -328,54 +352,74 @@ class Nucleus():
 
 
     def start(self):
+        """ Begins the Nucleus main thread. This thread contains the coordinator
+        and sub-threads for training, preprocessing, and validation.
+        """
         self.running = True
         self.main_thread.start()
 
     def stop(self):
+        """ Stops the Nucleus main thread. This recursively kills the training
+        validation and preprocessing threads under the coordinator.
+        """
         logger.debug('Request Nucleus stop.')
         self.running = False
         if self.coord:
             self.coord.request_stop()
         self.main_thread.join()
 
-    def _train(self):
+    def _main(self):
+        """ The main Nucleus thread creates and contains a coordinator object
+        with sub-threads to the training and pre-processing threads.
+        """
         logger.debug('Started Nucleus training.')
         with self.session:
             try:
                 # Set up threading coordinator.
                 self.coord = tf.train.Coordinator()
 
-                preproccess_thread = threading.Thread(target=self._preprocess_loop)
-                preproccess_thread.setDaemon(True)
-                training_thread = threading.Thread(target=self._train_loop)
-                training_thread.setDaemon(True)
+                # TODO(const) Need to implement the validation loop here.
 
+                # Create and start the training and preprocessing threads.
+                preproccess_thread = threading.Thread(target=self._preprocess_loop)
+                training_thread = threading.Thread(target=self._train_loop)
+                preproccess_thread.setDaemon(True)
+                training_thread.setDaemon(True)
                 preproccess_thread.start()
                 training_thread.start()
 
+                # Wait on threads.
                 self.coord.join([preproccess_thread, training_thread])
 
             except Exception as e:
+                # Stop on exception.
                 self.coord.request_stop(e)
                 self.coord.join([preproccess_thread, training_thread])
                 logger.error(e)
+
             finally:
+                # Stop on all other exits.
                 self.coord.request_stop()
                 self.coord.join([preproccess_thread, training_thread])
-
-
-        logger.debug('Stopped Nucleus training.')
+                logger.debug('Stopped Nucleus training.')
 
 
 
     # (Bellow) Functions pretaining to the creation of a metagraph summary image.
 
     def update_metagraph_summary(self, metagraph_buffer):
+        """ Updates the metagraph plot on tensorboard.
+        metagraph_buffer is a image buffer of bytes created by calling
+        visualization.generate_edge_weight_buffer(metagraph.nodes) in the
+        main thread.
+        """
         metagraph_summary = self.session.run(self.metagraph_summary, feed_dict={self.metagraph_image_placeholder: metagraph_buffer.getvalue()})
         self.summary_writer.add_summary(metagraph_summary, self.train_step)
 
     def normalize_attributions(self, attributions):
-
+        """ Normalizes the attribution scores from the main graph, ensures that
+        they sum to 1 and that they are only normalized over true inputs.
+        """
         attr_sum = attributions[0]
         for i in range(len(self.dendrite.channels)):
             node_i = self.dendrite.channels[i]
