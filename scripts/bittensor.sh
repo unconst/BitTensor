@@ -18,7 +18,6 @@ function create_eosio(){
   else
       failure 'failed to create eosio wallet.'
       cat data/$IDENTITY/bittensor_logs.out 2>&1
-      exit 1
   fi
 }
 

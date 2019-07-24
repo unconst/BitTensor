@@ -25,6 +25,7 @@ class BoltServicer(proto.bolt_pb2_grpc.BoltServicer):
         metagraph:
             A Metagraph object which maintains state about the bittensor network.
         """
+        logger.debug('Init Synapse.')
         self.identity = config.identity
         self.config = config
         self.metegraph = metagraph
@@ -35,6 +36,7 @@ class BoltServicer(proto.bolt_pb2_grpc.BoltServicer):
         Args:
         Returns:
         """
+        logger.debug('Trying to serve graph on Synapse ...')
         try:
             graph = tf.Graph()
             with graph.as_default(), tf.device('/cpu:0'):
@@ -43,12 +45,16 @@ class BoltServicer(proto.bolt_pb2_grpc.BoltServicer):
                 saver.restore(next_session, tf.train.latest_checkpoint('data/' + self.identity))
                 next_session.run('init_all_tables')
                 next_session.run(tf.local_variables_initializer())
-                next_session.run("embedding_output:0", feed_dict={"batch_words:0": [['UNK']], 'is_training:0': False})
+                next_session.run("embedding_output:0",
+                        feed_dict={
+                                "inference_batch_words:0": [['UNK']], # Inference.
+                                'is_training:0': False
+                                })
         except Exception as e:
-            logger.error('failed to server new graph. Exception {}', e)
-            return
+            logger.error('Failed to server new graph. Exception {}', e)
+            raise Exception(e)
 
-        logger.debug('served new graph.')
+        logger.debug('Served graph on Synapse.')
         self.session = next_session
 
     def Spike(self, request, context):
@@ -65,6 +71,10 @@ class BoltServicer(proto.bolt_pb2_grpc.BoltServicer):
         # TODO (const) The synapse should be competitively selecting which nodes
         # are allowed to query us based on the Metagraph information.
         batch_words = [[word] for word in request.string_val]
-        embeddings = self.session.run("embedding_output:0", feed_dict={"batch_words:0": batch_words, 'is_training:0': False})
+        embeddings = self.session.run("embedding_output:0",
+                            feed_dict={
+                                    "inference_batch_words:0": batch_words, # Inference.
+                                    'is_training:0': False
+                                })
         embed_proto = tf.make_tensor_proto(embeddings)
         return embed_proto

@@ -53,10 +53,6 @@ def generate_edge_weight_buffer(nodes):
         d['weight'] = edge_colors[(u,v)]
     edges,weights = zip(*nx.get_edge_attributes(G,'weight').items())
 
-    print (G.nodes())
-    print (weights)
-    print (node_sizes)
-
     plt.cla()
     plt.clf()
     figure = plt.figure(figsize=(20,15))

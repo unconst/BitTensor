@@ -26,7 +26,7 @@ class Node():
     def __str__(self):
         edge_str = []
         for el in self.edges :
-            edge_str.append((el['first'], el['second']))
+            edge_str.append((el['first'], "%.4f" % float(el['second'])))
         edge_str = str(edge_str)
         return  "( " + self.identity + " | " + str(self.stake) + " | " + str(self.last_emit) + " | " + self.address + ":" + str(self.port) + ' | ' + edge_str + " )"
 

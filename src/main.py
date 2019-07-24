@@ -55,36 +55,39 @@ def serve():
     # The nucleus trains the NN object.
     nucleus = Nucleus(config, metagraph, dendrite)
 
-    # Start the soma.
-    nucleus.start()
-    time.sleep(3)
-
     # The synapse manages our connection to downstream nodes.
     # TODO(const) Market driven bidding for neighbors with FAN-IN K value.
     synapse = BoltServicer(config, metagraph)
+    logger.info('Started Synapse.')
+
+    # Start the Nucleus.
+    nucleus.start()
+    logger.info('Started Nucleus.')
 
     # Start timed calls.
     tl = Timeloop()
     set_timed_loops(tl, metagraph, nucleus, synapse, dendrite)
     tl.start(block=False)
+    logger.info('Started Timers.')
 
     # Serve the synapse on a grpc server.
     server_address = config.address + ":" + config.port
     grpc_server = grpc.server(futures.ThreadPoolExecutor(max_workers=10))
     proto.bolt_pb2_grpc.add_BoltServicer_to_server(synapse, grpc_server)
     grpc_server.add_insecure_port(server_address)
-    logger.debug('served synapse on: {}.', server_address)
+    logger.debug('Served synapse on: {}.', server_address)
     grpc_server.start()
 
-    def tear_down():
-        grpc_server.stop(0)
-        nucleus.stop()
-        del metagraph
-        del dendrite
-        del nucleus
-        del synapse
+    def tear_down(_server, _nucleus, _metagraph, _dendrite, _synapse):
+        _server.stop(0)
+        _nucleus.stop()
+        del _metagraph
+        del _dendrite
+        del _nucleus
+        del _synapse
 
     try:
+        logger.info('Begin wait on Main.')
         while True:
             image_buffer = visualization.generate_edge_weight_buffer(metagraph.nodes)
             nucleus.update_metagraph_summary(image_buffer)
@@ -93,11 +96,11 @@ def serve():
 
     except KeyboardInterrupt:
         logger.debug('keyboard interrupt.')
-        tear_down()
+        tear_down(grpc_server, nucleus, metagraph, dendrite, synapse)
 
     except:
         logger.error('unknown interrupt.')
-        tear_down()
+        tear_down(grpc_server, nucleus, metagraph, dendrite, synapse)
 
 
 if __name__ == '__main__':
