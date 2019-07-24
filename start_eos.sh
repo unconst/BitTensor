@@ -8,8 +8,17 @@ source scripts/constant.sh
 
 script="./scripts/init_eos.sh"
 
-log "=== stopping eos ==="
-docker kill eos_container || true
+if [[ "$(docker images -q $DOCKER_IMAGE_NAME:$DOCKER_IMAGE_TAG 2> /dev/null)" == "" ]]; then
+  log "=== building eos container ==="
+  docker build -t $DOCKER_IMAGE_NAME:$DOCKER_IMAGE_TAG .
+fi
+
+
+if [[ "$(docker ps -a | grep $DOCKER_IMAGE_NAME:$DOCKER_IMAGE_TAG)" ]]; then
+  log "=== stopping eos ==="
+  docker kill eos_container || true
+fi
+
 
 log "=== run docker container from the $DOCKER_IMAGE_NAME:$DOCKER_IMAGE_TAG image ==="
 docker run --rm --name eos_container -d \
