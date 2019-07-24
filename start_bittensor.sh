@@ -18,8 +18,8 @@ trap clean_up SIGHUP SIGINT SIGTERM
 # Run under fake random ID and port for localhost testing.
 identity=$(LC_CTYPE=C tr -dc 'a-z' < /dev/urandom | head -c 7 | xargs)
 address="localhost"
-port=$(jot -r 1  2000 65000)
-tensorboard_port=$(jot -r 1  2000 65000)
+port=$(( ( RANDOM % 60000 ) + 5000 ))
+tensorboard_port=$(( ( RANDOM % 60000 ) + 5000 ))
 eosurl="http://localhost:8888"
 logdir="data/$identity/logs"
 
