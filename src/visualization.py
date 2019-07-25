@@ -1,13 +1,11 @@
 from __future__ import division
 import matplotlib as mpl
-#mpl.use('Agg')
 import matplotlib.pyplot as plt
 import networkx as nx
 import numpy
 
 import io
 import tensorflow as tf
-from PIL import Image
 
 import os
 

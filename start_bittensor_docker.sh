@@ -16,6 +16,20 @@ script="./scripts/bittensor.sh"
 COMMAND="$script $identity $address $port $eosurl $logdir"
 log "$COMMAND"
 
+
+if [[ "$(docker images -q $DOCKER_IMAGE_NAME:$DOCKER_IMAGE_TAG 2> /dev/null)" == "" ]]; then
+  log "=== building bittensor container ==="
+  docker build -t $DOCKER_IMAGE_NAME:$DOCKER_IMAGE_TAG .
+fi
+
+
+if [[ "$(docker ps -a | grep bitensor-$identity)" ]]; then
+  log "=== stopping bitensor-$identity ==="
+  docker stop bitensor-$identity || true
+  docker rm bitensor-$identity || true
+fi
+
+
 log "=== run docker container from the $DOCKER_IMAGE_NAME:$DOCKER_IMAGE_TAG image ==="
 docker run --rm --name bitensor-$identity -d \
 --network="host" \
