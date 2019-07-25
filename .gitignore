@@ -23,6 +23,9 @@
 .env.test.local
 .env.production.local
 
+# PIPY Stuff
+bittensor.egg-info
+
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
