@@ -7,7 +7,8 @@
 ## Table of Contents
 
 - [Overview](#overview)
-- [To-Run](#to-run)
+- [To-Run-Local](#to-run-local)
+- [To-Run-Remote](#to-run-remote)
 - [Motivation](#motivation)
 - [Organization](#organization)
   - [Nucleus](#nucleus)
@@ -26,17 +27,14 @@ BitTensor is a Machine Intelligence system which enables any computer in the wor
 
 When this software is run, it is built to fold your computing power into a single p2p machine learning network. The network is aligned by an incentive model built on EOS, which uses a recommendation system to reward computers for their informational product -- and pay accordingly.
 
-## To-Run
+## To-Run-Local
 
 Required:
-1. [Docker](https://docs.docker.com/install/)
-1. [Python3.7](https://realpython.com/installing-python/)
+1. [Install Docker](https://docs.docker.com/install/)
 
 ```
 $ git clone https://github.com/unconst/BitTensor
 $ cd BitTensor
-
-$ pip install -r requirements.txt
 
 # Run EOS blockchain.
 $ ./start_eos.sh
@@ -53,6 +51,34 @@ $ ./start_eos.sh
 # ./start_bittensor_docker.sh
 
 ```
+
+## To-Run-Remote
+
+1. [Install Docker](https://docs.docker.com/install/)
+1. [Make account on Digital Ocean] (https://www.digitalocean.com/)
+1. [Make a Digital Ocean API key] (https://cloud.digitalocean.com/account/api/tokens)
+
+```
+$ git clone https://github.com/unconst/BitTensor
+$ cd BitTensor
+$ export BITTENSOR_API_TOKEN=YOUR_TOKEN_FROM_STEP_3
+
+# Run EOS blockchain.
+$ ./start_eos.sh --digital_ocean
+
+# Run Node 1.
+# ./start_bittensor_docker.sh --digital_ocean
+
+# Run Node 2.
+# ./start_bittensor_docker.sh --digital_ocean
+
+...
+
+# Run Node N.
+# ./start_bittensor_docker.sh --digital_ocean
+
+```
+
 
 ## Motivation
 <img src="assets/brain.png" width="600" />
