@@ -28,6 +28,7 @@ def generate_edge_weight_buffer(nodes):
 
     total_stake = sum([node.stake for node in b_nodes])
 
+    # Build node sizes in proportion to stake held within the graph.
     node_sizes = []
     node_labels = {}
     for node in b_nodes:
@@ -35,6 +36,8 @@ def generate_edge_weight_buffer(nodes):
         node_sizes.append(25 + 500*(node.stake/total_stake))
         node_labels[node.identity] = str(node.identity)
 
+    # Edge colors (alphas and weight) reflect attribution wieghts of each
+    # connection.
     edge_colors = {}
     edge_labels = {}
     for node in b_nodes:
@@ -47,13 +50,16 @@ def generate_edge_weight_buffer(nodes):
                 else:
                     edge_labels[(node.identity, edge['first'])] = ""
 
+    # Set edge weights.
     for u,v,d in G.edges(data=True):
         d['weight'] = edge_colors[(u,v)]
     edges,weights = zip(*nx.get_edge_attributes(G,'weight').items())
 
+    # Clear Matplot lib buffer and create new figure.
     plt.cla()
     plt.clf()
     figure = plt.figure(figsize=(20,15))
+
     pos = nx.layout.circular_layout(G)
     nodes = nx.draw_networkx_nodes(G, pos, node_size=node_sizes, node_color='blue')
     edges = nx.draw_networkx_edges(G, pos, arrowstyle='->', arrowsize=15, edge_color=weights, edge_cmap=plt.cm.Blues, width=5)

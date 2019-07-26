@@ -87,11 +87,14 @@ def serve():
         del _synapse
 
     try:
-        logger.info('Begin wait on Main.')
+        logger.info('Begin wait on main...')
         while True:
+
+            # NOTE(const): Matplotib must run in the main thread.
             image_buffer = visualization.generate_edge_weight_buffer(metagraph.nodes)
             nucleus.update_metagraph_summary(image_buffer)
             logger.info('Updated metagraph image.')
+
             time.sleep(5)
 
     except KeyboardInterrupt:

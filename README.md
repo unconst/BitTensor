@@ -53,7 +53,6 @@ $ ./start_eos.sh
 ```
 
 ## To-Run-Remote
-
 1. [Install Docker](https://docs.docker.com/install/)
 1. [Make account on Digital Ocean](https://www.digitalocean.com/)
 1. [Make a Digital Ocean API key](https://cloud.digitalocean.com/account/api/tokens)
