@@ -42,15 +42,15 @@ $ pip install -r requirements.txt
 $ ./start_eos.sh
 
 # Run Node 1.
-# ./start_bittensor.sh
+# ./start_bittensor_docker.sh
 
 # Run Node 2.
-# ./start_bittensor.sh
+# ./start_bittensor_docker.sh
 
 ...
 
 # Run Node N.
-# ./start_bittensor.sh
+# ./start_bittensor_docker.sh
 
 ```
 
