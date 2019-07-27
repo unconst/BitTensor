@@ -100,19 +100,11 @@ This appear to be a chacteristic of decentralized computing systems: they can be
 
 We follow this mold, and use an incentive model organized around a token emission scheme and recommendation network. The token we use, BDNF, is biologically inspired by its neurotransmitter namesake, which acts in the human central nervous system to stimulate neuro-genesis and survival. We make the large leap to conclude 'The brain is a market, and BDNF is its currency.' -- using this analogy to form the inspirational guide through which the following system is designed.
 
-<img src="assets/brain_engineering_diagram.png" width="1000" />
 
 ## Organization
 
-```
-                 [EOS]
-                   |
-              [Metagraph]
-           /       |       \
-[Dendrite] ---> [Nucleus] ---> [Synapse]
-           \       |       /
-                 [Main]
-```
+<img src="assets/brain_engineering_diagram.png" width="1000" />
+
 
 ###### Nucleus
 The main Tensorflow graph is defined and trained within the Nucleus object. As is, the class is training a self supervised word-embedding over a dummy corpus of sentences in text8.zip. The result is a mapping which takes word to a 128 dimension vector, representing that word while maintaining its semantic properties.
@@ -134,6 +126,16 @@ The Metagraph object acts as an interface between the EOS blockchain and the res
 
 ###### EOS
 The EOS contract is separate from Dendrite. Nucleus, Synapse and Metagraph objects during execution. During testing, this class is run on a local EOS instance, but during production the contract is running in a decentralized manner across the EOS network.  
+
+```
+                 [EOS]
+                   |
+              [Metagraph]
+           /       |       \
+[Dendrite] ---> [Nucleus] ---> [Synapse]
+           \       |       /
+                 [Main]
+```
 
 
 ## Incentive     
