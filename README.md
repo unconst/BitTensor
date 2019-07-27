@@ -1,6 +1,6 @@
 ## BitTensor Network Daemon
 
-<img src="assets/mycellium.jpeg" width="800" />
+<img src="assets/mycellium.jpeg" width="1000" />
 
 > Decentralized Machine Intelligence
 
@@ -80,7 +80,7 @@ $ ./start_eos.sh --digital_ocean
 
 
 ## Motivation
-<img src="assets/brain.png" width="600" />
+<img src="assets/brain.png" width="1000" />
 
 "It is commonly argued that recent progress in machine learning has been largely driven by a drastic increase in the complexity and ﬂexibility of the models used, both in terms of number of learnable parameters and the number of ﬂoating-point operations done by the model (e.g. [19]). This empirical observation that increasing model size is generally rewarded by improved performance leads us to look for ways to scale training to even larger models than those currently in use today." -- Aidan Gomez (ARC Nets NIPS: 2019)
 
@@ -94,7 +94,7 @@ Within this new computing paradigm, components are organized around an incentive
 
 This project uses an incentive model organized around a token emission scheme and recommendation network. (Explained under 'Incentive') The token we use, BDNF, is biologically inspired by its neurotransmitter namesake, which acts in the human central nervous system to stimulate neurogenesis and survival. We make the large leap to conclude 'The brain is a market, and BDNF is its currency.' -- using this analogy to form the inspirational guide through which the following system is designed.
 
-<img src="assets/brain_engineering_diagram.png" width="600" />
+<img src="assets/brain_engineering_diagram.png" width="1000" />
 
 ## Organization
 
@@ -132,15 +132,15 @@ The EOS contract is separate from Dendrite. Nucleus, Synapse and Metagraph objec
 
 ## Incentive     
 
-<img src="assets/knowm.png" width="600" />
+<img src="assets/knowm.png" width="1000" />
 
 The BitTensor network, in aggregate, forms a single meta Machine Learning model composed of a many smaller interconnected sub-graphs. The connections between these nodes reflect channels along which tensors are passed, containing, in the forward direction, features, and in the reverse direction gradients: No different than the individual layers of a standard Neural Network architecture (or Tensorflow graph)
 
-<img src="assets/NN.jpeg" width="600" />
+<img src="assets/NN.jpeg" width="1000" />
 
 Client nodes communicate upstream to servers and, while training their local objective function, produce attribution values, which are numerical evaluations of each connection. We use Fishers Information Metric to produce attributions in the standard code, but any method is sufficient. In total, aggregated attributions from the entire network describe a directed weighted graph (DWG) structure. (Below)
 
-<img src="assets/weboftrust.jpg" width="600" />
+<img src="assets/weboftrust.jpg" width="1000" />
 
 The DWG is updated discretely through emission transactions, and are conglomerated on the EOS blockchain. This process produces global attribution scores: between the full-network and each sub-grph. New tokens are distributed in proportion to this global-attributuon.
 
