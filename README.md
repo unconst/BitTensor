@@ -32,8 +32,6 @@ The lack of centrality allows the structure to grow to arbitrary size across the
 When run, this software folds your computing power into that p2p network and rewards you with an EOS based digital token for your contribution.
 
 ## To-Run-Local
-
-Required:
 1. [Install Docker](https://docs.docker.com/install/)
 
 ```
