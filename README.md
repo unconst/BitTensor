@@ -29,7 +29,7 @@ The nature of trust-less computing necessitates that these contributions are com
 
 The lack of centrality allows the structure to grow to arbitrary size across the internet. Both the cost and control of the system is distributed. And the network's informational product is efficiently priced into the reward token's value.
 
-This software, when run, folds your computing power into that p2p network and rewards you with an EOS based digital token for your contribution.
+When run, this software folds your computing power into that p2p network and rewards you with an EOS based digital token for your contribution.
 
 ## To-Run-Local
 
