@@ -7,8 +7,8 @@
 ## Table of Contents
 
 - [Overview](#overview)
-- [To-Run-Local](#to-run-local)
-- [To-Run-Remote](#to-run-remote)
+- [To-Run-Locally](#to-run-locally)
+- [To-Run-Remotely](#to-run-remotely)
 - [Motivation](#motivation)
 - [Organization](#organization)
   - [Nucleus](#nucleus)
@@ -31,7 +31,7 @@ The lack of centrality allows the structure to grow to arbitrary size across the
 
 When run, this software folds your computing power into that p2p network and rewards you with an EOS based digital token for your contribution.
 
-## To-Run-Local
+## To-Run-Locally
 1. [Install Docker](https://docs.docker.com/install/)
 
 ```
@@ -54,7 +54,7 @@ $ ./start_eos.sh
 
 ```
 
-## To-Run-Remote
+## To-Run-Remotely
 1. [Install Docker](https://docs.docker.com/install/)
 1. [Make account on Digital Ocean](https://www.digitalocean.com/)
 1. [Make a Digital Ocean API key](https://cloud.digitalocean.com/account/api/tokens)
