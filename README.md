@@ -23,9 +23,13 @@
 
 ## Overview
 
-BitTensor is a Machine Intelligence system which enables any computer in the world the ability to share, and profit from, its ability to learn.
+BitTensor is a new class of Machine Learning model which is trained across a p2p network, it enables any computer and any engineer in the world to contribute.
 
-When this software is run, it is built to fold your computing power into a single p2p machine learning network. The network is aligned by an incentive model built on EOS, which uses a recommendation system to reward computers for their informational product -- and pay accordingly.
+The nature of trust-less computing necessitates that these contributions are combined through incentive rather than direct control from any one computer. We use a digital token to carry that incentive signal through the network: where the magnitude of this incentive is derived from a p2p collaborative filtering technique similar to Google's Page rank algorithm.  
+
+The lack of centrality allows the structure to grow to arbitrary size across the internet. Both the cost and control of the system is distributed. And the network's informational product is efficiently priced into the rewards token's value.
+
+This software, when run, folds your computing power into that p2p network and rewards you with an EOS based digital token for your contribution.
 
 ## To-Run-Local
 
