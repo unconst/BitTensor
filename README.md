@@ -103,7 +103,7 @@ We follow this mold, and use an incentive model organized around a token emissio
 
 ## Organization
 
-<img src="assets/brain_engineering_diagram.png" width="1000" />
+<img src="assets/brain_engineering_diagram.png" width="1000"  alt="An Engineering Diagram of the Brain." />
 
 
 ###### Nucleus
