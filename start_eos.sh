@@ -13,20 +13,15 @@ function read_command_line_args() {
   # Flag to print logs.
   dolog=true
 
-  echo $run_on_digital_ocean
-
   while [[ "$1" =~ ^- && ! "$1" == "--" ]]; do case $1 in
     -do | --digital_ocean )
       run_on_digital_ocean=true
-      echo $run_on_digital_ocean
       ;;
     --nolog )
       dolog=false
       ;;
   esac; shift; done
   if [[ "$1" == '--' ]]; then shift; fi
-
-  echo $run_on_digital_ocean
 
 }
 

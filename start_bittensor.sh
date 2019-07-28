@@ -19,7 +19,7 @@ trap clean_up SIGHUP SIGINT SIGTERM
 identity=$(LC_CTYPE=C tr -dc 'a-z' < /dev/urandom | head -c 7 | xargs)
 address="localhost"
 port=$(( ( RANDOM % 60000 ) + 5000 ))
-tensorboard_port=$(port + 1)
+tensorboard_port=$((port+1))
 eosurl="http://localhost:8888"
 logdir="data/$identity/logs"
 
