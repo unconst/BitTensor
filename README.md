@@ -7,8 +7,8 @@
 ## Table of Contents
 
 - [Overview](#overview)
-- [To-Run-Local](#to-run-local)
-- [To-Run-Remote](#to-run-remote)
+- [To-Run-Locally](#to-run-locally)
+- [To-Run-Remotely](#to-run-remotely)
 - [Motivation](#motivation)
 - [Organization](#organization)
   - [Nucleus](#nucleus)
@@ -23,13 +23,15 @@
 
 ## Overview
 
-BitTensor is a Machine Intelligence system which enables any computer in the world the ability to share, and profit from, its ability to learn.
+BitTensor is a new class of Machine Learning model which is trained across a p2p network, it enables any computer and any engineer in the world to contribute.
 
-When this software is run, it is built to fold your computing power into a single p2p machine learning network. The network is aligned by an incentive model built on EOS, which uses a recommendation system to reward computers for their informational product -- and pay accordingly.
+The nature of trust-less computing necessitates that these contributions are combined through incentive rather than direct control from any one computer. We use a digital token to carry that incentive signal through the network: where the magnitude of this incentive is derived from a p2p collaborative filtering technique similar to Google's Page rank algorithm.  
 
-## To-Run-Local
+The lack of centrality allows the structure to grow to arbitrary size across the internet. Both the cost and control of the system is distributed. And the network's informational product is efficiently priced into the reward token's value.
 
-Required:
+When run, this software folds your computing power into that p2p network and rewards you with an EOS based digital token for your contribution.
+
+## To-Run-Locally
 1. [Install Docker](https://docs.docker.com/install/)
 
 ```
@@ -52,7 +54,7 @@ $ ./start_eos.sh
 
 ```
 
-## To-Run-Remote
+## To-Run-Remotely
 1. [Install Docker](https://docs.docker.com/install/)
 1. [Make account on Digital Ocean](https://www.digitalocean.com/)
 1. [Make a Digital Ocean API key](https://cloud.digitalocean.com/account/api/tokens)
@@ -84,33 +86,24 @@ $ ./start_eos.sh --digital_ocean
 
 "It is commonly argued that recent progress in machine learning has been largely driven by a drastic increase in the complexity and flexibility of the models used, both in terms of number of learnable parameters and the number of ﬂoating-point operations done by the model (e.g. [19]). This empirical observation that increasing model size is generally rewarded by improved performance leads us to look for ways to scale training to even larger models than those currently in use today." -- Aidan Gomez (ARC Nets NIPS: 2019)
 
-Scale is nonetheless limited by our training mechanism. Back-propagation attempts to optimize the loss with respect to the entirety of the model's weights at each step, but this suffers from the ‘gradient locking problem’: where deep model parameters must wait for following parameter before moving on to its next update step. This is prohibitive when the scale of depth of those networks reach the scale desired by modern machine learning needs -- or biological scale.
+Scale is nonetheless limited by our training mechanism. Back-propagation attempts to optimize the loss with respect to the entirety of the model's weights at each step, but this suffers from the ‘gradient locking problem’: where deep model parameters must wait for downstream parameters before moving on to its next update step. This is prohibitive when the scale of depth of those networks reach the scale desired by modern machine learning needs -- or biological scale.
 
 Training networks composed of many 'local' loss functions allow us to train smaller subsections of the network independently, dividing and conquering the problem so that each locality is not dependent on far off events in the large network, hence eliminating this issue. This is not dissimilar to the (decentralized) parallel structure of natural systems, and has been successfully applied to increase the scale of Neural Networks into the trillion parameter range. [Gomez 2019].
 
-While we have relieved an \textit{algorithmic barrier} with our move from global to local objectives, there is still a \textit{computational barrier} to building Neural Networks at biological scale. Specifically, it is not clear whether any one group has the hardware capabilities to run such a system; with some mild assumptions, a quadrillion parameter Neural Network would cost tens of millions of dollars to train [?], and this would be a single trained instance. And, it is not clear whether one set of individuals alone could maintain such a huge system, or morally, if a small group should be allowed that much power.
+While we have relieved an *algorithmic barrier* with our move from global to local objectives, there is still a *computational barrier* to building Neural Networks at biological scale. Specifically, it is not clear whether any one group has the hardware capabilities to run such a system: with some mild assumptions, training a quadrillion parameter Neural Network, just once, would cost tens of millions of dollars [?]. And, it is not clear whether one set of individuals alone could maintain such a huge system, or morally, if a small group should be allowed that much power.
 
-It is this paper's proposition that a solution to these concerns is a move from closed Machine Learning systems towards an open decentralized one. Instead of having one team and one model, the network is distributed across the web and run by a collaboration of teams, or persons, around the globe: Any computer or any engineer can contribute to this system. We do not require any centralized overhead. The system grows and adapts to the market demand for the network product. And the ownership, cost, and revenues of the model are split amongst it's contributors. -- from global to local control, to  mirror our earlier move from global to local objective. 
+It is the proposition of this system, that a solution to these concerns is a move from many closed Machine Learning systems towards an single open and decentralized one. The the network is distributed across the web and run by a collaboration of teams, or persons, around the globe: Any computer or any engineer can contribute to this system. We do not require any centralized overhead. The system grows and adapts to the market demand for the network product. And the ownership, cost, and revenues of the model are split amongst it's contributors. -- from global to local control to mirror move from global to local objective. 
 
-Within this new computing paradigm, components are organized around an incentive protocol which uses assumptions about the self-interested nature of the individual components to keep the system aligned to a global objective.  Examples include the Bitcoin protocol or Bittorrent, both of which run without executive overhead -- and at their zenith exceeded the scale of centralized computing systems by many magnitudes. 
+Within this new computing paradigm, components are organized around an incentive protocol which uses assumptions about the self-interested nature of the individual components to keep the system aligned to a global objective.  Sister technologies include the Bitcoin protocol or Bittorrent, both of which run without executive overhead -- and at their zenith exceeded the scale of centralized computing systems by many magnitudes. 
 
-Decentralized computing has been harnessed by other technologies to bring considerable volumes of [computing power](https://digiconomist.net/bitcoin-energy-consumption) and a large and diverse number of [collaborators](https://en.wikipedia.org/wiki/BitTorrent) to bear on a problem domain. This is promising for Machine Learning in particular which requires large amounts of computing power and benefits from extending model [capacity](https://arxiv.org/abs/1701.06538), [diversity](https://arxiv.org/pdf/1611.05725.pdf), and [collaboration](https://en.wikipedia.org/wiki/Ensemble_learning).
+These qualities appear to be a chacteristic of decentralized computing systems: they can be harnessed to bring considerable volumes of [computing power](https://digiconomist.net/bitcoin-energy-consumption) and a large and diverse number of [collaborators](https://en.wikipedia.org/wiki/BitTorrent) to bear on a problem domain. And this is promising for Machine Learning in particular, which requires large amounts of computing power and benefits from extending model [capacity](https://arxiv.org/abs/1701.06538), [diversity](https://arxiv.org/pdf/1611.05725.pdf), and [collaboration](https://en.wikipedia.org/wiki/Ensemble_learning).
 
-This project uses an incentive model organized around a token emission scheme and recommendation network. The token we use, BDNF, is biologically inspired by its neurotransmitter namesake, which acts in the human central nervous system to stimulate neuro-genesis and survival. We make the large leap to conclude 'The brain is a market, and BDNF is its currency.' -- using this analogy to form the inspirational guide through which the following system is designed.
-
-<img src="assets/brain_engineering_diagram.png" width="1000" />
+We follow this mold, and use an incentive model organized around a token emission scheme and recommendation network. The token we use, BDNF, is biologically inspired by its neurotransmitter namesake, which acts in the human central nervous system to stimulate neuro-genesis and survival. We make the large leap to conclude 'The brain is a market, and BDNF is its currency.' -- using this analogy to form the inspirational guide through which the following system is designed.
 
 ## Organization
 
-```
-                 [EOS]
-                   |
-              [Metagraph]
-           /       |       \
-[Dendrite] ---> [Nucleus] ---> [Synapse]
-           \       |       /
-                 [Main]
-```
+<img src="assets/brain_engineering_diagram.png" width="1000"  alt="An Engineering Diagram of the Brain." />
+
 
 ###### Nucleus
 The main Tensorflow graph is defined and trained within the Nucleus object. As is, the class is training a self supervised word-embedding over a dummy corpus of sentences in text8.zip. The result is a mapping which takes word to a 128 dimension vector, representing that word while maintaining its semantic properties.
@@ -132,6 +125,16 @@ The Metagraph object acts as an interface between the EOS blockchain and the res
 
 ###### EOS
 The EOS contract is separate from Dendrite. Nucleus, Synapse and Metagraph objects during execution. During testing, this class is run on a local EOS instance, but during production the contract is running in a decentralized manner across the EOS network.  
+
+```
+                 [EOS]
+                   |
+              [Metagraph]
+           /       |       \
+[Dendrite] ---> [Nucleus] ---> [Synapse]
+           \       |       /
+                 [Main]
+```
 
 
 ## Incentive     
