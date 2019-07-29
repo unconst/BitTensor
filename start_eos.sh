@@ -34,7 +34,7 @@ function run_local() {
   fi
 
 
-  if [[ "$(docker ps -a | grep $DOCKER_IMAGE_NAME:$DOCKER_IMAGE_TAG)" ]]; then
+  if [[ "$(docker ps -a | grep eos_container)" ]]; then
     log "=== stopping eos ==="
     docker kill eos_container || true
   fi

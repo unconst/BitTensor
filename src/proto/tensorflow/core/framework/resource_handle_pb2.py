@@ -87,11 +87,11 @@ _RESOURCEHANDLEPROTO = _descriptor.Descriptor(
 DESCRIPTOR.message_types_by_name['ResourceHandleProto'] = _RESOURCEHANDLEPROTO
 _sym_db.RegisterFileDescriptor(DESCRIPTOR)
 
-ResourceHandleProto = _reflection.GeneratedProtocolMessageType('ResourceHandleProto', (_message.Message,), {
-  'DESCRIPTOR' : _RESOURCEHANDLEPROTO,
-  '__module__' : 'proto.tensorflow.core.framework.resource_handle_pb2'
+ResourceHandleProto = _reflection.GeneratedProtocolMessageType('ResourceHandleProto', (_message.Message,), dict(
+  DESCRIPTOR = _RESOURCEHANDLEPROTO,
+  __module__ = 'proto.tensorflow.core.framework.resource_handle_pb2'
   # @@protoc_insertion_point(class_scope:bolttensorflow.ResourceHandleProto)
-  })
+  ))
 _sym_db.RegisterMessage(ResourceHandleProto)
 
 

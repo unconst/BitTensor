@@ -94,7 +94,7 @@ class Dendrite():
         try:
             # Build Stub and send spike.
             stub = proto.bolt_pb2_grpc.BoltStub(channel)
-            words_proto = tf.make_tensor_proto(words)
+            words_proto = tf.compat.v1.make_tensor_proto(words)
             response = stub.Spike(words_proto)
 
             # Deserialize response.

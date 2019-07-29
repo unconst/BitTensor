@@ -40,11 +40,11 @@ class BoltServicer(proto.bolt_pb2_grpc.BoltServicer):
         try:
             graph = tf.Graph()
             with graph.as_default(), tf.device('/cpu:0'):
-                saver = tf.train.import_meta_graph('data/' + self.identity + '/model.meta')
-                next_session = tf.Session()
-                saver.restore(next_session, tf.train.latest_checkpoint('data/' + self.identity))
+                saver = tf.compat.v1.train.import_meta_graph('data/' + self.identity + '/model.meta')
+                next_session = tf.compat.v1.Session()
+                saver.restore(next_session, tf.compat.v1.train.latest_checkpoint('data/' + self.identity))
                 next_session.run('init_all_tables')
-                next_session.run(tf.local_variables_initializer())
+                next_session.run(tf.compat.v1.local_variables_initializer())
                 next_session.run("embedding_output:0",
                         feed_dict={
                                 "inference_batch_words:0": [['UNK']], # Inference.
@@ -77,5 +77,5 @@ class BoltServicer(proto.bolt_pb2_grpc.BoltServicer):
                                     "inference_batch_words:0": batch_words, # Inference.
                                     'is_training:0': False
                                 })
-        embed_proto = tf.make_tensor_proto(embeddings)
+        embed_proto = tf.compat.v1.make_tensor_proto(embeddings)
         return embed_proto
