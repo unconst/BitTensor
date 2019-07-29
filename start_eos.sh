@@ -66,7 +66,6 @@ function run_remote() {
 function main() {
   read_command_line_args
 
-  echo $run_on_digital_ocean
   if [ !$run_on_digital_ocean ]; then
       log "running eos local."
       run_local

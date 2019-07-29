@@ -68,6 +68,7 @@ class BoltServicer(proto.bolt_pb2_grpc.BoltServicer):
             embed_proto: A bolttensorflow.TensorProto proto containing the embedded words
                 as outputed by running the session graph.
         """
+        logger.info('.')
         # TODO (const) The synapse should be competitively selecting which nodes
         # are allowed to query us based on the Metagraph information.
         batch_words = [[word] for word in request.string_val]

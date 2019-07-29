@@ -5,8 +5,9 @@ source ./scripts/constant.sh
 IDENTITY=$1
 ADDRESS=$2
 PORT=$3
-EOSURL=$4
-LOGDIR=$5
+TBPORT=$4
+EOSURL=$5
+LOGDIR=$6
 
 # Creates the system eoisio wallet. This is used to build our unique account.
 # In the future the eosio account will be replaced with your own.
@@ -96,6 +97,25 @@ function print_metagraph() {
   cleos -u $EOSURL get table bittensoracc bittensoracc metagraph
 }
 
+
+function start_tensorboard() {
+  log "=== start Tensorboard ==="
+  log "tensorboard --logdir=$LOGDIR --port=$TBPORT"
+  log "Tensorboard: http://127.0.0.1:$TBPORT"
+  tensorboard --logdir=$LOGDIR --port=$TBPORT &
+  TensorboardPID=$!
+}
+
+function start_neuron() {
+  # The main command.
+  # Start our Neuron object training, server graph, open dendrite etc.
+  log ""
+  log "=== start Neuron ==="
+  log "python src/main.py $IDENTITY $ADDRESS $PORT $EOSURL $LOGDIR"
+  python src/main.py $IDENTITY $ADDRESS $PORT $EOSURL $LOGDIR &
+  NueronPID=$!
+}
+
 function main() {
   # Create the state directory for logs and model checkpoints.
   # TODO(const) In the future this could be preset and contain our conf file.
@@ -109,6 +129,8 @@ function main() {
   log "   IDENTITY: $IDENTITY"
   log "   ADDRESS: $ADDRESS"
   log "   PORT: $PORT"
+  log "   TBPORT: $PORT"
+  log "   LOGDIR: $LOGDIR"
   log "}"
   log ""
   log "=== setup accounts ==="
@@ -118,10 +140,6 @@ function main() {
   # should absolutely change.
   # Check to see if eosio wallet exists.
   # If not, create eosio account and pull private keys to this wallet.
-  echo "IDENTITY=$IDENTITY"
-  echo "EOSURL=$EOSURL"
-  echo "ADDRESS=$ADDRESS"
-  echo "PORT=$PORT"
   echo "EOSIO_PRIVATE_KEY=5KQwrPbwdL6PhXujxW37FSSQZ1JiwsST4cqQzDeyXtP79zkvFD3"
   echo "EOSIO_PUBLIC_KEY=EOS6MRyAjQq8ud7hVNYcfnVPJqcVpscN5So8BhtHuGYqET5GDW5CV"
   echo "EOSIO_PASSWORD=PW5JgJBjC1QXf8XoYPFY56qF5SJLLJNfjHbCai3DyC6We1FeBRL8q"
@@ -152,18 +170,34 @@ function main() {
   # Print metagraph.
   print_metagraph
 
-  # Unpublish our account on script tear down. This uncluters the metegraph.
-  trap unsubscribe_account EXIT
-
   # Build protos
   ./src/build.sh
 
-  # The main command.
-  # Start our Neuron object training, server graph, open dendrite etc.
-  log ""
-  log "=== start neuron ==="
-  python src/main.py $IDENTITY $ADDRESS $PORT $EOSURL $LOGDIR
-  log "neuron shut down."
+  # Start Tensorboard.
+  start_tensorboard
+
+  # Start eh Neuron object.
+  start_neuron
+
+  # Trap control C (for clean docker container tear down.)
+  function teardown() {
+    # Perform program exit & housekeeping
+    kill -9 $TensorboardPID
+    log "=== stopped Tensorboard ==="
+
+    kill -9 $NueronPID
+    log "=== stopped Nucleus ==="
+
+    unsubscribe_account
+    log "=== unsubscribed from Metagraph. ==="
+
+    exit 0
+  }
+  # NOTE(const) SIGKILL cannot be caught because it goes directly to the kernal.
+  trap teardown INT SIGHUP SIGINT SIGTERM
+
+  # idle waiting for abort from user
+  read -r -d '' _ </dev/tty
 }
 
 # Run.
