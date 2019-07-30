@@ -4,27 +4,18 @@ set -o errexit
 # change to script's directory
 cd "$(dirname "$0")"
 
+# Load constants.
 source scripts/constant.sh
 
-function read_command_line_args() {
-  # Flag to run docker image on digital ocean.
-  run_on_digital_ocean=false
-
-  # Flag to print logs.
-  dolog=true
-
-  while [[ "$1" =~ ^- && ! "$1" == "--" ]]; do case $1 in
-    -do | --digital_ocean )
-      run_on_digital_ocean=true
-      ;;
-    --nolog )
-      dolog=false
-      ;;
-  esac; shift; done
-  if [[ "$1" == '--' ]]; then shift; fi
-
-}
-
+verbose='true'
+remote='false'
+while getopts 'rv' flag; do
+  case "${flag}" in
+    r) remote='true' ;;
+    v) verbose='true' ;;
+    *) error "Unexpected option ${flag}" ;;
+  esac
+done
 
 function run_local() {
   script="./scripts/init_eos.sh"
@@ -49,7 +40,7 @@ function run_local() {
   --mount type=bind,src="$(pwd)"/eos_config,dst=/mnt/dev/config \
   -w "/opt/eosio/bin/" $DOCKER_IMAGE_NAME:$DOCKER_IMAGE_TAG /bin/bash -c "$script"
 
-  if [ "$1" != "--nolog" ]
+  if [ "$verbose" == "true" ]
   then
       log "=== follow eos_container logs ==="
       docker logs eos_container --follow
@@ -64,9 +55,8 @@ function run_remote() {
 
 
 function main() {
-  read_command_line_args
 
-  if [ !$run_on_digital_ocean ]; then
+  if [ "$remote" == "false" ]; then
       log "running eos local."
       run_local
   else
