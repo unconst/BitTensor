@@ -57,7 +57,7 @@ log "=== deploy smart contract ==="
 # $2 account holder name of the smart contract
 # $3 wallet for unlock the account
 # $4 password for unlocking the wallet
-deploy_contract.sh bittensor bittensoracc bittensorwal $(cat bittensor_wallet_password.txt)
+./scripts/deploy_contract.sh bittensor bittensoracc bittensorwal $(cat bittensor_wallet_password.txt)
 
 log "=== end of setup blockchain accounts and smart contract ==="
 # create a file to indicate the blockchain has been initialized

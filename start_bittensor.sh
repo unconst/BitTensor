@@ -12,6 +12,46 @@ port=$(( ( RANDOM % 60000 ) + 5000 ))
 tbport=$((port+1))
 eosurl="http://0.0.0.0:8888"
 logdir="data/$identity/logs"
+remote="false"
+token="none"
+
+# Read command line args
+while test 7 -gt 0; do
+  case "$1" in
+    -h|--help)
+      echo "starts a single bittensor instance."
+      exit 0
+      ;;
+    -i|--identity)
+      identity=`echo $2`
+      shift
+      ;;
+    -p|--port)
+      port=`echo $2`
+      tbport=$((port+1))
+      shift
+      ;;
+    -e|--eosurl)
+      eosurl=`echo $2`
+      shift
+      ;;
+    -l|--logdir)
+      logdir=`echo $2`
+      shift
+      ;;
+    -r|--remote)
+      remote="true"
+      shift
+      ;;
+    -t|--token)
+      token=`echo $2`
+      shift
+      ;;
+    *)
+      break
+      ;;
+  esac
+done
 
 script="./scripts/bittensor.sh"
 COMMAND="$script $identity $address $port $tbport $eosurl $logdir"
