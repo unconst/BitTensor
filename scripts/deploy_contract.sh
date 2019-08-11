@@ -1,5 +1,6 @@
 #!/usr/bin/env bash
 set -o errexit
+source scripts/constant.sh
 
 # $1 smart contract name
 # $2 account holder name of the smart contract
@@ -22,9 +23,9 @@ if [ ! -z $3 ]; then cleos wallet unlock -n $3 --password $4 || true; fi
 
 # compile smart contract to wasm and abi files using EOSIO.CDT (Contract Development Toolkit)
 # https://github.com/EOSIO/eosio.cdt
-(
-  eosio-cpp -abigen "$CONTRACTSPATH/$1/$1.cpp" -o "$COMPILEDCONTRACTSPATH/$1/$1.wasm" --contract "$1"
-) &&
+log "=== compile contract: $1 ==="
+eosio-cpp -abigen "$CONTRACTSPATH/$1/$1.cpp" -o "$COMPILEDCONTRACTSPATH/$1/$1.wasm" --contract "$1"
 
 # set (deploy) compiled contract to blockchain
+log "=== cleos set contract: $1 ==="
 cleos set contract $2 "$COMPILEDCONTRACTSPATH/$1/" --permission $2

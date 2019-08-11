@@ -50,7 +50,7 @@ cleos wallet import -n bittensorwal --private-key 5JD9AGTuTeD5BXZwGQ5AtwBqHK21aH
 # create account for bittensoracc with above wallet's public keys
 cleos create account eosio bittensoracc EOS6PUh9rs7eddJNzqgqDx1QrspSHLRxLMcRdwHZZRL4tpbtvia5B EOS8BCgapgYA2L4LJfCzekzeSr3rzgSTUXRXwNi8bNRoz31D14en9
 
-# * Replace "bittensoracc" by your own account name when you start your own project
+# TODO(const) "bittensoracc" by a new account in production.
 
 log "=== deploy smart contract ==="
 # $1 smart contract name
