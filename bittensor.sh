@@ -96,7 +96,7 @@ function init_host() {
   if [ "$remote" == "true" ]; then
     # Create DO instance.
     if [[ "$(docker-machine ls | grep bittensor-$identity)" ]]; then
-      log "bitensor-$identity droplet already exists."
+      log "bittensor-$identity droplet already exists."
     else
       log "Creating Droplet: bittensor-$identity"
       DROPLET_CREATE="docker-machine create --driver digitalocean --digitalocean-size s-4vcpu-8gb --digitalocean-access-token ${token} bittensor-$identity"
@@ -132,10 +132,10 @@ function start_service () {
   fi
 
   # Stopping instance if already existent.
-  if [[ "$(docker ps -a | grep bitensor-$identity)" ]]; then
-    log "=== stopping bitensor-$identity ==="
-    docker stop bitensor-$identity || true
-    docker rm bitensor-$identity || true
+  if [[ "$(docker ps -a | grep bittensor-$identity)" ]]; then
+    log "=== stopping bittensor-$identity ==="
+    docker stop bittensor-$identity || true
+    docker rm bittensor-$identity || true
   fi
 
 
@@ -148,34 +148,34 @@ function start_service () {
   # Run docker service.
   log "=== run docker container from the $DOCKER_IMAGE_NAME:$DOCKER_IMAGE_TAG image ==="
   if [ "$remote" == "false" ]; then
-    docker run --rm --name bitensor-$identity -d  -t \
+    docker run --rm --name bittensor-$identity -d  -t \
     --network="host" \
     --mount type=bind,src="$(pwd)"/scripts,dst=/bittensor/scripts \
     --mount type=bind,src="$(pwd)"/src,dst=/bittensor/src \
     $DOCKER_IMAGE_NAME:$DOCKER_IMAGE_TAG /bin/bash -c "$COMMAND"
   else
-    docker run --rm --name bitensor-$identity -d  -t \
+    docker run --rm --name bittensor-$identity -d  -t \
     --network="host" \
     $DOCKER_IMAGE_NAME:$DOCKER_IMAGE_TAG /bin/bash -c "$COMMAND"
   fi
 
-  docker logs bitensor-$identity --follow
+  docker logs bittensor-$identity --follow
 
 
   if [ "$remote" == "true" ]; then
     echo "To tear down this host run:"
-    echo "  docker-machine stop bitensor-$identity & docker-machine rm bitensor-$identity --force "
+    echo "  docker-machine stop bittensor-$identity & docker-machine rm bittensor-$identity --force "
   fi
 
   # Trap control C (for clean docker container tear down.)
   # function teardown() {
   #   log "=== stop bittensor_container ==="
-  #   docker stop bitensor-$identity
+  #   docker stop bittensor-$identity
   #   eval $(docker-machine env -u)
   #
   #   if [ "$remote" == "true" ]; then
   #     echo "To tear down this host run:"
-  #     echo "  docker-machine rm bitensor-$identity --force  "
+  #     echo "  docker-machine rm bittensor-$identity --force  "
   #   fi
   #   exit 0
   # }
