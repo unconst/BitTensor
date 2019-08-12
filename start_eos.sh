@@ -15,10 +15,13 @@ token="none"
 while test 3 -gt 0; do
   case "$1" in
     -h|--help)
-      echo "starts a single eos instance"
-      echo " -h : print help comments."
-      echo " -r : run instance on a remote digital ocean instance."
-      echo " -t TOKEN : if -r is set, then use this token to create instance."
+      echo "Script for starting an Bittensor-EOS chain instance."
+      echo "Usage ./start_eos.sh [OPTIONS]"
+      echo ""
+      echo "Options:"
+      echo " -h, --help         Print these comments and exit."
+      echo " -r, --remote       Run instance on a remote digital ocean instance."
+      echo " -t, --token        If -r is set: Use this token to create instance."
       exit 0
       ;;
     -r|--remote)
