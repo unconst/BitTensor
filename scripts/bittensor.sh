@@ -56,9 +56,9 @@ function create_account() {
   if [ $? -eq 0 ]; then
       success "created account: $IDENTITY."
   else
-      failure "failed to created account: $IDENTITY. Check your EOSURL connection."
+      failure "failed to created account: $IDENTITY. With error above."
       cat data/$IDENTITY/bittensor_logs.out 2>&1
-      exit 1
+      #exit 1
   fi
 }
 

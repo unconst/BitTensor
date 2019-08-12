@@ -105,18 +105,18 @@ _TENSORSHAPEPROTO.fields_by_name['dim'].message_type = _TENSORSHAPEPROTO_DIM
 DESCRIPTOR.message_types_by_name['TensorShapeProto'] = _TENSORSHAPEPROTO
 _sym_db.RegisterFileDescriptor(DESCRIPTOR)
 
-TensorShapeProto = _reflection.GeneratedProtocolMessageType('TensorShapeProto', (_message.Message,), dict(
+TensorShapeProto = _reflection.GeneratedProtocolMessageType('TensorShapeProto', (_message.Message,), {
 
-  Dim = _reflection.GeneratedProtocolMessageType('Dim', (_message.Message,), dict(
-    DESCRIPTOR = _TENSORSHAPEPROTO_DIM,
-    __module__ = 'proto.tensorflow.core.framework.tensor_shape_pb2'
+  'Dim' : _reflection.GeneratedProtocolMessageType('Dim', (_message.Message,), {
+    'DESCRIPTOR' : _TENSORSHAPEPROTO_DIM,
+    '__module__' : 'proto.tensorflow.core.framework.tensor_shape_pb2'
     # @@protoc_insertion_point(class_scope:bolttensorflow.TensorShapeProto.Dim)
-    ))
+    })
   ,
-  DESCRIPTOR = _TENSORSHAPEPROTO,
-  __module__ = 'proto.tensorflow.core.framework.tensor_shape_pb2'
+  'DESCRIPTOR' : _TENSORSHAPEPROTO,
+  '__module__' : 'proto.tensorflow.core.framework.tensor_shape_pb2'
   # @@protoc_insertion_point(class_scope:bolttensorflow.TensorShapeProto)
-  ))
+  })
 _sym_db.RegisterMessage(TensorShapeProto)
 _sym_db.RegisterMessage(TensorShapeProto.Dim)
 
