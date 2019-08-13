@@ -16,14 +16,15 @@ source ./scripts/constant.sh
 
 function print_help () {
   echo "Script for starting Bittensor instances."
-  echo "Usage ./start_bittensor.sh [OPTIONS]"
+  echo "Usage ./bittensor.sh [OPTIONS]"
   echo ""
   echo "Options:"
   echo " -h, --help       Print this help message and exit"
+  echo " -i, --identity   EOS identity."
   echo " -l, --logdir     Logging directory."
   echo " -p, --port       Server side port for accepting requests."
   echo " -e, --eosurl     URL for EOS blockchain isntance."
-  echo " -r, --remote      Run instance locally."
+  echo " -r, --remote     Run instance locally."
   echo " -t, --token      Digital ocean API token."
 }
 
@@ -112,7 +113,6 @@ function init_host() {
 }
 
 function init_image () {
-  log "init_image"
   # Init image if non-existent.
   log "=== building bittensor image. ==="
   if [[ "$(docker images -q $DOCKER_IMAGE_NAME:$DOCKER_IMAGE_TAG 2> /dev/null)" == "" ]]; then

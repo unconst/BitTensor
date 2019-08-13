@@ -101,7 +101,7 @@ function print_metagraph() {
 function start_tensorboard() {
   log "=== start Tensorboard ==="
   log "tensorboard --logdir=$LOGDIR --port=$TBPORT"
-  log "Tensorboard: http://127.0.0.1:$TBPORT"
+  log "Tensorboard: http://0.0.0.0:$TBPORT"
   tensorboard --logdir=$LOGDIR --port=$TBPORT &
   TensorboardPID=$!
 }
@@ -129,7 +129,7 @@ function main() {
   log "   IDENTITY: $IDENTITY"
   log "   ADDRESS: $ADDRESS"
   log "   PORT: $PORT"
-  log "   TBPORT: $PORT"
+  log "   TBPORT: $TBPORT"
   log "   LOGDIR: $LOGDIR"
   log "}"
   log ""
