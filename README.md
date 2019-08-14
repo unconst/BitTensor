@@ -149,7 +149,7 @@ Client nodes communicate upstream to servers and, while training their local obj
 
 <img src="assets/weboftrust.jpg" width="1000" />
 
-The DWG is updated discretely through emission transactions, and are conglomerated on the EOS blockchain. This process produces global attribution scores: between the full-network and each sub-grph. New tokens are distributed in proportion to this global-attributuon.
+The DWG is updated discretely through emission transactions, and are aggregated on the EOS chain. This process produces global attribution scores: a score between the full-network and each sub-graph. New tokens are distributed in proportion to this global attributuon.
 
 Below is a simulated version of that emission written in numpy:
 
