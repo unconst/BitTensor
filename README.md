@@ -92,7 +92,7 @@ Training networks composed of many 'local' loss functions allow us to train smal
 
 While we have relieved an *algorithmic barrier* with our move from global to local objectives, there is still a *computational barrier* to building Neural Networks at biological scale. Specifically, it is not clear whether any one group has the hardware capabilities to run such a system: with some mild assumptions, training a quadrillion parameter Neural Network, just once, would cost tens of millions of dollars [?]. And, it is not clear whether one set of individuals alone could maintain such a huge system, or morally, if a small group should be allowed that much power.
 
-It is the proposition of this system, that a solution to these concerns is a move from many closed Machine Learning systems towards an single open and decentralized one. The the network is distributed across the web and run by a collaboration of teams, or persons, around the globe: Any computer or any engineer can contribute to this system. We do not require any centralized overhead. The system grows and adapts to the market demand for the network product. And the ownership, cost, and revenues of the model are split amongst it's contributors. -- from global to local control to mirror move from global to local objective. 
+It is the proposition of this system, that a solution to these concerns is a move from many closed Machine Learning systems towards an single open and decentralized one. The network is distributed across the web and run by a collaboration of teams, or persons, around the globe: Any computer or any engineer can contribute to this system. We do not require any centralized overhead. The system grows and adapts to the market demand for the network product. And the ownership, cost, and revenues of the model are split amongst it's contributors. -- a move from global to local control mirroring our move from global to local objective. 
 
 Within this new computing paradigm, components are organized around an incentive protocol which uses assumptions about the self-interested nature of the individual components to keep the system aligned to a global objective.  Sister technologies include the Bitcoin protocol or Bittorrent, both of which run without executive overhead -- and at their zenith exceeded the scale of centralized computing systems by many magnitudes. 
 
@@ -149,7 +149,7 @@ Client nodes communicate upstream to servers and, while training their local obj
 
 <img src="assets/weboftrust.jpg" width="1000" />
 
-The DWG is updated discretely through emission transactions, and are conglomerated on the EOS blockchain. This process produces global attribution scores: between the full-network and each sub-grph. New tokens are distributed in proportion to this global-attributuon.
+The DWG is updated discretely through emission transactions, and are aggregated on the EOS chain. This process produces global attribution scores: a score between the full-network and each sub-graph. New tokens are distributed in proportion to this global attributuon.
 
 Below is a simulated version of that emission written in numpy:
 
