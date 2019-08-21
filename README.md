@@ -128,29 +128,6 @@ We follow this mold, and use an incentive model organized around a token emissio
 
 Above: An engineering diagram of the human brain. For inspiration.
 
-Our approach extends the computing resources -- and state -- of a standard Machine Learning model across a trust-less boundary: from data-center to web. Each participating computer in the network is a standalone learning component wrapped with a p2p networking stack -- we call these components neurons.
-
-Connections between Neurons carry tensors. This reflects the standard computational structure of an operation in a Tensorflow graph: Passing signals in the forward direction and gradients in reverse. The entire network is trainable with respect to the loss function inherent to any node in the network.
-
-Each node in the network is training independently with respect to a local loss function in conjunction with the auxiliary loss attained from gradients passed by upstream nodes in the network. Not dissimilar to the loss functions trained in ARCNets.[?] The training of a word embeddings is used in the first instance. Each node maintains it’s own dataset.  
-
-The internal Neural network model within each component queries it’s peers within the network at each training step to produce a input vector composed of the nest input and the output of its neighbours. Since all neighbours are training a word embedding of fixed dimension, these can be concatenated and fed into the network at the current node. Queries to downstream peers involves a inference over their internet model. Thus each training step is a iteration over our local peer and it’s neighbour models.
-
-The recursive nature of the network requires that message passing be stopped at some point. In the simplest case this is just a depth of 1, which forces the recession to stop at the first upstream nodes. Here the network input must be replaced by a dummy (since we no longer have the inputs from our sub peers). In this place we use distillation to mimic our peers models at the local level, running the distilled model to attain a approximate solution. This allows the network to run much faster and limits message passing at the expense of using a distilled or approximate model during training. In addition, the distillation allows any node to remove the full model from the network after training, it can extract a distilled model which does not require any network connections.
-
-The extension from trustful to trust-less compute nodes necessitates a manner of determining which computers are doing useful work so that we can disconnect from them, and in addition, a manner of incentivizing participation. It is expensive to run a machine learning micro-service.
-We build an incentive structure around a collaborative filtering technique not dissimilar to Google’s page rank: where each nodes in the network post their edge set (the connections they have with other nodes). In addition, each node computes an attribution score for this connection which is a subjective interpretation of the usefulness of the downstream component to it.
-
-We use fishers information pruning as an initial attribution technique, however any attribution method is equally allowed as long as it produces floating point normalized scores for each connection.
-
-In aggregate the total of attribution scores forms a directed weighted graph. Attribution scores are transitive by nature which allows us to determine which network nodes within the graph are producing value to the whole: a network attribution instead of a edge attribution.
-
-We sink this network information to a smart contract running on the EOS blockchain. This allows us to build into the network a digitally scarce token which can carry value. We mint new tokens into the network in proportion to the network-attribution received by each node. A 1% inflation is set which halves every N blocks in the chain to mimic the scarce deflation of Bitcoin.  
-
-We protect against Sybil attacks within the network using this token as well. We force naive nodes to block connections from non-stake holding nodes. And we weight attribution scores in proportion to the stake held by the node in question. This is a mild protection and we are investigating the intersection between market dynamics and this token emission scheme.
-
-
-## Organization
 
 ```
 
@@ -189,7 +166,6 @@ The Metagraph object acts as an interface between the EOS blockchain and the res
 
 ###### EOS
 The EOS contract is separate from Dendrite. Nucleus, Synapse and Metagraph objects during execution. During testing, this class is run on a local EOS instance, but during production the contract is running in a decentralized manner across the EOS network.  
-
 
 
 
