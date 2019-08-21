@@ -1,3 +1,0 @@
-./bittensor.sh:101:  # TODO(const) In the future this could be preset and contain our conf file.
-./bittensor.sh:117:  # TODO(const) These are currently hard coded to eosio main. In prodution this
-./todo.sh:3:grep -rnw . -e 'TODO' > TODO.txt

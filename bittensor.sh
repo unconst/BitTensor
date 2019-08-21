@@ -167,13 +167,23 @@ function start_service () {
     $DOCKER_IMAGE_NAME:$DOCKER_IMAGE_TAG /bin/bash -c "$COMMAND"
   fi
 
+  #Trap control C (for clean docker container tear down.)
+  function teardown() {
+    log "=== stop bittensor_container ==="
+    docker stop bittensor-$identity
+
+    if [ "$remote" == "true" ]; then
+      eval $(docker-machine env -u)
+      echo "To tear down this host run:"
+      echo "  docker-machine stop bittensor-$identity & docker-machine rm bittensor-$identity --force "
+    fi
+    exit 0
+  }
+  # NOTE(const) SIGKILL cannot be caught because it goes directly to the kernal.
+  trap teardown INT SIGHUP SIGINT SIGTERM
+
+  log "=== follow logs ==="
   docker logs bittensor-$identity --follow
-
-
-  if [ "$remote" == "true" ]; then
-    echo "To tear down this host run:"
-    echo "  docker-machine stop bittensor-$identity & docker-machine rm bittensor-$identity --force "
-  fi
 
 }
 
