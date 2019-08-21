@@ -24,6 +24,9 @@ void bittensor::subscribe( const name this_user,
     // TODO(const): We need to sub the balance from the bittensor pool
     // and then add it to the staked balance.
 
+    // TODO(const): We need to be able to update subscribe here. Change IP for
+    // instance
+
     // Add a new element to the graph with 0 stake.
     if( iterator == graph.end() )
     {

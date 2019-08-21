@@ -2,12 +2,21 @@
 source ./scripts/constant.sh
 
 # Arguments to this script.
+
+# Network identity
 IDENTITY=$1
-ADDRESS=$2
-PORT=$3
-TBPORT=$4
-EOSURL=$5
-LOGDIR=$6
+# Address to post to the EOS chain. (our API endpoint)
+SERVE_ADDRESS=$2
+# Local address to bind our server to.
+BIND_ADDRESS=$3
+# Port to bind endpoint on.
+PORT=$4
+# Port to bind Tensorboard on.
+TBPORT=$5
+# URL of EOS endpoint.
+EOSURL=$6
+# Directory to save checkpoints and logs.
+LOGDIR=$7
 
 # Creates the system eoisio wallet. This is used to build our unique account.
 # In the future the eosio account will be replaced with your own.
@@ -65,8 +74,8 @@ function create_account() {
 # Publish our newly formed account into the bittensoracc metagraph. We publish
 # our id, address, and port allowing other nodes to communicate with us.
 function subscribe_account() {
-  trace "cleos -u $EOSURL push action bittensoracc subscribe "["$IDENTITY", "$ADDRESS", "$PORT"]" -p $IDENTITY@active"
-  cleos -u $EOSURL push action bittensoracc subscribe "["$IDENTITY", "$ADDRESS", "$PORT"]" -p $IDENTITY@active >> data/$IDENTITY/bittensor_logs.out 2>&1
+  trace "cleos -u $EOSURL push action bittensoracc subscribe "["$IDENTITY", "$SERVE_ADDRESS", "$PORT"]" -p $IDENTITY@active"
+  cleos -u $EOSURL push action bittensoracc subscribe "["$IDENTITY", "$SERVE_ADDRESS", "$PORT"]" -p $IDENTITY@active >> data/$IDENTITY/bittensor_logs.out 2>&1
   if [ $? -eq 0 ]; then
       success "subscribe account: $IDENTITY."
   else
@@ -101,7 +110,7 @@ function print_metagraph() {
 function start_tensorboard() {
   log "=== start Tensorboard ==="
   log "tensorboard --logdir=$LOGDIR --port=$TBPORT"
-  log "Tensorboard: http://0.0.0.0:$TBPORT"
+  log "Tensorboard: http://$BIND_ADDRESS:$TBPORT"
   tensorboard --logdir=$LOGDIR --port=$TBPORT &
   TensorboardPID=$!
 }
@@ -111,8 +120,8 @@ function start_neuron() {
   # Start our Neuron object training, server graph, open dendrite etc.
   log ""
   log "=== start Neuron ==="
-  log "python src/main.py $IDENTITY $ADDRESS $PORT $EOSURL $LOGDIR"
-  python src/main.py $IDENTITY $ADDRESS $PORT $EOSURL $LOGDIR &
+  log "python src/main.py $IDENTITY $SERVE_ADDRESS $BIND_ADDRESS $PORT $EOSURL $LOGDIR"
+  python src/main.py $IDENTITY $SERVE_ADDRESS $BIND_ADDRESS $PORT $EOSURL $LOGDIR &
   NueronPID=$!
 }
 
@@ -127,7 +136,8 @@ function main() {
   log "Args {"
   log "   EOSURL: $EOSURL"
   log "   IDENTITY: $IDENTITY"
-  log "   ADDRESS: $ADDRESS"
+  log "   SERVE_ADDRESS: $SERVE_ADDRESS"
+  log "   BIND_ADDRESS: $BIND_ADDRESS"
   log "   PORT: $PORT"
   log "   TBPORT: $TBPORT"
   log "   LOGDIR: $LOGDIR"

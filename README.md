@@ -23,7 +23,7 @@
 
 ## Overview
 
-BitTensor is a new class of Machine Learning model which is trained across a p2p network, it enables any computer and any engineer in the world to contribute.
+BitTensor is a new class of Machine Learning model which is trained across a p2p network, it enables any computer and any engineer in the world to contribute in training.
 
 The nature of trust-less computing necessitates that these contributions are combined through incentive rather than direct control from any one computer. We use a digital token to carry that incentive signal through the network: where the magnitude of this incentive is derived from a p2p collaborative filtering technique similar to Google's Page rank algorithm.  
 
@@ -92,17 +92,70 @@ Training networks composed of many 'local' loss functions allow us to train smal
 
 While we have relieved an *algorithmic barrier* with our move from global to local objectives, there is still a *computational barrier* to building Neural Networks at biological scale. Specifically, it is not clear whether any one group has the hardware capabilities to run such a system: with some mild assumptions, training a quadrillion parameter Neural Network, just once, would cost tens of millions of dollars [?]. And, it is not clear whether one set of individuals alone could maintain such a huge system, or morally, if a small group should be allowed that much power.
 
-It is the proposition of this system, that a solution to these concerns is a move from many closed Machine Learning systems towards an single open and decentralized one. The network is distributed across the web and run by a collaboration of teams, or persons, around the globe: Any computer or any engineer can contribute to this system. We do not require any centralized overhead. The system grows and adapts to the market demand for the network product. And the ownership, cost, and revenues of the model are split amongst it's contributors. -- a move from global to local control mirroring our move from global to local objective. 
+It is the proposition of this system, that a solution to these concerns is a move from many closed Machine Learning systems towards an single open and decentralized one. The network is distributed across the web and run by a collaboration of teams, or persons, around the globe: Any computer or any engineer can contribute to this system. We do not require any centralized overhead. The system grows and adapts to the market demand for the network product. And the ownership, cost, and revenues of the model are split amongst it's contributors. -- a move from global to local control mirroring our move from global to local objective.
 
-Within this new computing paradigm, components are organized around an incentive protocol which uses assumptions about the self-interested nature of the individual components to keep the system aligned to a global objective.  Sister technologies include the Bitcoin protocol or Bittorrent, both of which run without executive overhead -- and at their zenith exceeded the scale of centralized computing systems by many magnitudes. 
+Within this new computing paradigm, components are organized around an incentive protocol which uses assumptions about the self-interested nature of the individual components to keep the system aligned to a global objective.  Sister technologies include the Bitcoin protocol or Bittorrent, both of which run without executive overhead -- and at their zenith exceeded the scale of centralized computing systems by many magnitudes.
 
 These qualities appear to be a chacteristic of decentralized computing systems: they can be harnessed to bring considerable volumes of [computing power](https://digiconomist.net/bitcoin-energy-consumption) and a large and diverse number of [collaborators](https://en.wikipedia.org/wiki/BitTorrent) to bear on a problem domain. And this is promising for Machine Learning in particular, which requires large amounts of computing power and benefits from extending model [capacity](https://arxiv.org/abs/1701.06538), [diversity](https://arxiv.org/pdf/1611.05725.pdf), and [collaboration](https://en.wikipedia.org/wiki/Ensemble_learning).
 
 We follow this mold, and use an incentive model organized around a token emission scheme and recommendation network. The token we use, BDNF, is biologically inspired by its neurotransmitter namesake, which acts in the human central nervous system to stimulate neuro-genesis and survival. We make the large leap to conclude 'The brain is a market, and BDNF is its currency.' -- using this analogy to form the inspirational guide through which the following system is designed.
 
-## Organization
+## Overview
 
 <img src="assets/brain_engineering_diagram.png" width="1000"  alt="An Engineering Diagram of the Brain." />
+
+Above: An engineering diagram of the human brain, inspirational and daunting depending.
+
+#### Intro.
+
+Our approach extends the computing resources -- and state -- of a standard Machine Learning model across a trustless boundary: from data-center to web. Each participating computer in the network is a standalone learning component wrapped with a p2p networking stack -- we call these components neurons.
+
+
+```
+
+                                     [EOS]
+                                       |
+                                  [Metagraph]
+                               /       |       \
+                    ----------------------------------------
+                  |                  Neuron                  |
+                  |                                          |
+                  | [Dendrite] ---> [Nucleus] ---> [Synapse] |
+                  |                                          |
+                  |                                          |
+                    ----------------------------------------
+                               \       |       /
+                                     [Main]
+```
+
+
+
+Connections between Neurons carry tensors. This reflects the standard computational structure of an operation in a Tensorflow graph: Passing signals in the forward direction and gradients in reverse. The entire network is trainable with respect to the loss function inherent to any node in the network.
+
+
+Each node in the network is training independently with respect to a local loss function in conjunction with the auxillary loss attained from gradients passed by upstream nodes in the network. Not dissimilar to the loss functions trained in ARCNets.[?] The training of a word embeddings is used in the first instance. Each node maintains it’s own dataset.  
+
+The internal Neural network model within each component queries it’s peers within the network at each training step to produce a input vector composed of the nest input and the output of its neighbours. Since all neighbours are training a word embedding of fixed dimension, these can be concatenated and fed into the network at the current node. Queries to downstream peers involves a inference over their internet model. Thus each training step is a iteration over our local peer and it’s neighbour models.
+\bigskip
+
+The recursive nature of the network requires that message passing be stopped at some point. In the simplest case this is just a depth of 1, which forces the recession to stop at the first upstream nodes. Here the network input must be replaced by a dummy (since we no longer have the inputs from our sub peers). In this place we use distillation to mimic our peers models at the local level, running the distilled model to attain a approximate solution. This allows the network to run much faster and limits message passing at the expense of using a distilled or approximate model during training. In addition, the distillation allows any node to remove the full model from the network after training, it can extract a distilled model which does not require any network connections.
+\bigskip
+
+The extension from trustful to trust-less compute nodes necessitates a manner of determining which computers are doing useful work so that we can disconnect from them, and in addition, a manner of incentivizing participation. It is expensive to run a machine learning micro-service.
+We build an incentive structure around a collaborative filtering technique not dissimilar to Google’s page rank: where each nodes in the network post their edge set (the connections they have with other nodes). In addition, each node computes an attribution score for this connection which is a subjective interpretation of the usefulness of the downstream component to it.
+\bigskip
+
+We use fishers information pruning as an initial attribution technique, however any attribution method is equally allowed as long as it produces floating point normalized scores for each connection.
+\bigskip
+
+In aggregate the total of attribution scores forms a directed weighted graph. Attribution scores are transitive by nature which allows us to determine which network nodes within the graph are producing value to the whole: a network attribution instead of a edge attribution.
+\bigskip
+
+We sink this network information to a smart contract running on the EOS blockchain. This allows us to build into the network a digitally scarce token which can carry value. We mint new tokens into the network in proportion to the network-attribution received by each node. A 1% inflation is set which halves every N blocks in the chain to mimic the scarce deflation of Bitcoin.  
+\bigskip
+
+We protect against Sybil attacks within the network using this token as well. We force naive nodes to block connections from non-stake holding nodes. And we weight attribution scores in proportion to the stake held by the node in question. This is a mild protection and we are investigating the intersection between market dynamics and this token emission scheme.
+\bigskip
 
 
 ###### Nucleus
@@ -126,15 +179,7 @@ The Metagraph object acts as an interface between the EOS blockchain and the res
 ###### EOS
 The EOS contract is separate from Dendrite. Nucleus, Synapse and Metagraph objects during execution. During testing, this class is run on a local EOS instance, but during production the contract is running in a decentralized manner across the EOS network.  
 
-```
-                 [EOS]
-                   |
-              [Metagraph]
-           /       |       \
-[Dendrite] ---> [Nucleus] ---> [Synapse]
-           \       |       /
-                 [Main]
-```
+
 
 
 ## Incentive     

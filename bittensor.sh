@@ -139,9 +139,17 @@ function start_service () {
   fi
 
 
+  # Print instance IP and port for connection.
+  if [ "$remote" == "true" ]; then
+    serve_address=$(eval docker-machine ip bittensor-$identity)
+    log "serve_address: $serve_address:$port"
+  else
+    serve_address="127.0.0.1"
+  fi
+
   # Build start command.
   script="./scripts/bittensor.sh"
-  COMMAND="$script $identity $bind_address $port $tbport $eosurl $logdir"
+  COMMAND="$script $identity $serve_address $bind_address $port $tbport $eosurl $logdir"
   log "Run command: $COMMAND"
 
 
@@ -166,21 +174,6 @@ function start_service () {
     echo "To tear down this host run:"
     echo "  docker-machine stop bittensor-$identity & docker-machine rm bittensor-$identity --force "
   fi
-
-  # Trap control C (for clean docker container tear down.)
-  # function teardown() {
-  #   log "=== stop bittensor_container ==="
-  #   docker stop bittensor-$identity
-  #   eval $(docker-machine env -u)
-  #
-  #   if [ "$remote" == "true" ]; then
-  #     echo "To tear down this host run:"
-  #     echo "  docker-machine rm bittensor-$identity --force  "
-  #   fi
-  #   exit 0
-  # }
-  # # NOTE(const) SIGKILL cannot be caught because it goes directly to the kernal.
-  # trap teardown INT SIGHUP SIGINT SIGTERM
 
 }
 
