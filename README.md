@@ -8,6 +8,7 @@
 
 - [Overview](#overview)
 - [To-Run-Locally](#to-run-locally)
+- [To-Run-Testnet](#to-run-testnet)
 - [To-Run-Remotely](#to-run-remotely)
 - [Motivation](#motivation)
 - [Organization](#organization)
@@ -54,7 +55,25 @@ $ ./start_eos.sh
 
 ```
 
-## To-Run-Remotely (TODO)
+## To-Run-Testnet
+
+1. [Install Docker](https://docs.docker.com/install/)
+1. [Make account on Digital Ocean](https://www.digitalocean.com/)
+1. [Make a Digital Ocean API key](https://cloud.digitalocean.com/account/api/tokens)
+
+```
+$ git clone https://github.com/unconst/BitTensor
+$ cd BitTensor
+
+# Run Node 1.
+# ./bittensor.sh --remote --token $DIGITAL_OCEAN_TOKEN --eosurl 142.93.177.245:8888
+
+# Run Node 2.
+# ./bittensor.sh --remote --token $DIGITAL_OCEAN_TOKEN --eosurl 142.93.177.245:8888
+
+```
+
+## To-Run-Remotely
 1. [Install Docker](https://docs.docker.com/install/)
 1. [Make account on Digital Ocean](https://www.digitalocean.com/)
 1. [Make a Digital Ocean API key](https://cloud.digitalocean.com/account/api/tokens)
@@ -80,6 +99,7 @@ $ ./start_eos.sh --remote --token $DIGITAL_OCEAN_TOKEN
 # ./bittensor.sh --remote --token $DIGITAL_OCEAN_TOKEN --eosurl <URL FROM ABOVE>
 
 ```
+
 
 
 ## Motivation
