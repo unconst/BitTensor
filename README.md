@@ -66,10 +66,10 @@ $ git clone https://github.com/unconst/BitTensor
 $ cd BitTensor
 
 # Run Node 1.
-# ./bittensor.sh --remote --token $DIGITAL_OCEAN_TOKEN --eosurl 142.93.177.245:8888
+# ./bittensor.sh --remote --token $DIGITAL_OCEAN_TOKEN --eosurl http://142.93.177.245:8888
 
 # Run Node 2.
-# ./bittensor.sh --remote --token $DIGITAL_OCEAN_TOKEN --eosurl 142.93.177.245:8888
+# ./bittensor.sh --remote --token $DIGITAL_OCEAN_TOKEN --eosurl http://142.93.177.245:8888
 
 ```
 
