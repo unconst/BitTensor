@@ -166,11 +166,21 @@ class Nucleus():
 
         # Full input layer.
         full_inputs = [word_embeddings] + next_remote_inputs
-        l1 = tf.concat(full_inputs, axis=1)
 
-        # Hidden Layer
-        # TODO(const) More than one layer?
-        w1 = tf.Variable(tf.random.uniform([self.embedding_size * (self.config.k + 1), self.embedding_size], -1.0, 1.0))
+        # Input subnetwork layers.
+        l1_input_dim = 50
+        l1_inputs = []
+        input_weights = []
+        for input_i in full_inputs:
+            w_i = tf.Variable(tf.random.uniform([self.embedding_size, l1_input_dim], -1.0, 1.0))
+            b_i = tf.Variable(tf.zeros([l1_input_dim]))
+            l1_input = tf.matmul(input_i, w_i) + b_i
+            l1_inputs.append(l1_input)
+            input_weights.append(w_i)
+        l1 = tf.concat(l1_inputs, axis=1)
+
+        # l1 combination layer. inputs --> embeddeding
+        w1 = tf.Variable(tf.random.uniform([l1_input_dim * len(l1_inputs), self.embedding_size], -1.0, 1.0))
         b1 = tf.Variable(tf.zeros([self.embedding_size]))
         final_layer = tf.sigmoid(tf.matmul(l1, w1) + b1)
 
@@ -199,8 +209,14 @@ class Nucleus():
         # FIM (attribution) calculations
         self.attributions = []
         for i in range(self.config.k + 1):
-            input_i = full_inputs[i]
-            input_attribution = tf.abs(tf.reduce_sum(tf.gradients(xs=[input_i], ys=self.output)))
+
+            # FIM approximation. FIM should be calculated on validation loop.
+            #input_i = full_inputs[i]
+            #input_attribution = tf.abs(tf.reduce_sum(tf.gradients(xs=[input_i], ys=self.output)))
+            #self.attributions.append(input_attribution)
+
+            # Weight magnitude attribution.
+            input_attribution = tf.reduce_sum(tf.reduce_sum(tf.abs(input_weights[i]), axis=1), axis=0)
             self.attributions.append(input_attribution)
             tf.compat.v1.summary.scalar('attribution' + str(i), input_attribution)
 

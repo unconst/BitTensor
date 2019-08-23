@@ -119,7 +119,7 @@ function init_image () {
     log "Building $DOCKER_IMAGE_NAME:$DOCKER_IMAGE_TAG"
     docker build -t $DOCKER_IMAGE_NAME:$DOCKER_IMAGE_TAG .
   else
-    # Build anyway.
+    # Build anyway
     docker build -t $DOCKER_IMAGE_NAME:$DOCKER_IMAGE_TAG .
   fi
 }

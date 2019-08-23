@@ -9,7 +9,7 @@ import proto.bolt_pb2_grpc
 class BoltServicer(proto.bolt_pb2_grpc.BoltServicer):
     def __init__(self, config, metagraph):
         """ Serves the inference graph for use by the network.
-        Graphs being produced in traingin are served by the Synapse object.
+        Graphs being produced in trainging are served by the Synapse object.
         The Synapse is responsible for upstream connections, for rate limiting,
         and through this, negotiating for higher attribution within the Metagraph.
 
@@ -32,7 +32,7 @@ class BoltServicer(proto.bolt_pb2_grpc.BoltServicer):
         self.load_graph()
 
     def load_graph(self):
-        """ Loads the latest checkpoint the neuron root dir.
+        """ Loads the latest checkpoint from the neuron root dir.
         Args:
         Returns:
         """
@@ -68,7 +68,7 @@ class BoltServicer(proto.bolt_pb2_grpc.BoltServicer):
             embed_proto: A bolttensorflow.TensorProto proto containing the embedded words
                 as outputed by running the session graph.
         """
-        logger.info(' ')
+        logger.info('.')
         # TODO (const) The synapse should be competitively selecting which nodes
         # are allowed to query us based on the Metagraph information.
         batch_words = [[word] for word in request.string_val]
