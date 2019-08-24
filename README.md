@@ -9,8 +9,8 @@
 - [Overview](#overview)
 - [To-Run-Locally](#to-run-locally)
 - [To-Run-Testnet](#to-run-testnet)
-- [To-Run-Remotely](#to-run-remotely)
-- [Motivation](#motivation)
+- [Why](#why)
+- [How](#how)
 - [Organization](#organization)
   - [Nucleus](#nucleus)
   - [Dendrite](#dendrite)
@@ -24,13 +24,13 @@
 
 ## Overview
 
-BitTensor is a new class of Machine Learning model which is trained across a p2p network, it enables any computer and any engineer in the world to contribute in training.
+BitTensor is a new class of Machine Learning model which is trained across a peer-to-peer network, it enables any computer and any engineer in the world to contribute in training.
 
 The nature of trust-less computing necessitates that these contributions are combined through incentive rather than direct control from any one computer. We use a digital token to carry that incentive signal through the network: where the magnitude of this incentive is derived from a p2p collaborative filtering technique similar to Google's Page rank algorithm.  
 
-The lack of centrality allows the structure to grow to arbitrary size across the internet. Both the cost and control of the system is distributed. And the network's informational product is efficiently priced into the reward token's value.
+The lack of centrality allows the structure to grow to arbitrary size across the internet. Both the cost and control of the system is distributed. And the network's informational product is priced into the reward token's value.
 
-When run, this software folds your computing power into that p2p network and rewards you with an EOS based digital token for your contribution.
+When run, this software folds your computing power into a p2p network and rewards you with an EOS based digital token for your contribution.
 
 ## To-Run-Locally
 1. [Install Docker](https://docs.docker.com/install/)
@@ -73,37 +73,15 @@ $ cd BitTensor
 
 ```
 
-## To-Run-Remotely
-1. [Install Docker](https://docs.docker.com/install/)
-1. [Make account on Digital Ocean](https://www.digitalocean.com/)
-1. [Make a Digital Ocean API key](https://cloud.digitalocean.com/account/api/tokens)
 
-```
-$ git clone https://github.com/unconst/BitTensor
-$ cd BitTensor
-$ export DIGITAL_OCEAN_TOKEN=YOUR_TOKEN_FROM_STEP_3
-
-# Run EOS blockchain.
-$ ./start_eos.sh --remote --token $DIGITAL_OCEAN_TOKEN
-... EOS URL DISPLAYED HERE ...
-
-# Run Node 1.
-# ./bittensor.sh --remote --token $DIGITAL_OCEAN_TOKEN --eosurl <URL FROM ABOVE>
-
-# Run Node 2.
-# ./bittensor.sh --remote --token $DIGITAL_OCEAN_TOKEN --eosurl <URL FROM ABOVE>
-
-...
-
-# Run Node N.
-# ./bittensor.sh --remote --token $DIGITAL_OCEAN_TOKEN --eosurl <URL FROM ABOVE>
-
-```
-
-
-
-## Motivation
+## Why
 <img src="assets/brain.png" width="1000" />
+
+This technology is being built because we believe the production of Machine Intelligence, like Human Intelligence, advances understanding and understanding begets harmony. And yet, intelligence is power and power, if held in the hands of the few, will corrupt. Because of this, our technological approach attempts to democratize ownership and opens its value stream to any computer and any individual who deems it worthwhile to contribute.
+
+Moreover, although democratization and openness are ethical values, we are relying on their practical use here: A free and open system with a large number of stake holders is also the most direct path towards our goal of producing Machine Intelligence. The scale of the AI problem in front of us necessitates that we harness the productive capabilities of the largest group of people and their computing resources.
+
+## How
 
 "It is commonly argued that recent progress in machine learning has been largely driven by a drastic increase in the complexity and flexibility of the models used, both in terms of number of learnable parameters and the number of ﬂoating-point operations done by the model (e.g. [19]). This empirical observation that increasing model size is generally rewarded by improved performance leads us to look for ways to scale training to even larger models than those currently in use today." -- Aidan Gomez (ARC Nets NIPS: 2019)
 
@@ -128,6 +106,30 @@ We follow this mold, and use an incentive model organized around a token emissio
 
 Above: An engineering diagram of the human brain. For inspiration.
 
+
+Our approach extends the computing resources -- and state -- of a standard Machine Learning model across a trust-less boundary: from data-center to web. Each participating computer in the network is a standalone learning component wrapped with a p2p networking stack -- we call these components neurons.
+
+Connections between Neurons carry tensors. This reflects the standard computational structure of an operation in a Tensorflow graph: Passing signals in the forward direction and gradients in reverse. The entire network is trainable with respect to the loss function inherent to any node in the network.
+
+Each node in the network is training independently with respect to a local loss function in conjunction with the auxiliary loss attained from gradients passed by upstream nodes in the network. Not dissimilar to the loss functions trained in ARCNets.[?] The training of a word embeddings is used in the first instance. Each node maintains it’s own dataset.  
+
+The internal Neural network model within each component queries it’s peers within the network at each training step to produce a input vector composed of the nest input and the output of its neighbours. Since all neighbours are training a word embedding of fixed dimension, these can be concatenated and fed into the network at the current node. Queries to downstream peers involves a inference over their internet model. Thus each training step is a iteration over our local peer and it’s neighbour models.
+
+The recursive nature of the network requires that message passing be stopped at some point. In the simplest case this is just a depth of 1, which forces the recession to stop at the first upstream nodes. Here the network input must be replaced by a dummy (since we no longer have the inputs from our sub peers). In this place we use distillation to mimic our peers models at the local level, running the distilled model to attain a approximate solution. This allows the network to run much faster and limits message passing at the expense of using a distilled or approximate model during training. In addition, the distillation allows any node to remove the full model from the network after training, it can extract a distilled model which does not require any network connections.
+
+The extension from trustful to trust-less compute nodes necessitates a manner of determining which computers are doing useful work so that we can disconnect from them, and in addition, a manner of incentivizing participation. It is expensive to run a machine learning micro-service.
+We build an incentive structure around a collaborative filtering technique not dissimilar to Google’s page rank: where each nodes in the network post their edge set (the connections they have with other nodes). In addition, each node computes an attribution score for this connection which is a subjective interpretation of the usefulness of the downstream component to it.
+
+We use fishers information pruning as an initial attribution technique, however any attribution method is equally allowed as long as it produces floating point normalized scores for each connection.
+
+In aggregate the total of attribution scores forms a directed weighted graph. Attribution scores are transitive by nature which allows us to determine which network nodes within the graph are producing value to the whole: a network attribution instead of a edge attribution.
+
+We sink this network information to a smart contract running on the EOS blockchain. This allows us to build into the network a digitally scarce token which can carry value. We mint new tokens into the network in proportion to the network-attribution received by each node. A 1% inflation is set which halves every N blocks in the chain to mimic the scarce deflation of Bitcoin.  
+
+We protect against Sybil attacks within the network using this token as well. We force naive nodes to block connections from non-stake holding nodes. And we weight attribution scores in proportion to the stake held by the node in question. This is a mild protection and we are investigating the intersection between market dynamics and this token emission scheme.
+
+
+## Organization
 
 ```
 
@@ -166,6 +168,7 @@ The Metagraph object acts as an interface between the EOS blockchain and the res
 
 ###### EOS
 The EOS contract is separate from Dendrite. Nucleus, Synapse and Metagraph objects during execution. During testing, this class is run on a local EOS instance, but during production the contract is running in a decentralized manner across the EOS network.  
+
 
 
 
