@@ -24,7 +24,7 @@
 
 ## Overview
 
-BitTensor is a new class of Machine Learning model which is trained across a peer-to-peer network, it enables any computer and any engineer in the world to contribute in training.
+BitTensor is a new class of Machine Learning model which is trained across a peer-to-peer network. It enables any computer and any engineer in the world to contribute in training.
 
 The nature of trust-less computing necessitates that these contributions are combined through incentive rather than direct control from any one computer. We use a digital token to carry that incentive signal through the network: where the magnitude of this incentive is derived from a p2p collaborative filtering technique similar to Google's Page rank algorithm.  
 
@@ -43,15 +43,15 @@ $ cd BitTensor
 $ ./start_eos.sh
 
 # Run Node 1.
-# ./bittensor.sh
+$ ./bittensor.sh
 
 # Run Node 2.
-# ./bittensor.sh
+$ ./bittensor.sh
 
 ...
 
 # Run Node N.
-# ./bittensor.sh
+$ ./bittensor.sh
 
 ```
 
@@ -65,25 +65,69 @@ $ ./start_eos.sh
 $ git clone https://github.com/unconst/BitTensor
 $ cd BitTensor
 
-# Run Node 1.
-# ./bittensor.sh --remote --token $DIGITAL_OCEAN_TOKEN --eosurl http://142.93.177.245:8888
+# Run Remote Node
+$ ./bittensor.sh --remote --token $DIGITAL_OCEAN_TOKEN --eosurl http://142.93.177.245:8888
 
-# Run Node 2.
-# ./bittensor.sh --remote --token $DIGITAL_OCEAN_TOKEN --eosurl http://142.93.177.245:8888
+
+# Run Local node
+$ python src/upncp.py --port 9091  // To punch a hole in your router.
+$ ./bittensor.sh --port 9091 --eosurl http://142.93.177.245:8888
 
 ```
 
+<img src="assets/brain.png" width="1000" />
 
 ## Why
-<img src="assets/brain.png" width="1000" />
 
 This technology is being built because we believe the production of Machine Intelligence, like Human Intelligence, advances understanding and understanding begets harmony. And yet, intelligence is power and power, if held in the hands of the few, will corrupt. Because of this, our technological approach attempts to democratize ownership and opens its value stream to any computer and any individual who deems it worthwhile to contribute.
 
 Moreover, although democratization and openness are ethical values, we are relying on their practical use here: A free and open system with a large number of stake holders is also the most direct path towards our goal of producing Strong Machine Intelligence. The scale of the AI problem in front of us necessitates that we build it this way.
 
-Why is this? Because a decentralized computing approach harnesses the largest pool of computing power and the largest pool of collaborators: Any computer and any engineer can contribute to this system. And we've seen from this technology's predecessors, Bitcoin and BitTorrent the power in this openness. At their zenith, these two technologies built, respectively, the largest super computer and largest bandwidth user across the globe.
+Why is this? Because a decentralized computing approach harnesses the largest pool of computing power and the largest pool of collaborators: Any computer and any engineer can contribute to this system.
+
+We've seen from this technology's predecessors, Bitcoin and BitTorrent the power open source systems can unlock: At their zenith, these two technologies were, respectively, the largest super computer and largest bandwidth user across the globe.
+
+<img src="assets/Lightning.png" width="1000" />
+
+Above: Bitcoin Lightning network nodes from late 2018.
+
+## How
+
+In standard Machine learning setting, the training mechanism uses Back-propagation to minimize the loss on a dataset with respect to the weights, and at each step the model parameters must wait for a signal from the loss function before the parameters can be updated.
+
+This is prohibitive when the scale of those networks reach the scale desired by modern machine learning needs -- or biological scale -- and necessarily so when we are attempting to train a system which spans multiple computers connected across the web, as we are doing here.
+
+Training networks composed of many 'local' loss functions allow us to train subsections of the network independently, dividing and conquering the problem so that each locality is not (immediately) dependent on far off events in the large network. This is not dissimilar to the decentralized/parallel structure of the human brain, and has been successfully applied to increase the scale of Neural Networks into the trillion parameter range. [Gomez 2019].
+
+<img src="assets/kgraphbittensor.png" width="1000" />
+Above: Local loss function training in a k-graph shaped NN organization.
+
+We follow this paradigmatic shift. Each connected computer within the network is training with respect to its own loss. Data can be continuously streamed through compute nodes, completely eliminating the wasted cycles spent blocking while waiting for error to return from some distant loss.
+
+In this scheme, each node is constantly streaming message between it at its neighbors. They can immediately pull next examples from a queue during training and serve an inference model to adjacent downstream components, updating this model as they improve it over time.
+
+The local models can be split width-wise in each node, across compute hardware with rapid communication, while the local losses allow depth-wise expansion, adding another dimension of parallelism to be exploited. More, the datasets are split as well, each node it responsible for its own corpus of language or images -- hypothetically increasing  model diversity.
+
+## Market
+
+_What is the product of Neuron_?
+
+Abstractly, it must be the cell's ability to transform signal into actionable information within the mind.
+This abstraction can be extended to a computing substrate as well -- the product of a machine intelligence unit, for instance, a Neural Network, is simply a mapping from an input to an output which converts unstructured signals into useful information.
+
+But _useful_ to what? Intelligence is only a valuable commodity with respect to a problem. What problem should a global machine learning system work on?
+
+We choose here unsupervised Language and Image modeling: where structured transformations in these domains -- ones that extract meaning or useful feature -- are used ubiquitously in a large variety of additional intelligence problems. Most human knowledge is stored in language and imagery, and there exists a near infinite quality of cheap unlabeled training data within both domains.
+
+We gate access to this network using a digital token, allowing holders to maximize the performance on a downstream problem and paying contributing computers in the same token which holds this value.
+
+
 
 ## Organization
+
+<img src="assets/brain_engineering_diagram.png" width="1000" />
+
+Above: An Engineering diagram of the brain. For inspiration.
 
 ```
 
@@ -101,6 +145,7 @@ Why is this? Because a decentralized computing approach harnesses the largest po
                                \       |       /
                                      [Main]
 ```
+
 
 ###### Nucleus
 The main Tensorflow graph is defined and trained within the Nucleus object. As is, the class is training a self supervised word-embedding over a dummy corpus of sentences in text8.zip. The result is a mapping which takes word to a 128 dimension vector, representing that word while maintaining its semantic properties.
