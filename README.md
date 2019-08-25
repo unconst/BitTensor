@@ -24,7 +24,7 @@
 
 ## Overview
 
-BitTensor is a new class of Machine Learning model which is trained across a peer-to-peer network. It enables any computer and any engineer in the world to contribute in training.
+BitTensor allows a new class of Machine Learning model to train across a peer-to-peer network. It enables any computer and any engineer in the world to contribute in training.
 
 The nature of trust-less computing necessitates that these contributions are combined through incentive rather than direct control from any one computer. We use a digital token to carry that incentive signal through the network: where the magnitude of this incentive is derived from a p2p collaborative filtering technique similar to Google's Page rank algorithm.  
 
@@ -39,7 +39,7 @@ When run, this software folds your computing power into a p2p network and reward
 $ git clone https://github.com/unconst/BitTensor
 $ cd BitTensor
 
-# Run EOS blockchain.
+# Run a test EOS blockchain.
 $ ./start_eos.sh
 
 # Run Node 1.
@@ -65,11 +65,11 @@ $ ./bittensor.sh
 $ git clone https://github.com/unconst/BitTensor
 $ cd BitTensor
 
-# Run Remote Node
+# Run a Remote Node
 $ ./bittensor.sh --remote --token $DIGITAL_OCEAN_TOKEN --eosurl http://142.93.177.245:8888
 
 
-# Run Local node
+# Run a Local Node
 $ python src/upncp.py --port 9091  // To punch a hole in your router.
 $ ./bittensor.sh --port 9091 --eosurl http://142.93.177.245:8888
 
@@ -79,13 +79,15 @@ $ ./bittensor.sh --port 9091 --eosurl http://142.93.177.245:8888
 
 ## Why
 
-This technology is being built because we believe the production of Machine Intelligence, like Human Intelligence, advances understanding and understanding begets harmony. And yet, intelligence is power and power, if held in the hands of the few, will corrupt. Because of this, our technological approach attempts to democratize ownership and opens its value stream to any computer and any individual who deems it worthwhile to contribute.
+We believe Machine Intelligence, like Human Intelligence, is an a priori good. And yet, intelligence is power and power, if held in the hands of the few, will corrupt. It should be democratized and made open source. Unfortunately, companies like OpenAI who claim this goal have failed in their mandate, opening up the algorithms but not access to the _intelligence_ itself.
+
+This technology is being built to do this, while democratizing its ownership, and sharing its profit with any computer or any individual who deems it worthwhile to contribute.
 
 Moreover, although democratization and openness are ethical values, we are relying on their practical use here: A free and open system with a large number of stake holders is also the most direct path towards our goal of producing Strong Machine Intelligence. The scale of the AI problem in front of us necessitates that we build it this way.
 
-Why is this? Because a decentralized computing approach harnesses the largest pool of computing power and the largest pool of collaborators: Any computer and any engineer can contribute to this system.
+Why is this? Because a decentralized computing approaches harness the largest pool of computing power and the largest pool of collaborators: Every computer and every engineer can contribute to this system.
 
-We've seen from this technology's predecessors, Bitcoin and BitTorrent the power open source systems can unlock: At their zenith, these two technologies were, respectively, the largest super computer and largest bandwidth user across the globe.
+We've seen this work with this technologies progenitors. Bitcoin is the largest super computer in the world, BitTorrent, at one time, the largest bandwidth user across the globe, and open source Linux, the most widely used operating system in use today.
 
 <img src="assets/Lightning.png" width="1000" />
 
@@ -93,91 +95,37 @@ Above: Bitcoin Lightning network nodes from late 2018.
 
 ## How
 
-In standard Machine learning setting, the training mechanism uses Back-propagation to minimize the loss on a dataset with respect to the weights, and at each step the model parameters must wait for a signal from the loss function before the parameters can be updated.
+In standard Machine learning setting, the training mechanism uses Back-propagation to minimize the loss on a dataset with respect to the weights, and at each step the model parameters wait for a signal from the global loss function before the next update.
 
-This is prohibitive when the scale of those networks reach the scale desired by modern machine learning needs -- or biological scale -- and necessarily so when we are attempting to train a system which spans multiple computers connected across the web, as we are doing here.
+This loss function centrality is prohibitive when the scale of those networks reach the scale desired by modern machine learning  -- or biological scale -- and necessarily so, when we are attempting to train a system which spans multiple computers connected across the web, as we are doing here.
 
-Training networks composed of many 'local' loss functions allow us to train subsections of the network independently, dividing and conquering the problem so that each locality is not (immediately) dependent on far off events in the large network. This is not dissimilar to the decentralized/parallel structure of the human brain, and has been successfully applied to increase the scale of Neural Networks into the trillion parameter range. [Gomez 2019].
+Instead, training networks composed of many 'local' loss functions allow us to train subsections of the network independently, dividing and conquering the problem so that each locality is not (immediately) dependent on far off events in the large network. This is not dissimilar to the decentralized/parallel structure of the human brain, and has been successfully applied to increase the scale of Neural Networks into the trillion parameter range. [Gomez 2019].
 
 <img src="assets/kgraphbittensor.png" width="1000" />
 Above: Local loss function training in a k-graph shaped NN organization.
 
 We follow this paradigmatic shift. Each connected computer within the network is training with respect to its own loss. Data can be continuously streamed through compute nodes, completely eliminating the wasted cycles spent blocking while waiting for error to return from some distant loss.
 
-In this scheme, each node is constantly streaming message between it at its neighbors. They can immediately pull next examples from a queue during training and serve an inference model to adjacent downstream components, updating this model as they improve it over time.
+Each node is constantly streaming messages between it at its neighbors in the network. They can immediately pull next examples from a queue during training and serve an inference model to adjacent downstream components, updating this model as they improve it over time.
 
-The local models can be split width-wise in each node, across compute hardware with rapid communication, while the local losses allow depth-wise expansion, adding another dimension of parallelism to be exploited. More, the datasets are split as well, each node it responsible for its own corpus of language or images -- hypothetically increasing  model diversity.
+The local models can be split width-wise in each node, across compute hardware with rapid communication, while the local losses allow depth-wise expansion, adding another dimension of parallelism to be exploited. The datasets are split as well, each node it responsible for its own corpus of language or images -- hypothetically increasing model diversity.
 
 ## Market
+
+<img src="assets/knowm.png" width="1000" />
 
 _What is the product of Neuron_?
 
 Abstractly, it must be the cell's ability to transform signal into actionable information within the mind.
 This abstraction can be extended to a computing substrate as well -- the product of a machine intelligence unit, for instance, a Neural Network, is simply a mapping from an input to an output which converts unstructured signals into useful information.
 
-But _useful_ to what? Intelligence is only a valuable commodity with respect to a problem. What problem should a global machine learning system work on?
+But _useful_ to what? Intelligence is only a valuable commodity with respect to a problem. What problem should a global machine learning system work on? We choose here unsupervised Language and Image modeling: a technique which extracts meaning and representation from an input without labeled data. These products are used ubiquitously in a large variety of additional intelligence problems. Most human knowledge is stored in language and imagery, and there exists a near infinite quantity of cheap unlabeled training data within both domains.
 
-We choose here unsupervised Language and Image modeling: where structured transformations in these domains -- ones that extract meaning or useful feature -- are used ubiquitously in a large variety of additional intelligence problems. Most human knowledge is stored in language and imagery, and there exists a near infinite quality of cheap unlabeled training data within both domains.
+Each network participant gates access to these representation using a digital token. Clients must hold it to maximize access to the network product and contributing computers can be rewarded through its value.
 
-We gate access to this network using a digital token, allowing holders to maximize the performance on a downstream problem and paying contributing computers in the same token which holds this value.
+## Incentive
 
-
-
-## Organization
-
-<img src="assets/brain_engineering_diagram.png" width="1000" />
-
-Above: An Engineering diagram of the brain. For inspiration.
-
-```
-
-                                     [EOS]
-                                       |
-                                  [Metagraph]
-                               /       |       \
-                    ----------------------------------------
-                  |                  Neuron                  |
-                  |                                          |
-                  | [Dendrite] ---> [Nucleus] ---> [Synapse] |
-                  |                                          |
-                  |                                          |
-                    ----------------------------------------
-                               \       |       /
-                                     [Main]
-```
-
-
-###### Nucleus
-The main Tensorflow graph is defined and trained within the Nucleus object. As is, the class is training a self supervised word-embedding over a dummy corpus of sentences in text8.zip. The result is a mapping which takes word to a 128 dimension vector, representing that word while maintaining its semantic properties.
-
-Although subject to future change, this problem serves as a good starting place because its generality and ubiquity within Artificial intelligence. In future versions of this code, this will be expanded to include sentence and paragraph embeddings, speech, image and video embeddings with the goal of training the network for general multitask.
-
-###### Dendrite
-During training the Nucleus interacts with the rest of the network through its Dendrite. The Dendrite maintains connections to upstream nodes making asynchronous calls using GRPC, and passing serialized Tensor protocol buffers along the wire.
-
-During validation and inference the Dendrite is cut from the model and replaced by submodules which have been trained through distillation to approximate the incoming signals from the rest of the network.
-
-###### Synapse
-This inference graphs being produced in training are served by the Synapse object. The Synapse is responsible for upstream connections. It is responsible for rate limiting, and through this,  negotiating for higher attribution within the Metagraph.
-
-Since the Synapse object is merely serving the inference graph, it is mostly detached from the Nucleus and Dendrite during training, only communicating with these objects by pulling the latest and best inference graph from the storage directory.
-
-###### Metagraph
-The Metagraph object acts as an interface between the EOS blockchain and the rest of the neuron. Through the Metagraph, this node can post updated attributions and call timed token emission (which releases newly mined tokens) The Metagraph object also serves as a de-facto DHT which removes the need for a gossip protocol used by many standard p2p applications Bitcoin and BitTorrent not withstanding.
-
-###### EOS
-The EOS contract is separate from Dendrite. Nucleus, Synapse and Metagraph objects during execution. During testing, this class is run on a local EOS instance, but during production the contract is running in a decentralized manner across the EOS network.  
-
-
-
-
-## Incentive     
-
-<img src="assets/knowm.png" width="1000" />
-
-The BitTensor network, in aggregate, forms a single meta Machine Learning model composed of a many smaller interconnected sub-graphs. The connections between these nodes reflect channels along which tensors are passed, containing, in the forward direction, features, and in the reverse direction gradients: No different than the individual layers of a standard Neural Network architecture (or Tensorflow graph)
-
-<img src="assets/NN.jpeg" width="1000" />
+The network, in aggregate, forms a single meta Machine Learning model composed of a many smaller interconnected sub-graphs. The connections between these nodes reflect channels along which tensors are passed, containing, in the forward direction, features, and in the reverse direction gradients: No different than the individual layers of a standard Neural Network architecture (or Tensorflow graph)
 
 Client nodes communicate upstream to servers and, while training their local objective function, produce attribution values, which are numerical evaluations of each connection. We use Fishers Information Metric to produce attributions in the standard code, but any method is sufficient. In total, aggregated attributions from the entire network describe a directed weighted graph (DWG) structure. (Below)
 
@@ -226,6 +174,53 @@ def bittensor_emission_simulation():
         E = A * tokens_per_block
         S = S + E
 ```
+
+## Organization
+
+<img src="assets/brain_engineering_diagram.png" width="1000" />
+
+Above: An Engineering diagram of the brain. For inspiration.
+
+```
+
+                                     [EOS]
+                                       |
+                                  [Metagraph]
+                               /       |       \
+                    ----------------------------------------
+                  |                  Neuron                  |
+                  |                                          |
+                  | [Dendrite] ---> [Nucleus] ---> [Synapse] |
+                  |                                          |
+                  |                                          |
+                    ----------------------------------------
+                               \       |       /
+                                     [Main]
+```
+
+
+###### Nucleus
+The main Tensorflow graph is defined and trained within the Nucleus object. As is, the class is training a self supervised word-embedding over a dummy corpus of sentences in text8.zip. The result is a mapping which takes word to a 128 dimension vector, representing that word while maintaining its semantic properties.
+
+Although subject to future change, this problem serves as a good starting place because its generality and ubiquity within Artificial intelligence. In future versions of this code, this will be expanded to include sentence and paragraph embeddings, speech, image and video embeddings with the goal of training the network for general multitask.
+
+###### Dendrite
+During training the Nucleus interacts with the rest of the network through its Dendrite. The Dendrite maintains connections to upstream nodes making asynchronous calls using GRPC, and passing serialized Tensor protocol buffers along the wire.
+
+During validation and inference the Dendrite is cut from the model and replaced by submodules which have been trained through distillation to approximate the incoming signals from the rest of the network.
+
+###### Synapse
+This inference graphs being produced in training are served by the Synapse object. The Synapse is responsible for upstream connections. It is responsible for rate limiting, and through this,  negotiating for higher attribution within the Metagraph.
+
+Since the Synapse object is merely serving the inference graph, it is mostly detached from the Nucleus and Dendrite during training, only communicating with these objects by pulling the latest and best inference graph from the storage directory.
+
+###### Metagraph
+The Metagraph object acts as an interface between the EOS blockchain and the rest of the neuron. Through the Metagraph, this node can post updated attributions and call timed token emission (which releases newly mined tokens) The Metagraph object also serves as a de-facto DHT which removes the need for a gossip protocol used by many standard p2p applications Bitcoin and BitTorrent not withstanding.
+
+###### EOS
+The EOS contract is separate from Dendrite. Nucleus, Synapse and Metagraph objects during execution. During testing, this class is run on a local EOS instance, but during production the contract is running in a decentralized manner across the EOS network.  
+
+
 
 
 ---
