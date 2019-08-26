@@ -94,53 +94,54 @@ We've seen this work with this technology's progenitors. Bitcoin is the largest 
 
 Above: Bitcoin Lightning network nodes from late 2018.
 
-## How
+## Training
 
 In standard Machine learning setting, the training mechanism uses Back-propagation to minimize the loss on a dataset with respect to the weights, and at each step the model parameters wait for a signal from the global loss function before the next update.
 
 This loss function centrality is prohibitive when the scale of those networks reach the scale desired by modern machine learning  -- or biological scale -- and necessarily so, when we are attempting to train a system which spans multiple computers connected across the web, as we are doing here.
 
-Instead, training networks composed of many 'local' loss functions allow us to train subsections of the network independently, dividing and conquering the problem so that each locality is not (immediately) dependent on far off events in the large network. This is not dissimilar to the decentralized/parallel structure of the human brain, and has been successfully applied to increase the scale of Neural Networks into the trillion parameter range. [Gomez 2019].
+Instead, the network is trained using unique loss functions at each node. Each participant within the network is training against its own loss and against its own dataset. This allows us to train subsections of the network independently, dividing and conquering the problem so that each locality is not (immediately) dependent on far off events in the large network. 
 
 <img src="assets/kgraphbittensor.png" width="1000" />
 Above: Local loss function training in a k-graph shaped NN organization.
 
-We follow this paradigmatic shift. Each connected computer within the network is training with respect to its own loss. Data can be continuously streamed through compute nodes, completely eliminating the wasted cycles spent blocking while waiting for error to return from some distant loss.
+Training steps on each node run asyncronously. Each node serves an inference model to adjacent components, updating this model as they improve it over time. There is no need to wast cycles waiting for error to return from some distant loss. And each node is constantly streaming messages between it at its neighbors in the network. The local models can be split width-wise in each node, across compute hardware with rapid communication, while the local losses allow depth-wise expansion, adding another dimension of parallelism to be exploited. 
 
-Each node is constantly streaming messages between it at its neighbors in the network. They can immediately pull next examples from a queue during training and serve an inference model to adjacent downstream components, updating this model as they improve it over time.
-
-The local models can be split width-wise in each node, across compute hardware with rapid communication, while the local losses allow depth-wise expansion, adding another dimension of parallelism to be exploited. The datasets are split as well, each node it responsible for its own corpus of language or images -- hypothetically increasing model diversity.
-
-## Market
+## Scoring
 
 <img src="assets/knowm.png" width="1000" />
 
-_What is the product of Neuron_?
+In order to prevent the need for the entire connected network to run at each step, each component is optimized locally – i.e performing a parameter update given only an input x and a target y drawn from its local dataset. It does not wait for a global error signal to propagate backwards from another computer.
 
-Abstractly, it must be the cell's ability to transform signal into actionable information within the mind.
-This abstraction can be extended to a computing substrate as well -- the product of a machine intelligence unit, for instance, a Neural Network, is simply a mapping from an input to an output which converts unstructured signals into useful information.
+In this setting each component contains a dataset with targets X and labels Y, and is attempting to ﬁt a function that predicts the output from the input, yˆ = f(x), by minimizing some loss metric on the output of the model, L(ˆy, y). 
+Each component model is also a composition of its neighboring models f = (f 1 ◦ f 2 ...f n ), and so we are optimizing the parameters θ of this composition by moving them in the direction of the gradient of the loss, ∂ θ i L(ˆy, y). 
 
-But _useful_ to what? Intelligence is only a valuable commodity with respect to a problem. What problem should a global machine learning system work on? We choose here unsupervised Language and Image modeling: a technique which extracts meaning and representation from an input without labeled data. These products are used ubiquitously in a large variety of additional intelligence problems. Most human knowledge is stored in language and imagery, and there exists a near infinite quantity of cheap unlabeled training data within both domains.
+We can derive an approximation of importance for each neighboring component in the network. In this implementation we use an information-theoretic approach to determine the value of each composed function f 1 ◦ f 2 ...f n by using the Fisher
+Information (FIM) as a proxy for importance. The Fisher criterion is a natural metric for quantifying the relative importance of inputs since it provides an estimate of how much information a set of parameters carry about the model's output distribution, namely, f(x).
 
-Each network participant gates access to these representation using a digital token. Clients must hold it to maximize access to the network product and contributing computers can be rewarded through its value.
+FIM can be calculated using the covariance of the gradient of log likelihood with regards to the model's parameters θ. This can be calculated from the expectation of the element-wise multiplication of the gradient: FIM(θ) = Ey [g  g], where g = ∂ log f(y|x;θ) / ∂θ is the gradient of the log-likelihood and  represents element-wise multiplication. FIM(θ) is a p×1 vector, where p is the numebr of parameters, and each element is the Fisher Information of a that corresponding parameter.
 
-## Incentive
+The Fisher Information provides an estimate of the amount of information a random variable carries about a parameter
+of the distribution. In the context of a compositional function, this provides a natural metric for quantifying the relative importance of a neighboring component in the network. The less information connected parameters to this input hold, the less important that component is to the output statistics of the network. A FIM score for each of our composed functions can derived by summing the parameter scores of all weights attached to that input.
 
-The network, in aggregate, forms a single meta Machine Learning model composed of a many smaller interconnected sub-graphs. The connections between these nodes reflect channels along which tensors are passed, containing, in the forward direction, features, and in the reverse direction gradients: No different than the individual layers of a standard Neural Network architecture (or Tensorflow graph)
+## Ranking & Emmission
 
-Client nodes communicate upstream to servers and, while training their local objective function, produce attribution values, which are numerical evaluations of each connection. We use Fishers Information Metric to produce attributions in the standard code, but any method is sufficient. In total, aggregated attributions from the entire network describe a directed weighted graph (DWG) structure. (Below)
+We rank individual components in the network based on the notion of transitive use: If a component i values a component j, it should also value the components trusted by j since component j is a composition of its neighbors. By using the method described above each component i calculates the local weight importance wij for all its neighbors. This is a reflection of how much the output of component i depends on the input from component j. 
 
-<img src="assets/weboftrust.jpg" width="1000" />
+These scores are normalized and posted to a centralized contract running on a decentralized append only database (blockchain).  This contract stores these normalized weights as a directed weighted graph G = [V, E] where for each edge _eij_ in E we have a value _wij_ associated with the connection between component _fi_ and _fj_. G is updated continuously by transaction calls from each working component as they train and as they calculate attribution scores for their neighbors in the network.
 
-The DWG is updated discretely through emission transactions, and are conglomerated on the EOS blockchain. This process produces global attribution scores: between the full-network and each sub-grph. New tokens are distributed in proportion to this global-attributuon.
+Using the local information in aggregate, we can derive a global attribution score for component _fi_, _ai_ which reflects its use to the entire network, rather than just its neigbors. A standard approach is the EigenTrust algorithm which iteratively updates the component use vector to an attractor point through multiple multiplications by the adjacency matrix described by G. i.e. a(t+1) = G * a(t). 
 
-Below is a simulated version of that emission written in numpy:
+However this algorithm suffers standard attacks like whitewashing, where nodes continually join and leave the network, and sybil attacks where malicious users create many fake nodes to influence the ranking scores. We use a staking method to alleviate these concerns. In this setting nodes must attain access to a finite digital token and attach it to the address in use by the network node. It is not possible to create many wieght holding spurious nodes without access to this token. And, the conecept of identity is made permenant by hoding it fixed to a digital token account address. 
 
+Global attribution scores derived using the method above give us a ranking for each node in the network. As a manner of incentivizing nodes to stay online we wish to incentivize them using a value holding token. These should be distributed first to computers which are producing value. 
+
+An approximate method is written below using python-numpy:
 ```
-def bittensor_emission_simulation():
+def attribution_simulation():
 
     # Stake vector.
-    S = [1.  1.  1.  1.  1.  1.  1.  1.  1.  1.]
+    S = [9.  8.  7.  6.  5.  4.  3.  2.  1.  0.]
 
     # Loop-in edges.
     N = [0.6 0.9 0.4 0.5 0.5 0.5  1.  1.  1.  1. ]
@@ -175,6 +176,10 @@ def bittensor_emission_simulation():
         E = A * tokens_per_block
         S = S + E
 ```
+
+
+
+
 
 ## Organization
 
