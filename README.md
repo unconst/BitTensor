@@ -86,9 +86,7 @@ This technology is being built to do this, while democratizing its ownership, an
 
 Moreover, although democratization and openness are ethical values, we are relying on their practical use here: A free and open system with a large number of stake holders is also the most direct path towards our goal of producing Strong Machine Intelligence. The scale of the AI problem in front of us necessitates that we build it this way.
 
-Why is this? Because a decentralized computing approaches harness the largest pool of computing power and the largest pool of collaborators: Every computer and every engineer can contribute to this system.
-
-We've seen this work with this technology's progenitors. Bitcoin is the largest super computer in the world, BitTorrent, at one time, the largest bandwidth user across the globe, and open source Linux, the most widely used operating system in use today.
+Why is this? Because a decentralized computing approaches harness the largest pool of computing power and the largest pool of collaborators: Every computer and every engineer can contribute to this system. We've seen how this worked for Bitcoin, the largest super computer in the world, BitTorrent, at one time, the largest bandwidth user across the globe, and open source Linux, the most widely used operating system in use today.
 
 <img src="assets/Lightning.png" width="1000" />
 
