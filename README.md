@@ -88,7 +88,7 @@ Moreover, although democratization and openness are ethical values, we are relyi
 
 Why is this? Because a decentralized computing approaches harness the largest pool of computing power and the largest pool of collaborators: Every computer and every engineer can contribute to this system.
 
-We've seen this work with this technologies progenitors. Bitcoin is the largest super computer in the world, BitTorrent, at one time, the largest bandwidth user across the globe, and open source Linux, the most widely used operating system in use today.
+We've seen this work with this technology's progenitors. Bitcoin is the largest super computer in the world, BitTorrent, at one time, the largest bandwidth user across the globe, and open source Linux, the most widely used operating system in use today.
 
 <img src="assets/Lightning.png" width="1000" />
 
