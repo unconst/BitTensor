@@ -1,19 +1,13 @@
 import grpc
 from loguru import logger
+import pickle
 import proto.bolt_pb2
 import proto.bolt_pb2_grpc
 import numpy as np
+import random
 import struct
 import tensorflow as tf
 import time
-
-def _bytes_to_np(in_bytes, shape):
-    length = len(in_bytes)/4
-    data = struct.unpack('<%df' % length, in_bytes)
-    data_array = np.array(data, np.float32)
-    out = np.reshape(data_array, shape)
-    return out
-
 
 # TODO (const): Negotiate channels with upstream nodes.
 
@@ -94,13 +88,16 @@ class Dendrite():
         try:
             # Build Stub and send spike.
             stub = proto.bolt_pb2_grpc.BoltStub(channel)
-            words_proto = tf.compat.v1.make_tensor_proto(words)
-            response = stub.Spike(words_proto)
+
+            # Send Spike proto.
+            request = proto.bolt_pb2.SpikeRequest(
+                        sender_identity = self.config.identity,
+                        message_identity = str(random.randint(0,1000000000)),
+                        payload = pickle.dumps(words.numpy(),  protocol=0))
+            response = stub.Spike(request)
 
             # Deserialize response.
-            # TODO(const) This should be a special tf.operation.
-            response_shape = [dim.size for dim in response.tensor_shape.dim]
-            np_response = _bytes_to_np(response.tensor_content, response_shape)
+            np_response = pickle.loads(response.payload).reshape(embedding_dim, -1)
             return np_response
 
         except Exception as error:

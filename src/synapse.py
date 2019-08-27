@@ -1,4 +1,6 @@
 from loguru import logger
+import numpy as np
+import pickle
 import sys
 import time
 import tensorflow as tf
@@ -65,17 +67,47 @@ class BoltServicer(proto.bolt_pb2_grpc.BoltServicer):
                 theses strings are words to be embedded.
             context: A GPRC message context.
         Returns:
-            embed_proto: A bolttensorflow.TensorProto proto containing the embedded words
+            response: A SpikeResponse proto containing identity,
+                message identifier, and the embedded words (payload)
                 as outputed by running the session graph.
         """
-        logger.info('.')
         # TODO (const) The synapse should be competitively selecting which nodes
         # are allowed to query us based on the Metagraph information.
-        batch_words = [[word] for word in request.string_val]
+        batch_words = pickle.loads(request.payload)
         embeddings = self.session.run("embedding_output:0",
                             feed_dict={
-                                    "inference_batch_words:0": batch_words, # Inference.
+                                    "inference_batch_words:0": batch_words.tolist(), # Inference.
                                     'is_training:0': False
                                 })
-        embed_proto = tf.compat.v1.make_tensor_proto(embeddings)
-        return embed_proto
+        payload = pickle.dumps(embeddings, protocol=0)
+        response = proto.bolt_pb2.SpikeResponse(
+                        responder_identity = self.config.identity,
+                        message_identity = request.message_identity,
+                        payload = payload)
+        return response
+
+
+    def Grade(self, request, context):
+        """ GRPC request handler for message Grade; Accepts a gradient message.
+        Args:
+            request: A grade message proto as defined in src/proto/bolt.proto
+                containing the request identity, message identifier, and payload.
+                The payload should be interpreted as a gradients w.r.t the input payload
+                theses strings are words to be embedded.
+            context: A GPRC message context.
+        Returns:
+            response: A GradeResponse proto containing an accepted message.
+        """
+        # TODO(const) this should append gradient messages to a training queue.
+        return proto.bolt_pb2.GradeResponse(accept=True)
+        # pass
+        # # TODO (const) The synapse should be competitively selecting which nodes
+        # # are allowed to query us based on the Metagraph information.
+        # batch_words = [[word] for word in request.string_val]
+        # embeddings = self.session.run("embedding_output:0",
+        #                     feed_dict={
+        #                             "inference_batch_words:0": batch_words, # Inference.
+        #                             'is_training:0': False
+        #                         })
+        # embed_proto = tf.compat.v1.make_tensor_proto(embeddings)
+        # return proto.bolt_pb2.GradeResponse(accept=True)
