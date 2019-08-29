@@ -113,7 +113,7 @@ Where Q is the cross entropy between targets and outputs and Ep is the expectati
 
 We are continuously receiving streams of gradient information from our local loss L_i and from upstream components u1, u2 ... un. These signals are combined using a in-feed queue which is last-in ﬁrst-out cyclic. Our component pulls greedily from this queue in an online fashion and by applying these gradients is optimizing its parameters θ by moving them in a direction which minimizes a combination of losses, namely L' = (L_i + Lu1 + Lu1 + Lu2 ... Lun).
 
-Simultaneously we are sending streams of gradients downstream, to components (d1 ◦ d2 ... dn ), which carry information to receiving nodes on how to update their parameters θ by moving them in the direction of L'. -- this strucutre mirrors the  differential graph structure of TensorFlow itself, but for asynchronous operations stored on computers across the web.
+Simultaneously we are sending streams of gradients downstream, to components (d1 ◦ d2 ... dn ), which carry information to receiving nodes on how to update their parameters θ by moving them in the direction of L'. -- intuitively, the structure mirrors the  differential graph architecture of TensorFlow itself, but for asynchronous operations stored on computers across the web.
 
 ## P2P Training.
 
@@ -150,30 +150,28 @@ where gnk is the gradient of the parameter with respect to the nth data point.
 
 ## Composition Ranking.
 
-For our compositional architecture, we wish to understand this pruning signal with respect to the inputs from neighboring components instead of individual parameters. Let ankij be the input of the kth component, f_k, at activation location j for the nth datapoint to the ith loss. Let us also introduce a binary mask m ∈ {0, 1} K into the network which modifies the activations ankij of each feature map k as follows:
+For our compositional architecture, we wish to understand this pruning signal with respect to the inputs from neighboring components instead of individual parameters. Consider a single component, f_i, in our network and let ankj be the activation/input of the kth downstream component, dk, at activation location j for the nth datapoint. The gradient of the loss for the nth datapoint with respect to a removal of the kth component is,
 
-  <p style="text-align: center;"> ankij' = mk * ankjij (8) </p>
+<p style="text-align: center;">gnk = −Σ ankj ∂/∂ankj log Q(f(x)| x) (9) </p>
 
-m is a full mask of the kth input component to our function f_i = (f_0 ◦ f_1 ... f_k ... f_n). The gradient of the loss for the nth datapoint with respect to mk is,
-
-<p style="text-align: center;">gnk = −Σankij ∂/∂ankij log Q(f(x) | x) (9) </p>
-
-and the pruning signal between the ith component and the jth component is, Aij = 1/2N Σ gnki^2. Where gnki is now the nth gradient with respect to the kth input activations from component i. This information is available during the backward pass of computing the network’s gradient and the pruning signal can therefore be computed at little extra computational cost.
+and the pruning signal between the ith component and the kth component is, Aik = 1/2N Σ gnk^2. Where gnk is now the nth gradient with respect to the kth input activations from component i. This information is available during the backward pass of computing the network’s gradient and the pruning signal can therefore be computed at little extra computational cost.
 
 ## Global Attribution
 
 It would be sufficient at this point to sum each local attribution across each component and at depth one to derive a proxy score for each node. However, the network is recursively connected, and we are interested in the attribution scores for every pair-wise path through the graph -- each component has multiple children who have multiple children and we wish to know their contributions as well.
 
-This follows immediately from the  notion of transitive value: If a component i values component j, it should also value the components trusted by j since component j is a composition of its neighbors.
+This follows immediately from the  notion of transitive value: If a component i values component j, it should also value the components contributing to j since component j is a composition of its neighbors. Applying the chain rule (9) we find the following recursive relation for transitive attribution scores: 
+
+ <p style="text-align: center;"> Aik = Aij * Ajk. (10) </p>
 
 We have each component i calculate the local weight importance Aij for all its neighbors (sub components).
-posting them to a centralized contract running on a decentralized append only database (blockchain). This contract stores normalized weights as a directed weighted graph G = [V, E] where for each edge _eij_ in E we have a value _wij_ associated with the connection between component _fi_ and _fj_. G is updated continuously by transaction calls from each working component as they train and as they calculate attribution scores for their neighbors in the network.
+posting them to a centralized contract running on a decentralized append only database (blockchain). This contract stores normalized weights as a directed weighted graph G = [V, E] where for each edge _eij_ in E we have a value _Aij_ associated with the connection between component _fi_ and _fj_. G is updated continuously by transaction calls from each working component as they train and as they calculate attribution scores for their neighbors in the network.
 
-From this graph, G, global attribution scores for component _fi_ are calculated using a modified EigenTrust algorithm which iteratively updates the component use vector to an attractor point through multiple multiplications by the adjacency matrix described by G. i.e. a(t+1) = G * a(t).
+Global attribution scores for component _fi_ are calculated using a modified EigenTrust algorithm which iteratively updates the component use vector to an attractor point through multiple multiplications by the adjacency matrix described by G. i.e. a(t+1) = G * a(t). The attribution vector a, converges to G's largest Eigen Vector. 
 
 ## Emission System
 
-Normalized global attribution is used to determine the total of new currency emitted within the graph per component, with high contributors attaining a high score. The entire calculation is done using a consensus engine which ensures that the specifics of token emission stay fixed. The state of G is held global so that every node can see how they are attaining token emissions.
+We emit new tokens within the graph to components with high contribution scores. The entire calculation is done using a consensus engine which ensures that the specifics of token emission stay fixed and the state of G is held global so that every node can see how they are attaining token emissions.
 
 below is an approximate method written below using python-numpy:
 ```
@@ -217,8 +215,9 @@ def attribution_simulation():
 ```
 
 
+## Market Analysis
 
-
+----
 
 ## Organization
 
