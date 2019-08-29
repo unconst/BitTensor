@@ -109,11 +109,11 @@ To begin, we follow a standard training scheme within each component.  Node i, c
 
   <p style="text-align: center;"> L_i(ˆy, y) = Ep[ -logQ(f_i(x), x)]. (1) </p>
 
-Where Q is the cross entropy between targets and outputs and Ep is the expectation over a subset P of our dataset M, our training set. And the model is optimizing its parameters θ by moving them in the direction of the gradient of its loss, namely ∂ θ i L_i(ˆy, y).
+Where Q is the cross entropy between targets and outputs and Ep is the expectation over a subset P of our dataset M, our training set. Component i is also composing its inputs with downstream components in the network f_i = (d1 ◦ d2 ... dn ) and serving its model to upstream components, u1, u2 ... un = ( ... f_i, ... ) where the output of our model is the input to that model.
 
-Component i is also composing its inputs with downstream components in the network f_i = (d1 ◦ d2 ... dn ) and serving its model to upstream components. For instance, u1, u2 ... un = ( ... f_i, ... ) where the output of our model is the input to that model.
+We are continuously receiving streams of gradient information from our local loss L_i and from upstream components u1, u2 ... un. These signals are combined using a in-feed queue which is last-in ﬁrst-out cyclic. Our component pulls greedily from this queue in an online fashion and by applying these gradients is optimizing its parameters θ by moving them in a direction which minimizes a combination of losses, namely L' = (L_i + Lu1 + Lu1 + Lu2 ... Lun).
 
-We are continuously receiving streams of gradient information from upstream components u1, u2 ... un, and sending streams of gradients downstream to components (d1 ◦ d2 ... dn ). These carry information to receiving nodes on how to update their parameters θ by moving them in the direction of some remote upstream loss, ∂ θ i Lr(ˆy, y). These signals are combined using a in-feed queue which is last-in ﬁrst-out cyclic: each component pulls gradient updates greedily in an online fashion to update its model.
+Simultaneously we are sending streams of gradients downstream, to components (d1 ◦ d2 ... dn ), which carry information to receiving nodes on how to update their parameters θ by moving them in the direction of L'. -- this strucutre mirrors the  differential graph structure of TensorFlow itself, but for asynchronous operations stored on computers across the web.
 
 ## P2P Training.
 
