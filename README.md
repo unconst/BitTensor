@@ -105,15 +105,15 @@ Above: Local loss function training in a k-graph shaped NN organization.
 
 ## Training Method
 
-To begin we follow a standard training scheme within each component.  Node i, contains a dataset M, with targets X_i and labels Y_i, and is attempting to ﬁt a function that predicts the output from the input, yˆ = f_i(x), by minimizing the loss on the output of the model,
+To begin, we follow a standard training scheme within each component.  Node i, contains a dataset M, with targets X_i and labels Y_i, and is attempting to ﬁt a function that predicts the output from the input, yˆ = f_i(x), by minimizing the loss on the output of the model,
 
   L_i(ˆy, y) = Ep[ -logQ(f_i(x), x)]. (1)
 
-Where Q is the cross entropy between targets and outputs and Ep is the expectation over a subset P of our dataset M, our training set. The model is also a composition of its neighboring models f_i = (f 1 ◦ f 2 ... f n ), and is optimizing its own model parameters θ by moving them in the direction of the gradient of its loss, namely ∂ θ i L_i(ˆy, y). 
+Where Q is the cross entropy between targets and outputs and Ep is the expectation over a subset P of our dataset M, our training set. And the model is optimizing its parameters θ by moving them in the direction of the gradient of its loss, namely ∂ θ i L_i(ˆy, y). 
 
-Simultaneously f_i may be the upstream composition for another component k, where k is training its own local function f_k = ( f_i, ... ) where the output of our model is the input to that model, and we are recieving streams of gradient information from f_k which carry information to update f_i's parameters θ by moving them in the direction of the gradient of this remote loss, ∂ θ i L_k(ˆy, y). 
+Component i also composing its inputs with downstream components in the network f_i = (d1 ◦ d2 ... dn ) and serving its model to upstream components. For instance, u1, u2 ... un = ( ... f_i, ... ) where the output of our model is the input to that model.
 
-We combine the stream of gradients from these losses using a in-feed queue which is last-in ﬁrst-out cyclic -- each component is pulling gradient updates greedily from it in an online fashion to update its model. This extends of our local loss with those of our parents. L_total = [ L_i, L_k1, ... Lkn] for n parent problems.
+We are continuously recieving streams of gradient information from upstread components u1, u2 ... un, and sending streams of gradients downstream to components (d1 ◦ d2 ... dn ). Which carry information to receiving nodes on how to update their parameters θ by moving them in the direction of some remote upstream loss, ∂ θ i Lr(ˆy, y). We combine each stream using a in-feed queue which is last-in ﬁrst-out cyclic so that each component is pulling gradient updates greedily from it in an online fashion to update its model. 
 
 ## P2P Training.
 
