@@ -86,55 +86,92 @@ This technology is being built to do this, while democratizing its ownership, an
 
 Moreover, although democratization and openness are ethical values, we are relying on their practical use here: A free and open system with a large number of stake holders is also the most direct path towards our goal of producing Strong Machine Intelligence. The scale of the AI problem in front of us necessitates that we build it this way.
 
-Why is this? Because decentralized computing approaches can harnes the largest pool of computing power and the largest pool of collaborators: Every computer and every engineer can contribute to this system. We've seen how this worked for Bitcoin, the largest super computer in the world, BitTorrent, at one time, the largest bandwidth user across the globe, and open source Linux, the most widely used operating system in use today.
+Why is this? Because decentralized computing approaches can harness the largest pool of computing power and the largest pool of collaborators: Every computer and every engineer can contribute to this system. We've seen how this worked for Bitcoin, the largest super computer in the world, BitTorrent, at one time, the largest bandwidth user across the globe, and open source Linux, the most widely used operating system in use today.
 
 <img src="assets/Lightning.png" width="1000" />
 
 Above: Bitcoin Lightning network nodes from late 2018.
 
-## Training
+## Introduction
 
 In standard Machine learning setting, the training mechanism uses Back-propagation to minimize the loss on a dataset with respect to the weights, and at each step the model parameters wait for a signal from the global loss function before the next update.
 
 This loss function centrality is prohibitive when the scale of those networks reach the scale desired by modern machine learning  -- or biological scale -- and necessarily so, when we are attempting to train a system which spans multiple computers connected across the web, as we are doing here.
 
-Instead, the network is trained using unique loss functions at each node. Each participant within the network is training against its own loss and against its own dataset. This allows us to train subsections of the network independently, dividing and conquering the problem so that each locality is not (immediately) dependent on far off events in the large network. 
+To avoid this problem, each node within the p2p network is training against its unique 'local' loss function. Each participant  has it own dataset and it hypothetically working on problems which are disjoint. They do not wait for a global error signal to propagate backwards from a far off computer's loss. The local models can be split width-wise in each node, across compute hardware with rapid communication, while the local losses allow depth-wise, lateral, expansion of the network.
 
 <img src="assets/kgraphbittensor.png" width="1000" />
 Above: Local loss function training in a k-graph shaped NN organization.
 
-Training steps on each node run asyncronously. Each node serves an inference model to adjacent components, updating this model as they improve it over time. There is no need to wast cycles waiting for error to return from some distant loss. And each node is constantly streaming messages between it at its neighbors in the network. The local models can be split width-wise in each node, across compute hardware with rapid communication, while the local losses allow depth-wise expansion, adding another dimension of parallelism to be exploited. 
+## Training Method
 
-## Scoring
+We follow a standard machine learning approach at each node. Node i, contains a dataset M, with targets X_i and labels Y_i, and is attempting to ﬁt a function that predicts the output from the input, yˆ = f_i(x), by minimizing the cross entropy on the output of the model,
 
-<img src="assets/knowm.png" width="1000" />
+  L_i(ˆy, y) = Ep[ -logQ(f_i(x), x)]. (1)
 
-In order to prevent the need for the entire connected network to run at each step, each component is optimized locally – i.e performing a parameter update given only an input x and a target y drawn from its local dataset. It does not wait for a global error signal to propagate backwards from another computer.
+Where Q is the cross entropy function and Ep is the expectation over a subset P of our dataset M. The model is also a composition of its neighboring models f_i = (f 1 ◦ f 2 ... f n ), and is optimizing its own model parameters θ by moving them in the direction of the gradient of its loss, namely ∂ θ i L_i(ˆy, y).
 
-In this setting each component contains a dataset with targets X and labels Y, and is attempting to ﬁt a function that predicts the output from the input, yˆ = f(x), by minimizing some loss metric on the output of the model, L(ˆy, y). 
-Each component model is also a composition of its neighboring models f = (f 1 ◦ f 2 ...f n ), and so we are optimizing the parameters θ of this composition by moving them in the direction of the gradient of the loss, ∂ θ i L(ˆy, y). 
+Simultaneously f_i may be the upstream composition for another component k, where k is training its own local function f_k = ( f_i, ... ) and  our component f_i is receiving streams of gradient information from f_k where these gradients carry information to update f_i's parameters θ by moving them in the direction of the gradient of this remote loss, ∂ θ i L_k(ˆy, y). We use a in-feed queue which is last-in ﬁrst-out cyclic to pend these updates -- pulling them greedily in an online fashion to update the model.
 
-We can derive an approximation of importance for each neighboring component in the network. In this implementation we use an information-theoretic approach to determine the value of each composed function f 1 ◦ f 2 ...f n by using the Fisher
-Information (FIM) as a proxy for importance. The Fisher criterion is a natural metric for quantifying the relative importance of inputs since it provides an estimate of how much information a set of parameters carry about the model's output distribution, namely, f(x).
+## P2P Training.
 
-FIM can be calculated using the covariance of the gradient of log likelihood with regards to the model's parameters θ. This can be calculated from the expectation of the element-wise multiplication of the gradient: FIM(θ) = Ey [g  g], where g = ∂ log f(y|x;θ) / ∂θ is the gradient of the log-likelihood and  represents element-wise multiplication. FIM(θ) is a p×1 vector, where p is the numebr of parameters, and each element is the Fisher Information of a that corresponding parameter.
+We are extending previous work in local loss function training by moving the training process from a datacenter into a decentralized computing domain: No computer is privileged, there is no single user of the network, and some computers may be incompetent, offline, or malicious. In lieu of these constraints we must use _incentive_ to draw our compute nodes into line.  We want them to stay online, and to learn well, and to train in alignment with a useful network product.
 
-The Fisher Information provides an estimate of the amount of information a random variable carries about a parameter
-of the distribution. In the context of a compositional function, this provides a natural metric for quantifying the relative importance of a neighboring component in the network. The less information connected parameters to this input hold, the less important that component is to the output statistics of the network. A FIM score for each of our composed functions can derived by summing the parameter scores of all weights attached to that input.
+We begin by defining our network problem. The global objective for the entire network, *L* is a summation over each local objective *L* = \sum_{i=0}^{N} Li.  Our goal is to incent each component towards optimizing our global loss function. i.e. towards minimizing *L*.
 
-## Ranking & Emmission
+To do this, we first augment our global loss with a stake vector *S*, e.g. *L_weighted* = *S* ◦*L* such that the global loss function is scaled towards computers holding stake. Stake quantities are stored in the form of a digital token on a decentralized compute and storage network known as a blockchain. These tokens can be transferred and sold and they immediately hold value within the network --  holding more stake directly changes the network's global loss.
 
-We rank individual components in the network based on the notion of transitive use: If a component i values a component j, it should also value the components trusted by j since component j is a composition of its neighbors. By using the method described above each component i calculates the local weight importance wij for all its neighbors. This is a reflection of how much the output of component i depends on the input from component j. 
+## Local Ranking.
 
-These scores are normalized and posted to a centralized contract running on a decentralized append only database (blockchain).  This contract stores these normalized weights as a directed weighted graph G = [V, E] where for each edge _eij_ in E we have a value _wij_ associated with the connection between component _fi_ and _fj_. G is updated continuously by transaction calls from each working component as they train and as they calculate attribution scores for their neighbors in the network.
+In order to drive nodes towards optimizing the global loss we wish to incent component to minimize the global loss, by paying components in proportion to their contribution more towards the overall performance of the model. This statement is equivalent to asking what it would cost, in terms of loss, to prune a single component, f_k, from the network.
 
-Using the local information in aggregate, we can derive a global attribution score for component _fi_, _ai_ which reflects its use to the entire network, rather than just its neigbors. A standard approach is the EigenTrust algorithm which iteratively updates the component use vector to an attractor point through multiple multiplications by the adjacency matrix described by G. i.e. a(t+1) = G * a(t). 
+For any change in parameters d, and with respect to a single loss function, Li, we can approximate the corresponding change in its loss with a 2nd order approximation around the current parameter values θ:
 
-However this algorithm suffers standard attacks like whitewashing, where nodes continually join and leave the network, and sybil attacks where malicious users create many fake nodes to influence the ranking scores. We use a staking method to alleviate these concerns. In this setting nodes must attain access to a finite digital token and attach it to the address in use by the network node. It is not possible to create many wieght holding spurious nodes without access to this token. And, the conecept of identity is made permenant by hoding it fixed to a digital token account address. 
+  g = ∇L(θ), H = ∇2L(θ), (3)
+  L(θ + d) − L(θ) ≈ g T d + 0.5 d H d (4)
 
-Global attribution scores derived using the method above give us a ranking for each node in the network. As a manner of incentivizing nodes to stay online we wish to incentivize them using a value holding token. These should be distributed first to computers which are producing value. 
+Following this approximation, dropping the kth parameter (setting θk = 0) would lead to the following increase in loss:
 
-An approximate method is written below using python-numpy:
+  L(θ − θkek) − L(θ) ≈ − gkθk + 0.5 * Hkkθ^2k (5)
+
+where ek is the unit vector which is zero everywhere except at its kth entry, where it is 1. Following related methods which also start from a 2nd order approximation, we assume that the current set of parameters is at a local optimum and that the 1st term vanishes as we average over a dataset of input images. For the diagonal of the Hessian, we use the approximation:
+
+  Hkk ≈ EP [∂/∂θklog Qθ(fi(x) | x)^2] (6)
+
+Assuming that Qθ(fi(x) | x) is close to M(fi(x)|x), Eqn. (6) can be viewed as an empirical estimate of the Fisher information of θk, where an expectation over the model is replaced with real data samples. If Q and M are in fact equal and the model is twice differentiable with respect to parameters θ, the Hessian reduces to the Fisher information matrix and the approximation becomes exact. If we use N data points to estimate the Fisher information, our approximation of the increase in loss becomes
+
+  ∆k = 1/2N θk \sum_{n} gnk^2, (7)
+
+where gn is the gradient of the parameters with respect to the nth data point.
+
+## Composition Ranking.
+
+For our compositional architecture, we wish to understand this pruning signal with respect to the inputs from neighboring components instead of individual parameters. Let ankij be the input of the kth component, f_k, at activation location j for the nth datapoint to the ith loss. Let us also introduce a binary mask m ∈ {0, 1} K into the network which modifies the activations ankij of each feature map k as follows:
+
+  ankij' = mk * ankjij . (8)
+
+m is full mask of the kth input component to our function f_i = (f_0 ◦ f_1 ... f_k ... f_n). The gradient of the loss for the nth datapoint with respect to mk is,
+
+gnk = −\sum_{i=0} ankij ∂/∂ankij log Q(f(x) | x) (9)
+
+and the pruning signal between the ith component and teh jth component is, Aij = 1/2N \sum_{i=0} gnk^2. The gradient with respect to the activations is available during the backward pass of computing the network’s gradient and the pruning signal can therefore be computed at little extra computational cost.
+
+## Global Attribution
+
+It would be sufficient at this point to sum each local attribution across each component and depth one score for each node. However, we are interested in the attribution scores for every pair-wise path through the graph -- each component has multiple children who have multiple children and we wish to know their contributions as well.
+
+This follows immediately from the  notion of transitive value: If a component i values component j, it should also value the components trusted by j since component j is a composition of its neighbors.
+
+We have each component i calculate the local weight importance Aij for all its neighbors (sub components).
+posting them to a centralized contract running on a decentralized append only database (blockchain). This contract stores normalized weights as a directed weighted graph G = [V, E] where for each edge _eij_ in E we have a value _wij_ associated with the connection between component _fi_ and _fj_. G is updated continuously by transaction calls from each working component as they train and as they calculate attribution scores for their neighbors in the network.
+
+From this graph, G, global attribution scores for component _fi_ are calculated using a modified EigenTrust algorithm which iteratively updates the component use vector to an attractor point through multiple multiplications by the adjacency matrix described by G. i.e. a(t+1) = G * a(t).
+
+## Emission System
+
+Normalized global attribution is used to determine the total of new currency emitted within the graph per component, with high contributors attaining a high score. The entire calculation is done using a consensus engine which ensures that the specifics of token emission stay fixed. The state of G is held global so that every node can see how they are attaining token emissions.
+
+below is an approximate method written below using python-numpy:
 ```
 def attribution_simulation():
 
