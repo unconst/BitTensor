@@ -107,15 +107,13 @@ Above: Local loss function training in a k-graph shaped NN organization.
 
 To begin, we follow a standard training scheme within each component.  Node i, contains a dataset M, with targets X_i and labels Y_i, and is attempting to ﬁt a function that predicts the output from the input, yˆ = f_i(x), by minimizing the loss on the output of the model,
 
-  L_i(ˆy, y) = Ep[ -logQ(f_i(x), x)]. (1)
+  <p style="text-align: center;"> L_i(ˆy, y) = Ep[ -logQ(f_i(x), x)]. (1) </p>
 
-Where Q is the cross entropy between targets and outputs and Ep is the expectation over a subset P of our dataset M, our training set. And the model is optimizing its parameters θ by moving them in the direction of the gradient of its loss, namely ∂ θ i L_i(ˆy, y). 
+Where Q is the cross entropy between targets and outputs and Ep is the expectation over a subset P of our dataset M, our training set. And the model is optimizing its parameters θ by moving them in the direction of the gradient of its loss, namely ∂ θ i L_i(ˆy, y).
 
 Component i is also composing its inputs with downstream components in the network f_i = (d1 ◦ d2 ... dn ) and serving its model to upstream components. For instance, u1, u2 ... un = ( ... f_i, ... ) where the output of our model is the input to that model.
 
-We are continuously recieving streams of gradient information from upstread components u1, u2 ... un, and sending streams of gradients downstream to components (d1 ◦ d2 ... dn ). Which carry information to receiving nodes on how to update their parameters θ by moving them in the direction of some remote upstream loss, ∂ θ i Lr(ˆy, y). 
-
-We combine each stream using a in-feed queue which is last-in ﬁrst-out cyclic so that each component is pulling gradient updates greedily from it in an online fashion to update its model. 
+We are continuously receiving streams of gradient information from upstream components u1, u2 ... un, and sending streams of gradients downstream to components (d1 ◦ d2 ... dn ). These carry information to receiving nodes on how to update their parameters θ by moving them in the direction of some remote upstream loss, ∂ θ i Lr(ˆy, y). These signals are combined using a in-feed queue which is last-in ﬁrst-out cyclic: each component pulls gradient updates greedily in an online fashion to update its model.
 
 ## P2P Training.
 
@@ -123,46 +121,48 @@ We are extending previous work in local loss function training by moving the tra
 
 We begin by defining our network problem. The global objective for the entire network, *L* is a summation over each local objective *L* = Σ Li. Our goal is to incent each component towards optimizing this global loss function. i.e. towards minimizing *L*.
 
-To do this, we first augment our global loss with a stake vector *S*, e.g. *L* = *S* ◦ *L* such that the global loss function is scaled towards computers holding stake. This binds the concept of value into the network training process -- holding more stake directly changes the network's global loss. We store stake quantities in the form of a digital token using a decentralized compute and storage network known as a blockchain. These tokens can be transferred and bought by computers who wish to attain more power over the network's global loss.
+To do this, we first augment our global loss with a stake vector *S*, e.g. *L* = *S* ◦ *L* such that the global loss function is scaled towards computers holding stake. This binds the concept of value into the network training process -- holding more stake directly changes the network's global loss.
+
+Further more, we represent stake quantities in the form of a digital token using a decentralized compute and storage network known as a blockchain. The tokens can be transferred and bought by computers who wish to attain more power over the network's global loss.
 
 ## Incentive
 
-In what follows we will explain how the network determines how these finite tokens are emitted. We wish to mint new tokens to compute nodes inproportion to their contribution optimizing the global loss. This statement is equivalent to asking what it would cost, in terms of loss, to prune a single component, f_k, from the network.
+In what follows we will explain how the network determines how these finite tokens are emitted. We wish to mint new tokens to compute nodes in-proportion to their contribution optimizing the global loss. This statement is equivalent to asking what it would cost, in terms of loss, to prune a single component, f_k, from the network.
 
-We can understand the effects of pruning a single component from the network using a 2nd order approximation to the loss function, L, around the current parameter values θ, with respect to a change in parameters d, reflecting the removal of single component. 
+We can understand that question using a 2nd order approximation to the loss function, L, around the current parameter values θ, with respect to a change in parameters d, reflecting the removal of single component.
 
-  <center> g = ∇L(θ), H = ∇2L(θ), (3) </center>
-  <center> L(θ + d) − L(θ) ≈ g T d + 0.5 d H d (4) </center>
+  <p style="text-align: center;">g = ∇L(θ),    H = ∇2L(θ), (3) </p>
+  <p style="text-align: center;">L(θ + d) − L(θ) ≈ g T d + 0.5 d H d (4) </p>
 
 Where g is the gradient of the loss and H is the Hessian. Following this approximation, dropping the kth parameter (setting θk = 0) would lead to the following increase in loss:
 
-  L(θ − θkek) − L(θ) ≈ − gkθk + 0.5 * Hkkθ^2k (5)
+  <p style="text-align: center;"> L(θ − θkek) − L(θ) ≈ − gkθk + 0.5 * Hkkθ^2k (5) </p>
 
-where ek is the unit vector which is zero everywhere except at its kth entry, where it is 1. Following related methods which also start from a 2nd order approximation, we assume that the current set of parameters is at a local optimum and that the 1st term vanishes as we average over a dataset of inputs. For the diagonal of the Hessian, we use the approximation:
+where ek is the unit vector which is zero everywhere except at its kth entry, where it is 1. And if we assume that the current set of parameters is at a local optimum the 1st term vanishes leaving us with the Hessian of the loss:
 
-  Hkk ≈ EP [∂ / ∂θk log Qθ(fi(x) | x)^2] (6)
+<p style="text-align: center;"> Hkk ≈ EP [∂ / ∂θk log Qθ(fi(x) | x)^2] (6)</p>
 
-Assuming that Qθ(fi(x) | x) is close to M(fi(x)|x), Eqn. (6) can be viewed as an empirical estimate of the Fisher information of θk, where an expectation over the model is replaced with real data samples. If Q and M are in fact equal and the model is twice differentiable with respect to parameters θ, the Hessian reduces to the Fisher information matrix and the approximation becomes exact. If we use N data points to estimate the Fisher information, our approximation of the increase in loss becomes
+This approximation becomes exact assuming the distribution of P and M are close and Eqn. (6) can be viewed as an empirical estimate of the Fisher information of θk. We can use N data points to estimate the increase in loss by removing our parameter θk:
 
-  ∆k = 1/2N θk Σgnk^2, (7)
+  <p style="text-align: center;"> ∆k = 1/2N  θk Σgnk^2 (7)</p>
 
-where gn is the gradient of the parameters with respect to the nth data point.
+where gnk is the gradient of the parameter with respect to the nth data point.
 
 ## Composition Ranking.
 
 For our compositional architecture, we wish to understand this pruning signal with respect to the inputs from neighboring components instead of individual parameters. Let ankij be the input of the kth component, f_k, at activation location j for the nth datapoint to the ith loss. Let us also introduce a binary mask m ∈ {0, 1} K into the network which modifies the activations ankij of each feature map k as follows:
 
-  ankij' = mk * ankjij . (8)
+  <p style="text-align: center;"> ankij' = mk * ankjij (8) </p>
 
-m is full mask of the kth input component to our function f_i = (f_0 ◦ f_1 ... f_k ... f_n). The gradient of the loss for the nth datapoint with respect to mk is,
+m is a full mask of the kth input component to our function f_i = (f_0 ◦ f_1 ... f_k ... f_n). The gradient of the loss for the nth datapoint with respect to mk is,
 
-gnk = −\sum_{i=0} ankij ∂/∂ankij log Q(f(x) | x) (9)
+<p style="text-align: center;">gnk = −Σankij ∂/∂ankij log Q(f(x) | x) (9) </p>
 
-and the pruning signal between the ith component and teh jth component is, Aij = 1/2N \sum_{i=0} gnk^2. The gradient with respect to the activations is available during the backward pass of computing the network’s gradient and the pruning signal can therefore be computed at little extra computational cost.
+and the pruning signal between the ith component and the jth component is, Aij = 1/2N Σ gnki^2. Where gnki is now the nth gradient with respect to the kth input activations from component i. This information is available during the backward pass of computing the network’s gradient and the pruning signal can therefore be computed at little extra computational cost.
 
 ## Global Attribution
 
-It would be sufficient at this point to sum each local attribution across each component and depth one score for each node. However, we are interested in the attribution scores for every pair-wise path through the graph -- each component has multiple children who have multiple children and we wish to know their contributions as well.
+It would be sufficient at this point to sum each local attribution across each component and at depth one to derive a proxy score for each node. However, the network is recursively connected, and we are interested in the attribution scores for every pair-wise path through the graph -- each component has multiple children who have multiple children and we wish to know their contributions as well.
 
 This follows immediately from the  notion of transitive value: If a component i values component j, it should also value the components trusted by j since component j is a composition of its neighbors.
 
