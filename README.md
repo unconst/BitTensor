@@ -105,42 +105,44 @@ Above: Local loss function training in a k-graph shaped NN organization.
 
 ## Training Method
 
-We follow a standard machine learning approach at each node. Node i, contains a dataset M, with targets X_i and labels Y_i, and is attempting to ﬁt a function that predicts the output from the input, yˆ = f_i(x), by minimizing the cross entropy on the output of the model,
+To begin we follow a standard training scheme within each component.  Node i, contains a dataset M, with targets X_i and labels Y_i, and is attempting to ﬁt a function that predicts the output from the input, yˆ = f_i(x), by minimizing the loss on the output of the model,
 
   L_i(ˆy, y) = Ep[ -logQ(f_i(x), x)]. (1)
 
-Where Q is the cross entropy function and Ep is the expectation over a subset P of our dataset M. The model is also a composition of its neighboring models f_i = (f 1 ◦ f 2 ... f n ), and is optimizing its own model parameters θ by moving them in the direction of the gradient of its loss, namely ∂ θ i L_i(ˆy, y).
+Where Q is the cross entropy between targets and outputs and Ep is the expectation over a subset P of our dataset M, our training set. The model is also a composition of its neighboring models f_i = (f 1 ◦ f 2 ... f n ), and is optimizing its own model parameters θ by moving them in the direction of the gradient of its loss, namely ∂ θ i L_i(ˆy, y). 
 
-Simultaneously f_i may be the upstream composition for another component k, where k is training its own local function f_k = ( f_i, ... ) and  our component f_i is receiving streams of gradient information from f_k where these gradients carry information to update f_i's parameters θ by moving them in the direction of the gradient of this remote loss, ∂ θ i L_k(ˆy, y). We use a in-feed queue which is last-in ﬁrst-out cyclic to pend these updates -- pulling them greedily in an online fashion to update the model.
+Simultaneously f_i may be the upstream composition for another component k, where k is training its own local function f_k = ( f_i, ... ) where the output of our model is the input to that model, and we are recieving streams of gradient information from f_k which carry information to update f_i's parameters θ by moving them in the direction of the gradient of this remote loss, ∂ θ i L_k(ˆy, y). 
+
+We combine the stream of gradients from these losses using a in-feed queue which is last-in ﬁrst-out cyclic -- each component is pulling gradient updates greedily from it in an online fashion to update its model. This extends of our local loss with those of our parents. L_total = [ L_i, L_k1, ... Lkn] for n parent problems.
 
 ## P2P Training.
 
 We are extending previous work in local loss function training by moving the training process from a datacenter into a decentralized computing domain: No computer is privileged, there is no single user of the network, and some computers may be incompetent, offline, or malicious. In lieu of these constraints we must use _incentive_ to draw our compute nodes into line.  We want them to stay online, and to learn well, and to train in alignment with a useful network product.
 
-We begin by defining our network problem. The global objective for the entire network, *L* is a summation over each local objective *L* = \sum_{i=0}^{N} Li.  Our goal is to incent each component towards optimizing our global loss function. i.e. towards minimizing *L*.
+We begin by defining our network problem. The global objective for the entire network, *L* is a summation over each local objective *L* = Σ Li.  Our goal is to incent each component towards optimizing this global loss function. i.e. towards minimizing *L*.
 
-To do this, we first augment our global loss with a stake vector *S*, e.g. *L_weighted* = *S* ◦*L* such that the global loss function is scaled towards computers holding stake. Stake quantities are stored in the form of a digital token on a decentralized compute and storage network known as a blockchain. These tokens can be transferred and sold and they immediately hold value within the network --  holding more stake directly changes the network's global loss.
+To do this, we first augment our global loss with a stake vector *S*, e.g. *L* = *S* ◦ *L* such that the global loss function is scaled towards computers holding stake. Stake quantities are stored in the form of a digital token on a decentralized compute and storage network known as a blockchain. These tokens can be transferred and sold and they immediately hold value within the network --  holding more stake directly changes the network's global loss.
 
 ## Local Ranking.
 
-In order to drive nodes towards optimizing the global loss we wish to incent component to minimize the global loss, by paying components in proportion to their contribution more towards the overall performance of the model. This statement is equivalent to asking what it would cost, in terms of loss, to prune a single component, f_k, from the network.
+In order to drive nodes towards optimizing the global loss we wish to incent components to minimize the global loss. This statement is equivalent to asking what it would cost, in terms of loss, to prune a single component, f_k, from the network.
 
-For any change in parameters d, and with respect to a single loss function, Li, we can approximate the corresponding change in its loss with a 2nd order approximation around the current parameter values θ:
+Pruning a single component is equivalent to a change in parameters d, and with respect to our loss, L, we can approximate the corresponding change with a 2nd order approximation around the current parameter values θ:
 
   g = ∇L(θ), H = ∇2L(θ), (3)
   L(θ + d) − L(θ) ≈ g T d + 0.5 d H d (4)
 
-Following this approximation, dropping the kth parameter (setting θk = 0) would lead to the following increase in loss:
+Where g is the gradient of the loss and H is the Hessian. Following this approximation, dropping the kth parameter (setting θk = 0) would lead to the following increase in loss:
 
   L(θ − θkek) − L(θ) ≈ − gkθk + 0.5 * Hkkθ^2k (5)
 
-where ek is the unit vector which is zero everywhere except at its kth entry, where it is 1. Following related methods which also start from a 2nd order approximation, we assume that the current set of parameters is at a local optimum and that the 1st term vanishes as we average over a dataset of input images. For the diagonal of the Hessian, we use the approximation:
+where ek is the unit vector which is zero everywhere except at its kth entry, where it is 1. Following related methods which also start from a 2nd order approximation, we assume that the current set of parameters is at a local optimum and that the 1st term vanishes as we average over a dataset of inputs. For the diagonal of the Hessian, we use the approximation:
 
-  Hkk ≈ EP [∂/∂θklog Qθ(fi(x) | x)^2] (6)
+  Hkk ≈ EP [∂ / ∂θk log Qθ(fi(x) | x)^2] (6)
 
 Assuming that Qθ(fi(x) | x) is close to M(fi(x)|x), Eqn. (6) can be viewed as an empirical estimate of the Fisher information of θk, where an expectation over the model is replaced with real data samples. If Q and M are in fact equal and the model is twice differentiable with respect to parameters θ, the Hessian reduces to the Fisher information matrix and the approximation becomes exact. If we use N data points to estimate the Fisher information, our approximation of the increase in loss becomes
 
-  ∆k = 1/2N θk \sum_{n} gnk^2, (7)
+  ∆k = 1/2N θk Σgnk^2, (7)
 
 where gn is the gradient of the parameters with respect to the nth data point.
 
