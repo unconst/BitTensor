@@ -111,7 +111,7 @@ class Nucleus():
         label_ids = vocabulary_table.lookup(self.train_batch_labels)
 
         # Get remote inputs. Blocking RPC which multicast queries upstream nodes.
-        remote_inputs = self.dendrite.spike(self.is_training, tf.reshape(self.train_batch_words, [self.batch_size, 1]), self.embedding_size)
+        remote_inputs = self.dendrite.spike(tf.reshape(self.train_batch_words, [self.batch_size, 1]))
         remote_inputs = [tf.reshape(rmi, [self.batch_size, self.embedding_size]) for rmi in remote_inputs]
 
         queue_dtypes = [tf.int64] + [tf.int64] + [tf.float32] * self.config.k
@@ -123,10 +123,6 @@ class Nucleus():
 
         # Pack the next example:
         pre_next_example = [label_ids] + [word_ids] + remote_inputs
-        a = tf.zeros([self.batch_size, 1], dtype=tf.int64)
-        b = tf.zeros([self.batch_size], dtype=tf.int64)
-        c = [tf.zeros([self.batch_size, self.embedding_size]) for _ in range(self.config.k)]
-        #pre_next_example = [a] + [b] + c
         self.enqueue_op = self.dendrite_queue.enqueue(pre_next_example)
 
 

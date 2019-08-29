@@ -7,9 +7,12 @@ import numpy as np
 import random
 import struct
 import tensorflow as tf
+from tensorflow.python.framework import ops
 import time
 
 # TODO (const): Negotiate channels with upstream nodes.
+
+EMBEDDING_SIZE=128
 
 class Dendrite():
     def __init__(self, config, metagraph):
@@ -53,55 +56,78 @@ class Dendrite():
         str_rep += "}."
         return  str_rep
 
-
-
-    def spike(self, is_training, words_tensor, embedding_dim):
-        # TODO(const) Implement distillation here for inference.
-        # TODO(const) Implement sub networks for each dendrite.
-        return_dtypes = [tf.float32 for _ in range(self.config.k)]
-        function_input = [is_training, words_tensor, embedding_dim]
-        return tf.cond(tf.equal(is_training, tf.constant(True)),
-                    true_fn=lambda: tf.py_function(func=self.query, inp=function_input, Tout=return_dtypes),
-                    false_fn=lambda: tf.py_function(func=self.query, inp=function_input, Tout=return_dtypes))
-
-
-    def query(self, is_training, words, embedding_dim):
-        # TODO(const) Currently this function is syncronous. Calls to the
-        # dendrite nodes should be async to save on time.
-
-        result = []
-        for i in range(self.config.k):
-            result.append(np.zeros((len(words), embedding_dim), dtype=np.float32))
-
-        if is_training:
-            for i in range(self.config.k):
-                channel = self.channels[i]
-                if channel:
-                    res = self._send_spike(channel, words, embedding_dim)
-                    if res is not None:
-                        result[i] = res
-
-        return result
-
-
-    def _send_spike(self, channel, words, embedding_dim):
+    def _gradrpc(self, channel, spikes, grad):
+        #logger.info('dendrite._gradrpc')
         try:
-            # Build Stub and send spike.
+            # Build Stub and request proto.
             stub = proto.bolt_pb2_grpc.BoltStub(channel)
+            request = proto.bolt_pb2.GradeRequest(
+                        sender_identity = self.config.identity,
+                        message_identity = str(random.randint(0,1000000000)),
+                        spike_payload = pickle.dumps(spikes.numpy(),  protocol=0),
+                        grad_payload = pickle.dumps(grad.numpy(),  protocol=0))
+            stub.Grade(request)
+        except Exception as error:
+            pass
+            #logger.info('failed grade call with error {}', error)
 
-            # Send Spike proto.
+    def _gradcast(self, op, grad):
+        #logger.info('dendrite._gradcast')
+        spikes = op.inputs[0]
+        for i in range(self.config.k):
+            channel = self.channels[i]
+            grad_i = grad[i]
+            if channel:
+                self._gradrpc(channel, spikes, grad_i)
+
+    def _spikegrad(self, op, grad):
+        #logger.info('dendrite._spikegrad')
+        tf.py_function(self._gradcast, [op, grad])
+        return op.inputs[0]
+
+    def _spikerpc(self, channel, spikes):
+        #logger.info('dendrite._spikerpc')
+        if channel is None:
+            return None
+
+        try:
+            # Build Stub and request proto.
+            stub = proto.bolt_pb2_grpc.BoltStub(channel)
             request = proto.bolt_pb2.SpikeRequest(
                         sender_identity = self.config.identity,
                         message_identity = str(random.randint(0,1000000000)),
-                        payload = pickle.dumps(words.numpy(),  protocol=0))
+                        payload = pickle.dumps(spikes.numpy(),  protocol=0))
             response = stub.Spike(request)
-
-            # Deserialize response.
-            np_response = pickle.loads(response.payload).reshape(embedding_dim, -1)
+            np_response = pickle.loads(response.payload).reshape(EMBEDDING_SIZE, -1)
             return np_response
 
         except Exception as error:
             #logger.info('failed call {}', error)
-            #time.sleep(10)
-            #logger.info('.')
             return None
+
+    def _spikecast(self, spikes):
+        #logger.info('dendrite._spikecast')
+        # TODO(const) Currently this function is syncronous. Calls to the
+        # dendrite nodes should be async to save on time.
+        result = []
+        for i in range(self.config.k):
+            res = self._spikerpc(self.channels[i], spikes)
+            if res is None:
+                result.append(np.zeros((len(spikes), EMBEDDING_SIZE), dtype=np.float32))
+            else:
+                result.append(res)
+        return result
+
+    def _spike(self, inp, Tout, stateful=True, name=None, grad=None):
+        #logger.info('dendrite._spike')
+        rnd_name = 'PyFuncGrad' + str(np.random.randint(0, 1E+8))
+        tf.RegisterGradient(rnd_name)(self._spikegrad)
+        g = tf.get_default_graph()
+        with g.gradient_override_map({"PyFunc": rnd_name}):
+            return tf.py_function(self._spikecast, inp, Tout, name=name)
+
+    def spike(self, words_tensor):
+        #logger.info('dendrite.spike')
+        rtypes = [tf.float32 for _ in range(self.config.k)]
+        inputs = [words_tensor]
+        return self._spike(inputs, rtypes, grad=self._spikegrad)

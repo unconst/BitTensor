@@ -20,12 +20,10 @@ message SpikeResponse {
 }
 
 message GradeRequest {
-  string requester_identity = 1;
+  string sender_identity = 1;
 	string message_identity = 2;
 	bytes spike_payload = 3;
 	bytes grade_payload = 4;
-	repeated int32 spike_shape = 5;
-	repeated int32 grade_shape = 6;
 }
 
 message GradeResponse {
