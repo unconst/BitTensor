@@ -111,26 +111,28 @@ To begin, we follow a standard training scheme within each component.  Node i, c
 
 Where Q is the cross entropy between targets and outputs and Ep is the expectation over a subset P of our dataset M, our training set. And the model is optimizing its parameters θ by moving them in the direction of the gradient of its loss, namely ∂ θ i L_i(ˆy, y). 
 
-Component i also composing its inputs with downstream components in the network f_i = (d1 ◦ d2 ... dn ) and serving its model to upstream components. For instance, u1, u2 ... un = ( ... f_i, ... ) where the output of our model is the input to that model.
+Component i is also composing its inputs with downstream components in the network f_i = (d1 ◦ d2 ... dn ) and serving its model to upstream components. For instance, u1, u2 ... un = ( ... f_i, ... ) where the output of our model is the input to that model.
 
-We are continuously recieving streams of gradient information from upstread components u1, u2 ... un, and sending streams of gradients downstream to components (d1 ◦ d2 ... dn ). Which carry information to receiving nodes on how to update their parameters θ by moving them in the direction of some remote upstream loss, ∂ θ i Lr(ˆy, y). We combine each stream using a in-feed queue which is last-in ﬁrst-out cyclic so that each component is pulling gradient updates greedily from it in an online fashion to update its model. 
+We are continuously recieving streams of gradient information from upstread components u1, u2 ... un, and sending streams of gradients downstream to components (d1 ◦ d2 ... dn ). Which carry information to receiving nodes on how to update their parameters θ by moving them in the direction of some remote upstream loss, ∂ θ i Lr(ˆy, y). 
+
+We combine each stream using a in-feed queue which is last-in ﬁrst-out cyclic so that each component is pulling gradient updates greedily from it in an online fashion to update its model. 
 
 ## P2P Training.
 
-We are extending previous work in local loss function training by moving the training process from a datacenter into a decentralized computing domain: No computer is privileged, there is no single user of the network, and some computers may be incompetent, offline, or malicious. In lieu of these constraints we must use _incentive_ to draw our compute nodes into line.  We want them to stay online, and to learn well, and to train in alignment with a useful network product.
+We are extending previous work in local loss function training by moving the training process from a datacenter into a decentralized computing domain where no computer is privileged, there is no single user of the network, and some computers may be incompetent, offline, or malicious. In lieu of these constraints we must use _incentive_ to draw our compute nodes into line. That incentive should drive them to stay online, and to learn well, and to train in alignment with a useful network product.
 
-We begin by defining our network problem. The global objective for the entire network, *L* is a summation over each local objective *L* = Σ Li.  Our goal is to incent each component towards optimizing this global loss function. i.e. towards minimizing *L*.
+We begin by defining our network problem. The global objective for the entire network, *L* is a summation over each local objective *L* = Σ Li. Our goal is to incent each component towards optimizing this global loss function. i.e. towards minimizing *L*.
 
-To do this, we first augment our global loss with a stake vector *S*, e.g. *L* = *S* ◦ *L* such that the global loss function is scaled towards computers holding stake. Stake quantities are stored in the form of a digital token on a decentralized compute and storage network known as a blockchain. These tokens can be transferred and sold and they immediately hold value within the network --  holding more stake directly changes the network's global loss.
+To do this, we first augment our global loss with a stake vector *S*, e.g. *L* = *S* ◦ *L* such that the global loss function is scaled towards computers holding stake. This binds the concept of value into the network training process -- holding more stake directly changes the network's global loss. We store stake quantities in the form of a digital token using a decentralized compute and storage network known as a blockchain. These tokens can be transferred and bought by computers who wish to attain more power over the network's global loss.
 
-## Local Ranking.
+## Incentive
 
-In order to drive nodes towards optimizing the global loss we wish to incent components to minimize the global loss. This statement is equivalent to asking what it would cost, in terms of loss, to prune a single component, f_k, from the network.
+In what follows we will explain how the network determines how these finite tokens are emitted. We wish to mint new tokens to compute nodes inproportion to their contribution optimizing the global loss. This statement is equivalent to asking what it would cost, in terms of loss, to prune a single component, f_k, from the network.
 
-Pruning a single component is equivalent to a change in parameters d, and with respect to our loss, L, we can approximate the corresponding change with a 2nd order approximation around the current parameter values θ:
+We can understand the effects of pruning a single component from the network using a 2nd order approximation to the loss function, L, around the current parameter values θ, with respect to a change in parameters d, reflecting the removal of single component. 
 
-  g = ∇L(θ), H = ∇2L(θ), (3)
-  L(θ + d) − L(θ) ≈ g T d + 0.5 d H d (4)
+  <center> g = ∇L(θ), H = ∇2L(θ), (3) </center>
+  <center> L(θ + d) − L(θ) ≈ g T d + 0.5 d H d (4) </center>
 
 Where g is the gradient of the loss and H is the Hessian. Following this approximation, dropping the kth parameter (setting θk = 0) would lead to the following increase in loss:
 
