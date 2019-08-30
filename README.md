@@ -135,80 +135,82 @@ In what follows we will explain how the network determines how tokens are emitte
 ## Attribution
 Asking which components contribute the most is equivalent to asking what it would cost, in terms of loss, to prune a single component from the network.
 
-<p style="text-align: center;"> _∆Lj_ = change in global loss w.r.t removal of single component j. </p>
+<p align="center"> _∆Lj_ = change in global loss w.r.t removal of single component j. </p>
 
 We begin with the local estimation, _∆Lij_, with respect to a single loss Li, and a connected component j. We can calculate _∆Lij_ using a 2nd order approximation of the loss with respect to its input activations _aj_, and a change _∆aj_ reflecting the removal of the component j.
 
-  <p style="text-align: center;"> _∆Lij_ = L(_aj_ + _∆aj_) − L(a) ≈ g T _∆aj_ + 1/2 _∆aj_ H _∆aj_ (4) </p>
+<p align="center"> _∆Lij_ = L(_aj_ + _∆aj_) − L(a) ≈ g T _∆aj_ + 1/2 _∆aj_ H _∆aj_ (4) </p>
 
 Where g is the gradient of the loss and vanishes if we assume that the loss is at a local optimum. The remaining term is the Hessian and can be approximated using an expectation over our training subset P:
 
-<p style="text-align: center;"> H ≈ Ep [∂ / ∂_aj_  L(f(x) | x)^2] (6)</p>
+<p align="center"> H ≈ Ep [∂ / ∂_aj_  L(f(x) | x)^2] (6)</p>
 
 This approximation becomes exact when P and M are close and Eqn. (6) can be viewed as an empirical estimate of the Fisher information of our activations. We then use N data points to estimate our pruning signal ∆L.
 
-  <p style="text-align: center;"> g = ∂ / ∂_aj_  L(f(xn) | xn )^2. </p>
-  <p style="text-align: center;"> ∆Lij = 1/2N  \*  _∆aj_  \*  Σn _g_^2 (7)</p>
+<p align="center"> g = ∂ / ∂_aj_  L(f(xn) | xn )^2. </p>
+<p align="center"> ∆Lij = 1/2N  \*  _∆aj_  \*  Σn _g_^2 (7)</p>
 
 This information is available during the backward pass of computing the network’s gradient and the pruning signal can therefore be found at little extra computational cost.
 
 ∆Lij is a local attribution, from component i to component j, and for a network with depth 1 it would be sufficient to sum these to derive a score for each node. However, the network may be largely recursive, and we are interested in the attribution scores for every pair-wise path through the graph.
 
-<p style="text-align: center;"> _∆Lj_ = Σi _∆Lij_ </p>
+<p align="center"> _∆Lj_ = Σi _∆Lij_ </p>
 
 Even for non directly connected components _∆Lij_ exists and follows immediately from the notion of transitive contribution: If a component i contributes to component j, it should also contribute to the components connected to j since component j is a composition of its neighbors. Applying the chain rule to (7) we find this recursive relation:
 
- <p style="text-align: center;"> Given _∆Lij_ and _∆Ljk_ </p>
- <p style="text-align: center;"> _∆Lik_ = _∆Lij_ * _∆Ljk_ (10) </p>
+<p align="center"> Given _∆Lij_ and _∆Ljk_ </p>
+<p align="center"> _∆Lik_ = _∆Lij_ * _∆Ljk_ (10) </p>
 
 ## Emission
 
-We have each component i calculate the local weight importance Aij for all its neighbors (sub components).
-posting them to a centralized contract running on a decentralized append only database (blockchain). This contract stores normalized weights as a directed weighted graph G = [V, E] where for each edge _eij_ in E we have a value _Aij_ associated with the connection between component _fi_ and _fj_. G is updated continuously by transaction calls from each working component as they train and as they calculate attribution scores for their neighbors in the network.
+We have each component i calculate the local weight importance _∆Lik_ for all its neighbors (sub components) posting them to a centralized contract running on a decentralized append only database (blockchain). This contract stores these normalized weights as a directed weighted graph G = [V, E] where for each edge _eij_ in E we have a value _∆Lij_ associated with the connection between component _i_ and _j_. G is updated continuously by transaction calls from each component as they train and as they calculate attribution scores for their neighbors in the network.
 
-Global attribution scores for component _fi_ are calculated using a modified EigenTrust algorithm which iteratively updates the component use vector to an attractor point through multiple multiplications by the adjacency matrix described by G. i.e. a(t+1) = G * a(t). The attribution vector a, converges to G's largest Eigen Vector.
+Global attribution scores for component _i_ are calculated using a modified EigenTrust algorithm which iteratively updates the component use vector to an attractor point through multiple multiplications by the adjacency matrix described by G. i.e. _∆L_(t+1) = G * _∆L_(t).
 
 We emit new tokens within the graph to components with high contribution scores. The entire calculation is done using a consensus engine which ensures that the specifics of token emission stay fixed and the state of G is held global so that every node can see how they are attaining token emissions.
 
 below is an approximate method written below using python-numpy:
 ```
-def attribution_simulation():
 
-    # Stake vector.
-    S = [9.  8.  7.  6.  5.  4.  3.  2.  1.  0.]
 
-    # Loop-in edges.
-    N = [0.6 0.9 0.4 0.5 0.5 0.5  1.  1.  1.  1. ]
+N_BLOCKS = 100
+DEPTH = 100
+TOKENS_PER_BLOCK = 50
 
-    # Outgoing edges.
-    M =[[0.  0.1 0.3 0.2 0.  0.  0.  0.  0.  0. ]
-        [0.1 0.  0.  0.1 0.  0.  0.  0.  0.  0. ]
-        [0.1 0.  0.  0.2 0.  0.  0.  0.  0.  0. ]
-        [0.2 0.  0.3 0.  0.  0.  0.  0.  0.  0. ]
-        [0.  0.  0.  0.  0.  0.5 0.  0.  0.  0. ]
-        [0.  0.  0.  0.  0.5 0.  0.  0.  0.  0. ]
-        [0.  0.  0.  0.  0.  0.  0.  0.  0.  0. ]
-        [0.  0.  0.  0.  0.  0.  0.  0.  0.  0. ]
-        [0.  0.  0.  0.  0.  0.  0.  0.  0.  0. ]
-        [0.  0.  0.  0.  0.  0.  0.  0.  0.  0. ]]
+def get∆L ():
+  ∆L = np.multiply (S, Lii)
+  T = np.matmul (Lij, S)
+  for _ in range(DEPTH):
+      ∆L += np.multiply( T, Lii)
+      T = np.matmul (Lij, T)
 
-    # Loop over blocks.
-    n_blocks = 100
-    for _ in range(n_blocks):        
+  ∆L = ∆L / np.linalg.norm(∆L, 1)
+  return ∆L
 
-        # Attribution calculation.
-        depth = 100
-        A = np.multiply(S, N)
-        T = np.matmul(M, S)
-        for _ in range(depth):
-            A += np.multiply(T, N)
-            T = np.matmul(M, T)
+def emit():
+  # Stake vector.
+  S = [9.  8.  7.  6.  5.  4.  3.  2.  1.  0.]
 
-        # Emission calculation.
-        tokens_per_block = 50
-        A = A / np.linalg.norm(A, 1)
-        E = A * tokens_per_block
-        S = S + E
+  # i to i attributions
+  Lii = [0.6 0.9 0.4 0.5 0.5 0.5  1.  1.  1.  1. ]
+
+  # i to j attributions
+  Lij =[[0.  0.1 0.3 0.2 0.  0.  0.  0.  0.  0. ]
+    [0.1 0.  0.  0.1 0.  0.  0.  0.  0.  0. ]
+    [0.1 0.  0.  0.2 0.  0.  0.  0.  0.  0. ]
+    [0.2 0.  0.3 0.  0.  0.  0.  0.  0.  0. ]
+    [0.  0.  0.  0.  0.  0.5 0.  0.  0.  0. ]
+    [0.  0.  0.  0.  0.5 0.  0.  0.  0.  0. ]
+    [0.  0.  0.  0.  0.  0.  0.  0.  0.  0. ]
+    [0.  0.  0.  0.  0.  0.  0.  0.  0.  0. ]
+    [0.  0.  0.  0.  0.  0.  0.  0.  0.  0. ]
+    [0.  0.  0.  0.  0.  0.  0.  0.  0.  0. ]]
+
+  # Loop over blocks.
+  for _ in range(N_BLOCKS):        
+    ∆L = get∆L()               // Modified EigenTrust
+    E = ∆L * TOKENS_PER_BLOCK             // Emission this block
+    S = S + E                             // Stake update.
 ```
 
 
