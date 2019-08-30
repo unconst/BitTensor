@@ -106,11 +106,11 @@ Above: Local loss function training in a k-graph shaped NN organization.
 
 ## Method
 
-To begin, we follow a standard training scheme within each p2p component. Our Component contains a dataset M, with targets X and labels Y, and is attempting to ﬁt a function that predicts the output from the input, yˆ = f(x), by minimizing the loss on the output of the model,
+To begin, we follow a standard training scheme within each p2p component. Our component contains a dataset M, with targets X and labels Y, and is attempting to ﬁt a function that predicts the output from the input, yˆ = f(x), by minimizing the loss on the output of the model,
 
   <p align="center"> Loss = Ep[ L(f(x), x)]. (1) </p>
 
-Where L the loss function between targets and outputs, (for instance cross-entropy), and Ep is the expectation over a subset P of our dataset M, our training set. Our component is also networked, and is composing its model with downstream components in the network f(x) = (d1 ◦ d2 ... dn ) and, in reflection, serving its own model to upstream components, u1, u2 ... un = ( ... f_i, ... ) where the output of our model is the input to that model.
+Where L the loss function between targets and outputs, (for instance cross-entropy), and Ep is the expectation over a subset P of our dataset M, our training set. Our component is also networked, and is composing its model with downstream components in the network f(x) = (d1 ◦ d2 ... dn ) and, in reflection, serving its own model to upstream components, u1, u2 ... un = ( ... f(x), ... ) where the output of our model is the input to that model.
 
 <p align="center">
 <img src="assets/UpDn.png" width="500" />
@@ -126,7 +126,7 @@ We are extending previous work in Neural Network training by moving the training
 
 We begin by defining our network problem. The global objective for the entire network, *L* is a summation over each local objective *L* = Σ Li. Our goal is to incent each component towards optimizing this global loss function. i.e. towards minimizing *L*.
 
-To do this, we first augment our global loss with a stake vector *S*, e.g. *L* = *S* ◦ *L* such that the global loss function is scaled towards computers holding stake. This binds the concept of value into the network training process -- attaching more stake towards a loss function directly changes the incentive scheme.
+To do this, we first augment our global loss with a stake vector *S*, e.g. *L* = *S* ◦ *L* such that the global loss function is scaled towards computers holding stake. This binds the concept of value into the network training process -- attaching more stake towards a loss function directly changes the objective function.
 
 Stake quantities are represented in the form of a digital token using a decentralized compute and storage network known as a blockchain. The tokens can be transferred and bought by computers who wish to attain more power over the network.
 
@@ -135,44 +135,44 @@ In what follows we will explain how the network determines how tokens are emitte
 ## Attribution
 Asking which components contribute the most is equivalent to asking what it would cost, in terms of loss, to prune a single component from the network.
 
-<p align="center"> _∆Lj_ = change in global loss w.r.t removal of single component j. </p>
+<p align="center"> *∆Lj* = the change in global loss w.r.t removal of single component j. </p>
 
-We begin with the local estimation, _∆Lij_, with respect to a single loss Li, and a connected component j. We can calculate _∆Lij_ using a 2nd order approximation of the loss with respect to its input activations _aj_, and a change _∆aj_ reflecting the removal of the component j.
+We begin with the local estimation, *∆Lij*, with respect to a single loss Li, and a connected component j. We can calculate *∆Lij* using a 2nd order approximation of the loss with respect to its input activations *aj*, and a change *∆aj* reflecting the removal of the component j.
 
-<p align="center"> _∆Lij_ = L(_aj_ + _∆aj_) − L(a) ≈ g T _∆aj_ + 1/2 _∆aj_ H _∆aj_ (4) </p>
+<p align="center"> *∆Lij* = L(*aj* + *∆aj*) − *L*(*aj*) ≈ g' ∙ *∆aj*  +  1/2 *∆aj*'' ∙ H ∙ *∆aj* (4) </p>
 
-Where g is the gradient of the loss and vanishes if we assume that the loss is at a local optimum. The remaining term is the Hessian and can be approximated using an expectation over our training subset P:
+Where g is the gradient of the loss which vanishes if we assume the loss is at a local optimum. The remaining term is the Hessian and can be approximated using the following expectation over our training subset P:
 
-<p align="center"> H ≈ Ep [∂ / ∂_aj_  L(f(x) | x)^2] (6)</p>
+<p align="center"> H ≈ Ep [ ( ∂*L*(x)/∂*aj* ) ^2] (6)</p>
 
-This approximation becomes exact when P and M are close and Eqn. (6) can be viewed as an empirical estimate of the Fisher information of our activations. We then use N data points to estimate our pruning signal ∆L.
+This approximation becomes exact when P and M are close and Eqn. (6) can be viewed as an empirical estimate of the Fisher information of our activations. We can use N data points to estimate our pruning signal *∆Lij*.
 
-<p align="center"> g = ∂ / ∂_aj_  L(f(xn) | xn )^2. </p>
-<p align="center"> ∆Lij = 1/2N  \*  _∆aj_  \*  Σn _g_^2 (7)</p>
+<p align="center"> gn = ( ∂*L*(xn)/∂*aj* ) ^2. </p>
+<p align="center"> *∆Lij* = 1/2N   *∆aj*   Σn *gn*^2 (7)</p>
 
 This information is available during the backward pass of computing the network’s gradient and the pruning signal can therefore be found at little extra computational cost.
 
-∆Lij is a local attribution, from component i to component j, and for a network with depth 1 it would be sufficient to sum these to derive a score for each node. However, the network may be largely recursive, and we are interested in the attribution scores for every pair-wise path through the graph.
-
-<p align="center"> _∆Lj_ = Σi _∆Lij_ </p>
-
-Even for non directly connected components _∆Lij_ exists and follows immediately from the notion of transitive contribution: If a component i contributes to component j, it should also contribute to the components connected to j since component j is a composition of its neighbors. Applying the chain rule to (7) we find this recursive relation:
-
-<p align="center"> Given _∆Lij_ and _∆Ljk_ </p>
-<p align="center"> _∆Lik_ = _∆Lij_ * _∆Ljk_ (10) </p>
-
 ## Emission
 
-We have each component i calculate the local weight importance _∆Lik_ for all its neighbors (sub components) posting them to a centralized contract running on a decentralized append only database (blockchain). This contract stores these normalized weights as a directed weighted graph G = [V, E] where for each edge _eij_ in E we have a value _∆Lij_ associated with the connection between component _i_ and _j_. G is updated continuously by transaction calls from each component as they train and as they calculate attribution scores for their neighbors in the network.
+The totality of *∆Lij* scores describe a directed weighted graph G = [V, E] where for each edge *eij* in E we have a the weight *∆Lij* associated with the connection between component *i* and *j*. *∆Lij* is a local attribution and we would like to determine the global attribution for a node i, *∆Li*. This score should be a sum over every pair-wise path through the graph weighted by stake *Si*.
 
-Global attribution scores for component _i_ are calculated using a modified EigenTrust algorithm which iteratively updates the component use vector to an attractor point through multiple multiplications by the adjacency matrix described by G. i.e. _∆L_(t+1) = G * _∆L_(t).
+<p align="center"> *∆Lj* = Σi *Si* x *∆Lij* </p>
 
-We emit new tokens within the graph to components with high contribution scores. The entire calculation is done using a consensus engine which ensures that the specifics of token emission stay fixed and the state of G is held global so that every node can see how they are attaining token emissions.
+We can derive all pair-wise paths by applying the chain rule to (7) to find the following recursive relation:
+
+<p align="center"> Given *∆Lij* and *∆Ljk* </p>
+<p align="center"> *∆Lik* = *∆Lij* x *∆Ljk* (8) </p>
+
+Which is intuitive, following immediately from the notion of transitive contribution: If a component i contributes to component j, it should multiplicatively contribute to the components using j since they are compositions of its parent.
+
+As a corollary of (8) global attribution scores for component _i_ can be calculated with a Power Iteration over adjacency matrix described by G.
+
+<p align="center">  *∆L*(t+1) = G ∙ *∆L* (t). (9) </p>
+
+This is similar to the EigenTrust algorithm or Google Page Rank, but with Fishers Information scores instead of recommendations or web links. We emit new tokens within the graph to components with high contribution scores proportionally. The entire calculation is done using a consensus engine which ensures that the specifics of token emission stay fixed and where the state of G is held global so that every node can see how they are attaining token emissions.
 
 below is an approximate method written below using python-numpy:
 ```
-
-
 N_BLOCKS = 100
 DEPTH = 100
 TOKENS_PER_BLOCK = 50
@@ -181,7 +181,7 @@ def get∆L ():
   ∆L = np.multiply (S, Lii)
   T = np.matmul (Lij, S)
   for _ in range(DEPTH):
-      ∆L += np.multiply( T, Lii)
+      ∆L += np.multiply(T, Lii)
       T = np.matmul (Lij, T)
 
   ∆L = ∆L / np.linalg.norm(∆L, 1)
