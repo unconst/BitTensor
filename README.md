@@ -9,10 +9,11 @@
 - [Overview](#overview)
 - [To-Run-Locally](#to-run-locally)
 - [To-Run-Testnet](#to-run-testnet)
-- [Why](#why)
-- [How](#how)
-- [Market](#market)
+- [Introduction](#introduction)
+- [Method](#method)
 - [Incentive](#incentive)
+- [Attribution](#attribution)
+- [Emission](#emission)
 - [Organization](#organization)
   - [Nucleus](#nucleus)
   - [Dendrite](#dendrite)
@@ -103,73 +104,69 @@ To avoid this problem, each node within the p2p network is training against its 
 <img src="assets/kgraphbittensor.png" width="1000" />
 Above: Local loss function training in a k-graph shaped NN organization.
 
-## Training Method
+## Method
 
-To begin, we follow a standard training scheme within each component.  Node i, contains a dataset M, with targets X_i and labels Y_i, and is attempting to ﬁt a function that predicts the output from the input, yˆ = f_i(x), by minimizing the loss on the output of the model,
+To begin, we follow a standard training scheme within each p2p component. Our Component contains a dataset M, with targets X and labels Y, and is attempting to ﬁt a function that predicts the output from the input, yˆ = f(x), by minimizing the loss on the output of the model,
 
-  <p style="text-align: center;"> L_i(ˆy, y) = Ep[ -logQ(f_i(x), x)]. (1) </p>
+  <p style="text-align: center;"> Loss = Ep[ L(f(x), x)]. (1) </p>
 
-Where Q is the cross entropy between targets and outputs and Ep is the expectation over a subset P of our dataset M, our training set. Component i is also composing its inputs with downstream components in the network f_i = (d1 ◦ d2 ... dn ) and serving its model to upstream components, u1, u2 ... un = ( ... f_i, ... ) where the output of our model is the input to that model.
+Where L the loss function between targets and outputs, (for instance cross-entropy), and Ep is the expectation over a subset P of our dataset M, our training set. Our component is also networked, and is composing its model with downstream components in the network f(x) = (d1 ◦ d2 ... dn ) and, in reflection, serving its own model to upstream components, u1, u2 ... un = ( ... f_i, ... ) where the output of our model is the input to that model.
 
-We are continuously receiving streams of gradient information from our local loss L_i and from upstream components u1, u2 ... un. These signals are combined using a in-feed queue which is last-in ﬁrst-out cyclic. Our component pulls greedily from this queue in an online fashion and by applying these gradients is optimizing its parameters θ by moving them in a direction which minimizes a combination of losses, namely L' = (L_i + Lu1 + Lu1 + Lu2 ... Lun).
+<p align="center">
+<img src="assets/UpDn.png" width="500" />
+</p>
 
-Simultaneously we are sending streams of gradients downstream, to components (d1 ◦ d2 ... dn ), which carry information to receiving nodes on how to update their parameters θ by moving them in the direction of L'. -- intuitively, the structure mirrors the  differential graph architecture of TensorFlow itself, but for asynchronous operations stored on computers across the web.
+We are continuously receiving streams of gradient information from upstream components (u1, u2 ... un) and simultaneously sending gradients downstream, to components (d1 ◦ d2 ... dn ). These gradients carry information on how to update their parameters θ by moving them in the direction of a our loss -- intuitively, the structure mirrors the behavior of single Neuron in a standard Neural Network, passing signals upstream and gradients downstream. Note, 'Upstream' has been arbitrarily chosen as the direction gradient information originates.
 
-## P2P Training.
-
-We are extending previous work in local loss function training by moving the training process from a datacenter into a decentralized computing domain where no computer is privileged, there is no single user of the network, and some computers may be incompetent, offline, or malicious. In lieu of these constraints we must use _incentive_ to draw our compute nodes into line. That incentive should drive them to stay online, and to learn well, and to train in alignment with a useful network product.
-
-We begin by defining our network problem. The global objective for the entire network, *L* is a summation over each local objective *L* = Σ Li. Our goal is to incent each component towards optimizing this global loss function. i.e. towards minimizing *L*.
-
-To do this, we first augment our global loss with a stake vector *S*, e.g. *L* = *S* ◦ *L* such that the global loss function is scaled towards computers holding stake. This binds the concept of value into the network training process -- holding more stake directly changes the network's global loss.
-
-Further more, we represent stake quantities in the form of a digital token using a decentralized compute and storage network known as a blockchain. The tokens can be transferred and bought by computers who wish to attain more power over the network's global loss.
+A number of consideration arise here surrounding infinite recursions, forward and backward pass latency, issues of asynchronous lock-step, and deadlock. These are investigated below.
 
 ## Incentive
 
-In what follows we will explain how the network determines how these finite tokens are emitted. We wish to mint new tokens to compute nodes in-proportion to their contribution optimizing the global loss. This statement is equivalent to asking what it would cost, in terms of loss, to prune a single component, f_k, from the network.
+We are extending previous work in Neural Network training by moving the training process from a datacenter into a decentralized computing domain where no computer is privileged, there is no single user of the network, and some computers may be incompetent, offline, or malicious. In lieu of these constraints we must use _incentive_ to draw our compute nodes into line. That incentive should drive them to stay online, and to learn well, and train in alignment with a useful network product.
 
-We can understand that question using a 2nd order approximation to the loss function, L, around the current parameter values θ, with respect to a change in parameters d, reflecting the removal of single component.
+We begin by defining our network problem. The global objective for the entire network, *L* is a summation over each local objective *L* = Σ Li. Our goal is to incent each component towards optimizing this global loss function. i.e. towards minimizing *L*.
 
-  <p style="text-align: center;">g = ∇L(θ),    H = ∇2L(θ), (3) </p>
-  <p style="text-align: center;">L(θ + d) − L(θ) ≈ g T d + 0.5 d H d (4) </p>
+To do this, we first augment our global loss with a stake vector *S*, e.g. *L* = *S* ◦ *L* such that the global loss function is scaled towards computers holding stake. This binds the concept of value into the network training process -- attaching more stake towards a loss function directly changes the incentive scheme.
 
-Where g is the gradient of the loss and H is the Hessian. Following this approximation, dropping the kth parameter (setting θk = 0) would lead to the following increase in loss:
+Stake quantities are represented in the form of a digital token using a decentralized compute and storage network known as a blockchain. The tokens can be transferred and bought by computers who wish to attain more power over the network.
 
-  <p style="text-align: center;"> L(θ − θkek) − L(θ) ≈ − gkθk + 0.5 * Hkkθ^2k (5) </p>
+In what follows we will explain how the network determines how tokens are emitted. We wish to mint new tokens to compute nodes in-proportion to their contribution optimizing the global loss.
 
-where ek is the unit vector which is zero everywhere except at its kth entry, where it is 1. And if we assume that the current set of parameters is at a local optimum the 1st term vanishes leaving us with the Hessian of the loss:
+## Attribution
+Asking which components contribute the most is equivalent to asking what it would cost, in terms of loss, to prune a single component from the network.
 
-<p style="text-align: center;"> Hkk ≈ EP [∂ / ∂θk log Qθ(fi(x) | x)^2] (6)</p>
+<p style="text-align: center;"> _∆Lj_ = change in global loss w.r.t removal of single component j. </p>
 
-This approximation becomes exact assuming the distribution of P and M are close and Eqn. (6) can be viewed as an empirical estimate of the Fisher information of θk. We can use N data points to estimate the increase in loss by removing our parameter θk:
+We begin with the local estimation, _∆Lij_, with respect to a single loss Li, and a connected component j. We can calculate _∆Lij_ using a 2nd order approximation of the loss with respect to its input activations _aj_, and a change _∆aj_ reflecting the removal of the component j.
 
-  <p style="text-align: center;"> ∆k = 1/2N  θk Σgnk^2 (7)</p>
+  <p style="text-align: center;"> _∆Lij_ = L(_aj_ + _∆aj_) − L(a) ≈ g T _∆aj_ + 1/2 _∆aj_ H _∆aj_ (4) </p>
 
-where gnk is the gradient of the parameter with respect to the nth data point.
+Where g is the gradient of the loss and vanishes if we assume that the loss is at a local optimum. The remaining term is the Hessian and can be approximated using an expectation over our training subset P:
 
-## Composition Ranking.
+<p style="text-align: center;"> H ≈ Ep [∂ / ∂_aj_  L(f(x) | x)^2] (6)</p>
 
-For our compositional architecture, we wish to understand this pruning signal with respect to the inputs from neighboring components instead of individual parameters. Consider a single component, f_i, in our network and let ankj be the activation/input of the kth downstream component, dk, at activation location j for the nth datapoint. The gradient of the loss for the nth datapoint with respect to a removal of the kth component is,
+This approximation becomes exact when P and M are close and Eqn. (6) can be viewed as an empirical estimate of the Fisher information of our activations. We then use N data points to estimate our pruning signal ∆L.
 
-<p style="text-align: center;">gnk = −Σ ankj ∂/∂ankj log Q(f(x)| x) (9) </p>
+  <p style="text-align: center;"> g = ∂ / ∂_aj_  L(f(xn) | xn )^2. </p>
+  <p style="text-align: center;"> ∆Lij = 1/2N  \*  _∆aj_  \*  Σn _g_^2 (7)</p>
 
-and the pruning signal between the ith component and the kth component is, Aik = 1/2N Σ gnk^2. Where gnk is now the nth gradient with respect to the kth input activations from component i. This information is available during the backward pass of computing the network’s gradient and the pruning signal can therefore be computed at little extra computational cost.
+This information is available during the backward pass of computing the network’s gradient and the pruning signal can therefore be found at little extra computational cost.
 
-## Global Attribution
+∆Lij is a local attribution, from component i to component j, and for a network with depth 1 it would be sufficient to sum these to derive a score for each node. However, the network may be largely recursive, and we are interested in the attribution scores for every pair-wise path through the graph.
 
-It would be sufficient at this point to sum each local attribution across each component and at depth one to derive a proxy score for each node. However, the network is recursively connected, and we are interested in the attribution scores for every pair-wise path through the graph -- each component has multiple children who have multiple children and we wish to know their contributions as well.
+<p style="text-align: center;"> _∆Lj_ = Σi _∆Lij_ </p>
 
-This follows immediately from the  notion of transitive value: If a component i values component j, it should also value the components contributing to j since component j is a composition of its neighbors. Applying the chain rule (9) we find the following recursive relation for transitive attribution scores: 
+Even for non directly connected components _∆Lij_ exists and follows immediately from the notion of transitive contribution: If a component i contributes to component j, it should also contribute to the components connected to j since component j is a composition of its neighbors. Applying the chain rule to (7) we find this recursive relation:
 
- <p style="text-align: center;"> Aik = Aij * Ajk. (10) </p>
+ <p style="text-align: center;"> Given _∆Lij_ and _∆Ljk_ </p>
+ <p style="text-align: center;"> _∆Lik_ = _∆Lij_ * _∆Ljk_ (10) </p>
+
+## Emission
 
 We have each component i calculate the local weight importance Aij for all its neighbors (sub components).
 posting them to a centralized contract running on a decentralized append only database (blockchain). This contract stores normalized weights as a directed weighted graph G = [V, E] where for each edge _eij_ in E we have a value _Aij_ associated with the connection between component _fi_ and _fj_. G is updated continuously by transaction calls from each working component as they train and as they calculate attribution scores for their neighbors in the network.
 
-Global attribution scores for component _fi_ are calculated using a modified EigenTrust algorithm which iteratively updates the component use vector to an attractor point through multiple multiplications by the adjacency matrix described by G. i.e. a(t+1) = G * a(t). The attribution vector a, converges to G's largest Eigen Vector. 
-
-## Emission System
+Global attribution scores for component _fi_ are calculated using a modified EigenTrust algorithm which iteratively updates the component use vector to an attractor point through multiple multiplications by the adjacency matrix described by G. i.e. a(t+1) = G * a(t). The attribution vector a, converges to G's largest Eigen Vector.
 
 We emit new tokens within the graph to components with high contribution scores. The entire calculation is done using a consensus engine which ensures that the specifics of token emission stay fixed and the state of G is held global so that every node can see how they are attaining token emissions.
 
@@ -215,9 +212,14 @@ def attribution_simulation():
 ```
 
 
-## Market Analysis
+## Market Analysis (TODO)
 
 ----
+
+## Neuron Training (TODO)
+
+These signals are combined using a in-feed queue which is last-in ﬁrst-out cyclic. Our component pulls greedily from this queue in an online fashion and by applying these gradients is optimizing its parameters θ by moving them in a direction which minimizes a combination of losses, namely L' = (L_i + Lu1 + Lu1 + Lu2 ... Lun).
+
 
 ## Organization
 
