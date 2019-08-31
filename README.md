@@ -97,9 +97,9 @@ Above: Bitcoin Lightning network nodes from late 2018.
 
 To begin, we follow a standard training scheme within each p2p component. Our component contains a dataset M, with targets X and labels Y, and is attempting to ﬁt a function that predicts the output from the input, yˆ = f(x), by minimizing the loss on the output of the model,
 
-  <p align="center"> Loss = Ep[ L(f(x), x)]. (1) </p>
+  <p align="center"> Loss = Ep[L(f(x), x)]. (1) </p>
 
-Where L the loss function between targets and outputs, (for instance cross-entropy), and Ep is the expectation over a subset P of our dataset M, our training set. Our component is also networked, and is composing its model with downstream components in the network f(x) = (d1 ◦ d2 ... dn ) and, in reflection, serving its own model to upstream components, u1, u2 ... un = ( ... f(x), ... ) where the output of our model is the input to that model.
+Where L is a loss calculation between the targets and outputs, (for instance cross-entropy), and Ep is the expectation over a training subset P of our full dataset M. Our component is also networked, and is composing its model with downstream components in the network f(x) = (d1 ◦ d2 ... dn ) and, in reflection, serving its own model to upstream components, u1, u2 ... un = ( ... f(x), ... ) where the output of our model is an input to those models.
 
 <p align="center">
 <img src="assets/UpDn.png" width="500" />
