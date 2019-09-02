@@ -26,10 +26,10 @@ https://arxiv.org/abs/1906.08237
 ERNIE: Enhanced Representation through Knowledge Integration
 https://arxiv.org/abs/1904.09223
 
-RoBerta: A Robustly Optimized Bert Pretraining Approach
+RoBerta: A Robustly Optimized Bert Pre-training Approach
 https://arxiv.org/abs/1907.11692
 
-Cross-lingual Language Model Pretraining
+Cross-lingual Language Model Pre-training
 https://arxiv.org/pdf/1901.07291.pdf
 
 Outrageously Large Neural Networks: The Sparsely-Gated Mixture-of-Experts Layer
