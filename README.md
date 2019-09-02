@@ -26,7 +26,7 @@
 
 ## Overview
 
-BitTensor allows a new class of Machine Learning models to train across a peer-to-peer network. It enables any computer and any engineer in the world to contribute in training.
+BitTensor allows a new class of Machine Learning model which trains across a peer-to-peer network. It enables any computer and any engineer in the world to contribute in training.
 
 The nature of trust-less computing necessitates that these contributions are combined through incentive rather than direct control from any one computer. We use a digital token to carry that incentive signal through the network: where the magnitude of this incentive is derived from a p2p collaborative filtering technique similar to Google's Page rank algorithm.  
 
@@ -79,13 +79,13 @@ $ ./bittensor.sh --port 9091 --eosurl http://142.93.177.245:8888
 
 <img src="assets/brain.png" width="1000" />
 
-## Why
+## Introduction
 
 We believe Machine Intelligence, like Human Intelligence, is an a priori good. And yet, intelligence is power and power, if held in the hands of the few, will corrupt. Machine Intelligence should be democratized and made open source. Unfortunately, companies like OpenAI who claim this goal have failed in their mandate, opening up the algorithms but not access to the _intelligence_ itself.
 
-This technology is being built to do this, while democratizing its ownership, and sharing its profit with any computer or any individual who deems it worthwhile to contribute.
+This technology is being built to democratizing the ownership, access, and profit of a machine intelligence system with any computer or any individual who deems it worthwhile to contribute.
 
-Moreover, although democratization and openness are ethical values, we are relying on their practical use here: A free and open system with a large number of stake holders is also the most direct path towards our goal of producing Strong Machine Intelligence. The scale of the AI problem in front of us necessitates that we build it this way.
+Moreover, although democratization and openness are ethical values, we are relying on their practical use here: An open system with a large number of contributers is also the most direct path towards our goal of producing Strong Machine Intelligence. The scale of the AI problem in front of us necessitates that we build it this way.
 
 Why is this? Because decentralized computing approaches can harness the largest pool of computing power and the largest pool of collaborators: Every computer and every engineer can contribute to this system. We've seen how this worked for Bitcoin, the largest super computer in the world, BitTorrent, at one time, the largest bandwidth user across the globe, and open source Linux, the most widely used operating system in use today.
 
@@ -93,24 +93,13 @@ Why is this? Because decentralized computing approaches can harness the largest 
 
 Above: Bitcoin Lightning network nodes from late 2018.
 
-## Introduction
-
-In standard Machine learning setting, the training mechanism uses Back-propagation to minimize the loss on a dataset with respect to the weights, and at each step the model parameters wait for a signal from the global loss function before the next update.
-
-This loss function centrality is prohibitive when the scale of those networks reach the scale desired by modern machine learning  -- or biological scale -- and necessarily so, when we are attempting to train a system which spans multiple computers connected across the web, as we are doing here.
-
-To avoid this problem, each node within the p2p network is training against its unique 'local' loss function. Each participant  has it own dataset and it hypothetically working on problems which are disjoint. They do not wait for a global error signal to propagate backwards from a far off computer's loss. The local models can be split width-wise in each node, across compute hardware with rapid communication, while the local losses allow depth-wise, lateral, expansion of the network.
-
-<img src="assets/kgraphbittensor.png" width="1000" />
-Above: Local loss function training in a k-graph shaped NN organization.
-
 ## Method
 
 To begin, we follow a standard training scheme within each p2p component. Our component contains a dataset M, with targets X and labels Y, and is attempting to ﬁt a function that predicts the output from the input, yˆ = f(x), by minimizing the loss on the output of the model,
 
-  <p align="center"> Loss = Ep[ L(f(x), x)]. (1) </p>
+  <p align="center"> Loss = Ep[L(f(x), x)]. (1) </p>
 
-Where L the loss function between targets and outputs, (for instance cross-entropy), and Ep is the expectation over a subset P of our dataset M, our training set. Our component is also networked, and is composing its model with downstream components in the network f(x) = (d1 ◦ d2 ... dn ) and, in reflection, serving its own model to upstream components, u1, u2 ... un = ( ... f(x), ... ) where the output of our model is the input to that model.
+Where L is a loss calculation between the targets and outputs, (for instance cross-entropy), and Ep is the expectation over a training subset P of our full dataset M. Our component is also networked, and is composing its model with downstream components in the network f(x) = (d1 ◦ d2 ... dn ) and, in reflection, serving its own model to upstream components, u1, u2 ... un = ( ... f(x), ... ) where the output of our model is an input to those models.
 
 <p align="center">
 <img src="assets/UpDn.png" width="500" />
