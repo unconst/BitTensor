@@ -113,9 +113,9 @@ A number of consideration arise here surrounding infinite recursions, forward an
 
 We are extending previous work in Neural Network training by moving the training process from a datacenter into a decentralized computing domain where no computer is privileged, there is no single user of the network, and some computers may be incompetent, offline, or malicious. In lieu of these constraints we must use _incentive_ to draw our compute nodes into line. That incentive should drive them to stay online, and to learn well, and train in alignment with a useful network product.
 
-We begin by defining our network problem. The global objective for the entire network, *L* is a summation over each local objective *L* = Σ Li. Our goal is to incent each component towards optimizing this global loss function. i.e. towards minimizing *L*.
+We begin by defining our network problem. The global objective for the entire network, L is a summation over each local objective L = Σ Li. Our goal is to incent each component towards optimizing this global loss function. i.e. towards minimizing L.
 
-To do this, we first augment our global loss with a stake vector *S*, e.g. *L* = *S* ◦ *L* such that the global loss function is scaled towards computers holding stake. This binds the concept of value into the network training process -- attaching more stake towards a loss function directly changes the objective function.
+To do this, we first scale our global loss with a stake vector S, namely, L = S ◦ L such that the global loss function is scaled towards computers holding stake. This binds the concept of value into the network training process -- attaching more stake towards a loss function directly changes the objective function.
 
 Stake quantities are represented in the form of a digital token using a decentralized compute and storage network known as a blockchain. The tokens can be transferred and bought by computers who wish to attain more power over the network.
 
@@ -124,39 +124,39 @@ In what follows we will explain how the network determines how tokens are emitte
 ## Attribution
 Asking which components contribute the most is equivalent to asking what it would cost, in terms of loss, to prune a single component from the network.
 
-<p align="center"> *∆Lj* = the change in global loss w.r.t removal of single component j. </p>
+<p align="center"> ∆Lj = the change in global loss w.r.t removal of single component j. </p>
 
-We begin with the local estimation, *∆Lij*, with respect to a single loss Li, and a connected component j. We can calculate *∆Lij* using a 2nd order approximation of the loss with respect to its input activations *aj*, and a change *∆aj* reflecting the removal of the component j.
+We begin with the local estimation, ∆Lij, with respect to a single loss Li, and a connected component j. We can calculate ∆Lij using a 2nd order approximation of the loss with respect to its input activations aj, and a change ∆aj reflecting the removal of the component j.
 
-<p align="center"> *∆Lij* = L(*aj* + *∆aj*) − *L*(*aj*) ≈ g' ∙ *∆aj*  +  1/2 *∆aj*'' ∙ H ∙ *∆aj* (4) </p>
+<p align="center"> ∆Lij = L(aj + ∆aj) − L(aj) ≈ g' ∙ ∆aj  +  1/2 ∆aj ∙ H ∙ ∆aj (4) </p>
 
 Where g is the gradient of the loss which vanishes if we assume the loss is at a local optimum. The remaining term is the Hessian and can be approximated using the following expectation over our training subset P:
 
-<p align="center"> H ≈ Ep [ ( ∂*L*(x)/∂*aj* ) ^2] (6)</p>
+<p align="center"> H ≈ Ep [ ( ∂L(x)/∂aj ) ^2] (6)</p>
 
 This approximation becomes exact when P and M are close and Eqn. (6) can be viewed as an empirical estimate of the Fisher information of our activations. We can use N data points to estimate our pruning signal *∆Lij*.
 
-<p align="center"> gn = ( ∂*L*(xn)/∂*aj* ) ^2. </p>
-<p align="center"> *∆Lij* = 1/2N   *∆aj*   Σn *gn*^2 (7)</p>
+<p align="center"> gn = ( ∂L(xn)/∂aj )^2. </p>
+<p align="center"> ∆Lij = 1/2N   ∆aj   Σn gn^2 (7)</p>
 
 This information is available during the backward pass of computing the network’s gradient and the pruning signal can therefore be found at little extra computational cost.
 
 ## Emission
 
-The totality of *∆Lij* scores describe a directed weighted graph G = [V, E] where for each edge *eij* in E we have a the weight *∆Lij* associated with the connection between component *i* and *j*. *∆Lij* is a local attribution and we would like to determine the global attribution for a node i, *∆Li*. This score should be a sum over every pair-wise path through the graph weighted by stake *Si*.
+The totality of ∆Lij scores describe a directed weighted graph G = [V, E] where for each edge eij in E we have a the weight *∆Lij* associated with the connection between component i and j. ∆Lij is a local attribution and we would like to determine the global attribution for a node i, ∆Li. This score should be a sum over every pair-wise path through the graph weighted by stake *Si*.
 
-<p align="center"> *∆Lj* = Σi *Si* x *∆Lij* </p>
+<p align="center"> ∆Lj = Σi Si x ∆Lij </p>
 
 We can derive all pair-wise paths by applying the chain rule to (7) to find the following recursive relation:
 
-<p align="center"> Given *∆Lij* and *∆Ljk* </p>
-<p align="center"> *∆Lik* = *∆Lij* x *∆Ljk* (8) </p>
+<p align="center"> Given ∆Lij and ∆Ljk </p>
+<p align="center"> ∆Lik = ∆Lij x ∆Ljk (8) </p>
 
 Which is intuitive, following immediately from the notion of transitive contribution: If a component i contributes to component j, it should multiplicatively contribute to the components using j since they are compositions of its parent.
 
 As a corollary of (8) global attribution scores for component _i_ can be calculated with a Power Iteration over adjacency matrix described by G.
 
-<p align="center">  *∆L*(t+1) = G ∙ *∆L* (t). (9) </p>
+<p align="center">  ∆L(t+1) = G ∙ ∆L (t). (9) </p>
 
 This is similar to the EigenTrust algorithm or Google Page Rank, but with Fishers Information scores instead of recommendations or web links. We emit new tokens within the graph to components with high contribution scores proportionally. The entire calculation is done using a consensus engine which ensures that the specifics of token emission stay fixed and where the state of G is held global so that every node can see how they are attaining token emissions.
 
