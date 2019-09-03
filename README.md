@@ -27,11 +27,11 @@
 
 ## Overview
 
-BitTensor allows a new class of Machine Learning model which trains across a peer-to-peer network. It enables any computer and any engineer in the world to contribute to the training.
+BitTensor allows a new class of Machine Learning model which trains across a peer-to-peer network. It enables any computer and any engineer in the world to contribute to its training.
 
 The nature of trust-less computing necessitates that these contributions are driven by incentives rather than by direct control from any one computer. We use a digital token to carry that incentive signal through the network: Where the magnitude of this incentive is derived from a p2p collaborative filtering technique similar to Google's Page rank algorithm.  
 
-As a network product used by a variety of downstream tasks we focus on learning general multi-task representations, starting from language and extending the network to image and speech.
+As a network product we focus on learning unsupervised multi-task representations, starting from language and extending the network to image and speech. The result is a sufficiently general product which is useful to a large number of downstream stake holders.
 
 The lack of centrality allows the structure to grow to arbitrary size across the internet. Both the cost and control of the system is distributed and the network's informational product is priced into the reward token's value.
 
@@ -84,13 +84,11 @@ $ ./bittensor.sh --port 9091 --eosurl http://142.93.177.245:8888
 
 ## Introduction
 
-We believe Machine Intelligence, like Human Intelligence, is an a priori good. And yet, intelligence is power and power, if held in the hands of the few, will corrupt. Machine Intelligence should be democratized and made open source. Unfortunately, companies like OpenAI who claim this goal have failed in their mandate, opening up the algorithms but not access to the _intelligence_ itself.
+Today, Machine Intelligence is driven by incremental improvements on datasets with the best in class systems owned almost exclusively by large technological institutions with access to compute. While the system has worked well pushing the boundaries of almost every field in Machine Intelligence, we are still very far from achieving the remote goal of strong machine intelligence.
 
-This technology is being built to democratizing the ownership, access, and profit of a machine intelligence system with any computer or any individual who deems it worthwhile to contribute.
+For one, work done training the last best-in-class models are thrown out with every new algorithmic improvement. Albeit some use of distillation, there is little transfer of intelligence between new generations of models. The size of the largest Neural Network architectures are still many magnitudes smaller than a single human brain, and consume many magnitude more in energy, and this is to compare our intelligence systems with single organisms as opposed to the life-collective. More, the ownership and profits of Machine Intelligence is centralized in the hands of a few large corporations who have the compute power and the talent to beat out any competitor systems. Companies like OpenAI who have claimed the goal of opening access have failed in their mandate, opening up the algorithms but not the _intelligence_ itself.
 
-Moreover, although democratization and openness are ethical values, we are relying on their practical use here: An open system with a large number of contributers is also the most direct path towards our goal of producing Strong Machine Intelligence. The scale of the AI problem in front of us necessitates that we build it this way.
-
-Why is this? Because decentralized computing approaches can harness the largest pool of computing power and the largest pool of collaborators: Every computer and every engineer can contribute to this system. We've seen how this worked for Bitcoin, the largest super computer in the world, BitTorrent, at one time, the largest bandwidth user across the globe, and open source Linux, the most widely used operating system in use today.
+What is needed is a collaborative machine-learning system based on an incentive which drives advancement through a market rather than academic accreditation. The ownership, access, and profit form the system should be democratized. The network should grow naturally in proportion to its value. It should learn continually not throwing out understanding it had learned in the past. Driven by incentive rather than executive overhead it should be able to harness the largest pool of computing power and the largest pool of collaborators -- with any computer or any engineer able to contribute allowing the structure to grow to arbitrary size across the internet
 
 <img src="assets/Lightning.png" width="1000" />
 
@@ -209,15 +207,18 @@ def emit():
 
 ## Representation
 
-In the standard Machine Learning settings the model is trained for a very specific task, but our network product must be useful for a large number of stake holders with varying task specifications. In other words, we are seeking a network product which is _general_, similar to that of the human brain -- able to learn many different tasks and benefits from transferring knowledge between them. Borrowing another term, the network must be general multi-task, where components convert any typed information (images, speech, text) into a unified representation useful to a variety of downstream tasks.
+In the standard Machine Learning settings the model is trained for a very specific task, but our network product must be useful for a large number of stake holders with varying task specifications. Because of this, we are seeking a network product which is _general_, similar to that of the human brain -- able to learn many different tasks and benefit from transferring knowledge between them.
 
-Following [14] each component is learning a unified representation as variables-size projection from the input domain. We initially focus on Language Representation, from text, since it is used by a large number of downstream tasks including state-or-the-art translation, question answering and sentiment analysis, and many enterprise problems by companies like Google or Facebook with improvements driving baselines by the million.
+The broadest domain in Machine Learning is general unsupervised multi-task [14], where components convert any typed information (images, speech, text) into a unified representation useful to a variety of downstream tasks. In this model each component is training to produce a representation as variables-size projection from the input domain.
+
+We initially focus on Language Representation, from text, since it is used by a large number of downstream tasks including state-or-the-art translation, question answering and sentiment analysis, and many enterprise problems by companies like Google or Facebook with improvements driving baselines by the million.
 
 As the most robust input modality, text queries are sent as pure unicode strings in any language. We leave tokenization and parsing to the leaf nodes. This pushes computation onto the network but allows us to fit the large variety of different parsing techniques into a single protocol.
 
 <p align="center"> "raw natural language text" ---> [f(x)] ---> [unified vector representation] </p>
 
-State-of-the-art algorithms like BERT, and ERNIe, TranformerXL, RoBerta and XLNet can be unified under this protocol allowing us to host pretrained versions of these networks as initial components within the network. We may wish to have them train more, or lock weights. Hypothetically by hosting the highest performing Language models as initial nodes, we are guaranteed a network product which reaches or exeeds the performance of those models.
+In what follows we show how state-of-the-art algorithms like BERT, and ERNIE, TranformerXL, RoBerta and XLNet can be unified under this structure. This allows us to host pre-trained versions of these networks as initial components within the network. We may wish to have them train more, or lock weights. Hypothetically by hosting the highest performing Language models as initial nodes, we are guaranteed a network product which reaches or exceeds the performance of those models.
+
 
 ## BitTensor1.
 
