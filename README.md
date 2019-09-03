@@ -27,15 +27,15 @@
 
 ## Overview
 
-BitTensor allows a new class of Machine Learning model which trains across a peer-to-peer network. It enables any computer and any engineer in the world to contribute in training.
+BitTensor allows a new class of Machine Learning model which trains across a peer-to-peer network. It enables any computer and any engineer in the world to contribute to the training.
 
-The nature of trust-less computing necessitates that these contributions are combined through incentive rather than direct control from any one computer. We use a digital token to carry that incentive signal through the network: where the magnitude of this incentive is derived from a p2p collaborative filtering technique similar to Google's Page rank algorithm.  
+The nature of trust-less computing necessitates that these contributions are driven by incentives rather than by direct control from any one computer. We use a digital token to carry that incentive signal through the network: Where the magnitude of this incentive is derived from a p2p collaborative filtering technique similar to Google's Page rank algorithm.  
 
-As a network product we focus on learning general multi-task representations because they are a basic unit used by the largest variety of downstream tasks -- and enterprise problems.
+As a network product used by a variety of downstream tasks we focus on learning general multi-task representations, starting from language and extending the network to image and speech.
 
-The lack of centrality allows the structure to grow to arbitrary size across the internet. Both the cost and control of the system is distributed. And the network's informational product is priced into the reward token's value.
+The lack of centrality allows the structure to grow to arbitrary size across the internet. Both the cost and control of the system is distributed and the network's informational product is priced into the reward token's value.
 
-When run, this software folds your computing power into a p2p network and rewards you with an EOS based digital token for your contribution.
+When run, this software folds your computing power into a p2p network and rewards you with an EOS-based digital token for your contribution.
 
 ## To-Run-Locally
 1. [Install Docker](https://docs.docker.com/install/)
