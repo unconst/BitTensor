@@ -27,13 +27,13 @@
 
 ## Overview
 
-BitTensor allows a new class of Machine Learning model which trains across a peer-to-peer network. It enables any computer and any engineer in the world to contribute in training.
+BitTensor allows a new class of Machine Learning model which trains across a peer-to-peer network. It enables any computer and any engineer in the world to contribute to the training.
 
-The nature of trust-less computing necessitates that these contributions are combined through incentive rather than direct control from any one computer. We use a digital token to carry that incentive signal through the network: where the magnitude of this incentive is derived from a p2p collaborative filtering technique similar to Google's Page rank algorithm.  
+The nature of trust-less computing necessitates that these contributions are drive by incentives rather than by direct control from any one computer. We use a digital token to carry that incentive signal through the network: Where the magnitude of this incentive is derived from a p2p collaborative filtering technique similar to Google's Page rank algorithm.  
 
-The lack of centrality allows the structure to grow to arbitrary size across the internet. Both the cost and control of the system is distributed. And the network's informational product is priced into the reward token's value.
+This lack of centralization allows the structure to grow to an arbitrary size across the internet. Both the cost and control of the system are distributed. In addition, the network's informational product is priced into the reward token's value.
 
-When run, this software folds your computing power into a p2p network and rewards you with an EOS based digital token for your contribution.
+When run, this software folds your computing power into a p2p network and rewards you with an EOS-based digital token for your contribution.
 
 ## To-Run-Locally
 1. [Install Docker](https://docs.docker.com/install/)
