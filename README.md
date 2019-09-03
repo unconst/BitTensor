@@ -14,12 +14,12 @@
 - [Incentive](#incentive)
 - [Attribution](#attribution)
 - [Emission](#emission)
-- [Organization](#organization)
+- [Representation](#representation)
+- [BitTensor1](#bitTensor1)
   - [Nucleus](#nucleus)
   - [Dendrite](#dendrite)
   - [Synapse](#synapse)
   - [Metagraph](#metagraph)
-- [Word-Embeddings](#word-embeddings)
 - [References](#references)
 - [License](#license)
 
@@ -30,6 +30,8 @@
 BitTensor allows a new class of Machine Learning model which trains across a peer-to-peer network. It enables any computer and any engineer in the world to contribute in training.
 
 The nature of trust-less computing necessitates that these contributions are combined through incentive rather than direct control from any one computer. We use a digital token to carry that incentive signal through the network: where the magnitude of this incentive is derived from a p2p collaborative filtering technique similar to Google's Page rank algorithm.  
+
+As a network product we focus on learning general multi-task representations because they are a basic unit used by the largest variety of downstream tasks -- and enterprise problems.
 
 The lack of centrality allows the structure to grow to arbitrary size across the internet. Both the cost and control of the system is distributed. And the network's informational product is priced into the reward token's value.
 
@@ -203,17 +205,21 @@ def emit():
     S = S + E                             // Stake update.
 ```
 
-
-## Market Analysis (TODO)
-
 ----
 
-## Neuron Training (TODO)
+## Representation
 
-These signals are combined using a in-feed queue which is last-in ﬁrst-out cyclic. Our component pulls greedily from this queue in an online fashion and by applying these gradients is optimizing its parameters θ by moving them in a direction which minimizes a combination of losses, namely L' = (L_i + Lu1 + Lu1 + Lu2 ... Lun).
+In the standard Machine Learning settings the model is trained for a very specific task, but our network product must be useful for a large number of stake holders with varying task specifications. In other words, we are seeking a network product which is _general_, similar to that of the human brain -- able to learn many different tasks and benefits from transferring knowledge between them. Borrowing another term, the network must be general multi-task, where components convert any typed information (images, speech, text) into a unified representation useful to a variety of downstream tasks.
 
+Following [14] each component is learning a unified representation as variables-size projection from the input domain. We initially focus on Language Representation, from text, since it is used by a large number of downstream tasks including state-or-the-art translation, question answering and sentiment analysis, and many enterprise problems by companies like Google or Facebook with improvements driving baselines by the million.
 
-## Organization
+As the most robust input modality, text queries are sent as pure unicode strings in any language. We leave tokenization and parsing to the leaf nodes. This pushes computation onto the network but allows us to fit the large variety of different parsing techniques into a single protocol.
+
+<p align="center"> "raw natural language text" ---> [f(x)] ---> [unified vector representation] </p>
+
+State-of-the-art algorithms like BERT, and ERNIe, TranformerXL, RoBerta and XLNet can be unified under this protocol allowing us to host pretrained versions of these networks as initial components within the network. We may wish to have them train more, or lock weights. Hypothetically by hosting the highest performing Language models as initial nodes, we are guaranteed a network product which reaches or exeeds the performance of those models.
+
+## BitTensor1.
 
 <img src="assets/brain_engineering_diagram.png" width="1000" />
 
@@ -259,77 +265,63 @@ The Metagraph object acts as an interface between the EOS blockchain and the res
 The EOS contract is separate from Dendrite. Nucleus, Synapse and Metagraph objects during execution. During testing, this class is run on a local EOS instance, but during production the contract is running in a decentralized manner across the EOS network.  
 
 
-
-
----
-
-## Word-Embeddings
-
-A word-embedding is a projection from a word to a continuous vector space representation of that word, which attempts to maintain the semantics under the projection, For instance, 'King' --> [0,1, 0,9, ..., -1.2], such that 'King' - 'Queen' = 'Male'.
-
-Word-embeddings are highly useful initital projections for a large number of Machine Learning problems. This makes them an ideal product for our network. They can also be trained in an un-supervised fashion which is a requirment for the local-loss approach described above.
-
-During training we use a language corpus and find our projection by training a classifier to predict words in context. For example, the sentence 'The queen had long hair', may produce a number of supervised training examples ('queen' -> 'had'), or ('hair' -> 'long'). The ability to predict context requires an understanding of the relationships between words ('meaning' is a relational quality) -- a highly successful assumption in practice.
-
-In the prototype node above, we train each NN using a standard skip gram model, to predict the following word from the previous, however any other embedding producing method is possible -- indeed, the goal should be diversity.
-
 ## References
 
-The PageRank Citation Ranking
+[1] The PageRank Citation Ranking
 http://ilpubs.stanford.edu:8090/422/1/1999-66.pdf
 
-Brain-derived neurotrophic factor and its clinical implications
+[2] Brain-derived neurotrophic factor and its clinical implications
 https://www.ncbi.nlm.nih.gov/pmc/articles/PMC4697050/
 
-Attention is all you need.
+[3] Attention is all you need.
 https://arxiv.org/abs/1706.03762
 
-Universal Language Model Fine-Tuning for Text Classification
+[4] Universal Language Model Fine-Tuning for Text Classification
 https://arxiv.org/abs/1801.06146
 
-Bi-directional Encoder Representations from Transformers
+[5] Bi-directional Encoder Representations from Transformers
 https://arxiv.org/abs/1810.04805
 
-Googles Transformer-XL
+[6] Googles Transformer-XL
 https://arxiv.org/abs/1901.02860
 
-Open AI GPT-2
+[7] Open AI GPT-2
 https://openai.com/blog/better-language-models/
 
-XLNet
+[9] XLNet
 https://arxiv.org/abs/1906.08237
 
-ERNIE: Enhanced Representation through Knowledge Integration
+[10] ERNIE: Enhanced Representation through Knowledge Integration
 https://arxiv.org/abs/1904.09223
 
-RoBerta: A Robustly Optimized Bert Pre-training Approach
+[11] RoBerta: A Robustly Optimized Bert Pre-training Approach
 https://arxiv.org/abs/1907.11692
 
-Cross-lingual Language Model Pre-training
+[12] Cross-lingual Language Model Pre-training
 https://arxiv.org/pdf/1901.07291.pdf
 
-Outrageously Large Neural Networks: The Sparsely-Gated Mixture-of-Experts Layer
+[13] Outrageously Large Neural Networks: The Sparsely-Gated Mixture-of-Experts Layer
 https://arxiv.org/abs/1701.06538
 
-One Model To Learn Them All
+[14] One Model To Learn Them All
 https://arxiv.org/abs/1706.05137
 
-AHaH Computing–From Metastable Switches to Attractors to Machine Learning
+[15] AHaH Computing–From Metastable Switches to Attractors to Machine Learning
 https://journals.plos.org/plosone/article?id=10.1371/journal.pone.0085175
 
-Distilling the Knowledge in a Neural Network
+[16] Distilling the Knowledge in a Neural Network
 https://www.cs.toronto.edu/~hinton/absps/distillation.pdf
 
-Faster Gaze Prediction With Dense Networks and Fisher Pruning
+[17] Faster Gaze Prediction With Dense Networks and Fisher Pruning
 https://arxiv.org/pdf/1801.05787.pdf
 
-Overcoming catastrophic forgetting in neural networks
+[18] Overcoming catastrophic forgetting in neural networks
 https://arxiv.org/abs/1612.00796
 
-Bitcoin: A Peer-to-Peer Electronic Cash System
+[19] Bitcoin: A Peer-to-Peer Electronic Cash System
 https://bitcoin.org/bitcoin.pdf
 
-IPFS - Content Addressed, Versioned, P2P File System
+[20] IPFS - Content Addressed, Versioned, P2P File System
 https://arxiv.org/abs/1407.3561
 
 
