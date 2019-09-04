@@ -115,25 +115,33 @@ Each node is differential, it accepts gradient information from upstream compone
 <img src="assets/krgraph.png" width="500" />
 </p>
 
-One problem with the above system would be latency and infinite-recursion. Specifically, message passing between consecutive nodes may involve long jump distances on the wide-internet and an ad-hoc structure guarantees no protection graph cycles. Our solution is to suggest distillation [16] where each component extracts knowledge from downstream models by training a proxy network to learn the outputs from their inputs. With distillation, each call to a neighbouring component only involves a single hop, and standalone inference models can be extracted from the network at any point.
+One problem with the above system would be latency and infinite-recursion. Specifically, message passing between consecutive nodes may involve long jump distances on the wide-internet and an ad-hoc structure guarantees no protection against graph cycles. Our solution is to suggest distillation [16] where each component extracts knowledge from downstream models by training a proxy network to learn the outputs from their inputs. With distillation, each call to a neighboring component only involves a single hop, and standalone inference models can be extracted from the network at any point.
 
 ### Representation
 
-We need a problem for the network which is sufficiently general enough that there would be stake holders across the globe. It should be sufficiently difficult to warrant a global system, and the data used to train it should be ubiquitous and cheap.
+In our collaborative domain, we require a Machine Intelligence problem which is general enough to interest a diverse set of stake holders. More, the problem should be sufficiently difficult to warrant such a global system and the data used to train it should be ubiquitous and cheap.
 
-For our purposes, we choose unsupervised multi-task [14], where components convert information types (images, speech, text) into a unified representation. Representation learning is used by a large number of downstream tasks including state-or-the-art translation, question answering and sentiment analysis, and many enterprise problems by companies like Google or Facebook with improvements driving baselines by the million.
+For our purposes, we choose unsupervised representation learning [5,6,7,9,10,14,24,25], where components train themselves on large-scale unlabeled corpora to learn a basis ('representation') for downstream tasks. Knowledge attained learning in this way is then transferrable and has been highly successful improving the performance on learning tasks across a wide spectrum of domains.
 
-We initially focus on Language Representation from text. As the most robust input modality, text queries are sent as pure unicode strings in any language. We leave tokenization and parsing to the leaf nodes and push computation onto the network leaves.
+Within this modality, we initially focus on Language Representation from text in the most general sense: queries to a component are pure unicode strings in any language, (we leave tokenization and parsing to each component), and outputs are fixed length representation vectors.
 
-<p align="center"> "raw natural language text" ---> [f(x)] ---> [unified vector representation] </p>
+<p align="center"> "raw natural language text" ---> [f(x)] ---> [fixed length representation] </p>
 
-State-of-the-art algorithms like BERT, and ERNIE, TranformerXL, RoBerta and XLNet can be unified under this structure. Hosted pre-trained versions of these networks can be used as initial components within the network where we may wish to have them train more, or lock weights.
+<p align="center">
+<img src="assets/UVR.png" width="500" />
+</p>
+
+Starting initially with word embedding methods [24] and then to more sophisticated contextual word-embeddings [25] and large text inputs [6], this shared high-level paradigm, has seen a range of training methods developed.
+
+For instance, BERT [5] which used multi-word masking strategies. MT-DNN [14] which combined pre-training with multi-task knowledge transfer. GPT-2 [7] who added task information from an independently sourced question answering dataset. XLM who used language embeddings to improve performance for cross-lingual tasks. ERNIE [10] who added entity level and phrase level masking and XLNet[9] who learning across all mask permutations.
+
+The unlabeled datasets used to train them has been equally diverse, ranging from hundreds of freely available datasets, translation corpuses, reddit crawls, wikipedia and books. This reflects the ubiquity and inexpensive nature of unlabeled natural language. There is no need to worry about protecting datasets.
 
 ### Incentive
 
 We are extending previous work in Neural Network training by moving the training process from a datacenter into a decentralized computing domain where no computer is privileged, there is no single user of the network, and some computers may be incompetent, offline, or malicious. In lieu of these constraints we must use _incentive_ to draw our compute nodes into line. That incentive should drive them to stay online, and to learn well, and train in alignment with a useful network product.
 
-To begin, we assume a standard training scheme within each p2p component. They may contain a dataset M, with targets X and labels Y, and be attempting to ﬁt a function that predicts the output from the input, yˆ = f(x), by minimizing the loss on the output of the model,
+To begin, we assume a standard training scheme within each p2p component. They may contain a language dataset M, with targets X and self-supervised labels Y, and be attempting to ﬁt a function that predicts the output from the input, yˆ = f(x), by minimizing the loss on the output of the model,
 
   <p align="center"> Loss = Ep[L(f(x), x)]. (1) </p>
 
@@ -141,12 +149,11 @@ Where L is a loss calculation between the targets and outputs, (for instance cro
 
 To do this, we first scale our global loss with a stake vector S, namely, L = S ◦ L such that the global loss function is scaled towards computers holding stake. This binds the concept of value into the network training process -- attaching more stake towards a loss function directly changes the objective function.
 
-Stake quantities are represented in the form of a digital token using a decentralized compute and storage network known as a blockchain. The tokens can be transferred and bought by computers who wish to attain more power over the network.
-
-In what follows we will explain how the network determines how tokens are emitted. We wish to mint new tokens to compute nodes in-proportion to their contribution optimizing the global loss.
+Stake quantities are represented in the form of a digital token using a decentralized compute and storage network known as a blockchain. The tokens can be transferred and bought by computers who wish to attain more power over the network. For instance, to fine tune a translation or sentiment analysis problem deriving its performance from an understanding of language.
 
 ### Attribution
-Asking which components contribute the most is equivalent to asking what it would cost, in terms of loss, to prune a single component from the network.
+We wish to mint new tokens to components in-proportion to their contribution optimizing the global loss.
+Following methods used to prune neural networks[17][18], asking how much a components contributes is equivalent to asking what it would cost, in terms of loss, to prune that from the network.
 
 <p align="center"> ∆Lj = the change in global loss w.r.t removal of single component j. </p>
 
@@ -182,7 +189,9 @@ As a corollary of (8) global attribution scores for component _i_ can be calcula
 
 <p align="center">  ∆L(t+1) = G ∙ ∆L (t). (9) </p>
 
-This is similar to the EigenTrust algorithm or Google Page Rank, but with Fishers Information scores instead of recommendations or web links. We emit new tokens within the graph to components with high contribution scores proportionally. The entire calculation is done using a consensus engine which ensures that the specifics of token emission stay fixed and where the state of G is held global so that every node can see how they are attaining token emissions.
+This is similar to the EigenTrust algorithm [23] or Google Page Rank [1], but with Fishers Information scores instead of recommendations or web links. We emit new tokens within the graph to components with high contribution scores proportionally. The entire calculation is done using a consensus engine which ensures that the specifics of token emission stay fixed and where the state of G is held global so that every node can see how they are attaining token emissions.
+
+We note that this form of local attribution emission scheme may be similar in nature to the propagation of the neurotrophic factor BDNF in the brain.[2]
 
 below is an approximate method written below using python-numpy:
 ```
@@ -340,6 +349,14 @@ https://arxiv.org/pdf/1803.02155.pdf
 [22] Generating Wikipedia by Summarizing long sequences <br/>
 https://arxiv.org/pdf/1801.10198.pdf
 
+[23] The EigenTrust Algorithm for Reputation Management in P2P Networks <br/>
+http://ilpubs.stanford.edu:8090/562/1/2002-56.pdf
+
+[24] Distributed Representations of Words and Phrases and their Compositionality <br/>
+https://arxiv.org/pdf/1310.4546.pdf
+
+[25] Skip-Thought Vectors <br/>
+https://arxiv.org/abs/1506.06726
 
 ## License
 
