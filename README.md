@@ -11,10 +11,11 @@
 - [To-Run-Testnet](#to-run-testnet)
 - [Introduction](#introduction)
 - [Method](#method)
-- [Incentive](#incentive)
-- [Attribution](#attribution)
-- [Emission](#emission)
-- [Representation](#representation)
+  - [Components](#components)
+  - [Representation](#representation)
+  - [Incentive](#incentive)
+  - [Attribution](#attribution)
+  - [Emission](#emission)
 - [BitTensor1](#bitTensor1)
   - [Nucleus](#nucleus)
   - [Dendrite](#dendrite)
@@ -86,11 +87,11 @@ $ ./bittensor.sh --port 9091 --eosurl http://142.93.177.245:8888
 
 Today, Machine Intelligence is driven by incremental improvements on datasets by best-in-class systems owned almost exclusively by the large technological institutions that have access to the needed computing power. While the system has worked well to push the boundaries of almost every aspect of Machine Intelligence, we are still very far from achieving the ultimate goal of strong machine intelligence.
 
-For one thing, work done training the latest best-in-class models is thrown out with every new algorithmic improvement. Though there is some use of distillation, there is little transfer of intelligence between new generations of models. The size of the largest Neural Network architectures is still many magnitudes smaller than a single human brain, and consumes much more energy. 
+For one thing, work done training the latest best-in-class models is thrown out with every new algorithmic improvement. Though there is some use of distillation, there is little transfer of intelligence between new generations of models. The size of the largest Neural Network architectures is still many magnitudes smaller than a single human brain, and consumes much more energy.
 
 Moreover, the ownership and profits of Machine Intelligence are in the hands of a few large corporations who have the computing power and the talent to beat out competitor systems. Companies like OpenAI who have claimed the goal of opening access have failed in their mandate, opening up the algorithms but not the intelligence itself.
 
-What is needed is a collaborative machine-learning system based on incentives. This will drive advancement via a market rather than, say, through academic accreditation. The ownership, access, and profits from the system should be decentralized. When this occurs, the network will grow naturally in proportion to its value. 
+What is needed is a collaborative machine-learning system based on incentives. This will drive advancement via a market rather than, say, through academic accreditation. The ownership, access, and profits from the system should be decentralized. When this occurs, the network will grow naturally in proportion to its value.
 
 In addition, it should accumulate learning, not be discarding work that it has generated in the past. Driven by incentives, this type of network will be able to harness a much larger pool of computing power and  collaborators. In essense, because any computer or any interested party will be able to contribute, this will allow the structure to grow to an arbitrary size across the internet
 
@@ -108,13 +109,17 @@ We define each component in our network as a tensor operation containing a Machi
 <img src="assets/UpDn.png" width="500" />
 </p>
 
-Each node is differential, it accepts gradient information from upstream components (u1, u2 ... un) and sends gradient information downstream, to components (d1 ◦ d2 ... dn ). The gradients carry information on how to update remote parameters θ by moving them in the direction of a loss function -- intuitively, no different from the operation in a standard differential graph architecture. An network of these components could be constructed which spanned multiple computers across the web and which formed a peer-to-peer version of a Neural Network. 
+Each node is differential, it accepts gradient information from upstream components (u1, u2 ... un) and sends gradient information downstream, to components (d1 ◦ d2 ... dn ). The gradients carry information on how to update remote parameters θ by moving them in the direction of a loss function -- intuitively, no different from the operation in a standard differential graph architecture. An network of these components could be constructed which spanned multiple computers across the web and which formed a peer-to-peer version of a Neural Network.
 
-One problem with the above system would be latency and infinite-recursion. Specifically, message passing between consecutive nodes may involve long jump distances on the wide-internet and in an ad-hoc graph guarantees no protection against cycle loops through the graph. Our solution is to suggest distillation[16] where each component extracts the generalization ability of the downstream models by training a proxy network to learn the outputs of the remaining network. Because of this, Each call to a neighbouring component only involves a single hop, and standalone inference models can be extracted from the network at any point. 
+<p align="center">
+<img src="assets/krgraph.png" width="500" />
+</p>
+
+One problem with the above system would be latency and infinite-recursion. Specifically, message passing between consecutive nodes may involve long jump distances on the wide-internet and in an ad-hoc graph guarantees no protection against cycle loops through the graph. Our solution is to suggest distillation[16] where each component extracts the generalization ability of the downstream models by training a proxy network to learn the outputs of the remaining network. Because of this, Each call to a neighbouring component only involves a single hop, and standalone inference models can be extracted from the network at any point.
 
 ### Representation
 
-We need a problem for the network which is sufficiently general enough that there would be stake holders across the globe. The problem should be sufficiently difficult to warrant a global system, and the data used to train it should be ubiquitous and cheap.
+We need a problem for the network which is sufficiently general enough that there would be stake holders across the globe. It should be sufficiently difficult to warrant a global system, and the data used to train it should be ubiquitous and cheap.
 
 For our purposes, we choose unsupervised multi-task [14], where components convert information types (images, speech, text) into a unified representation. Representation learning is used by a large number of downstream tasks including state-or-the-art translation, question answering and sentiment analysis, and many enterprise problems by companies like Google or Facebook with improvements driving baselines by the million.
 
@@ -122,17 +127,17 @@ We initially focus on Language Representation from text. As the most robust inpu
 
 <p align="center"> "raw natural language text" ---> [f(x)] ---> [unified vector representation] </p>
 
-State-of-the-art algorithms like BERT, and ERNIE, TranformerXL, RoBerta and XLNet can be unified under this structure.  Hosted pre-trained versions of these networks can be used as initial components within the network where we may wish to have them train more, or lock weights.
+State-of-the-art algorithms like BERT, and ERNIE, TranformerXL, RoBerta and XLNet can be unified under this structure. Hosted pre-trained versions of these networks can be used as initial components within the network where we may wish to have them train more, or lock weights.
 
 ### Incentive
 
 We are extending previous work in Neural Network training by moving the training process from a datacenter into a decentralized computing domain where no computer is privileged, there is no single user of the network, and some computers may be incompetent, offline, or malicious. In lieu of these constraints we must use _incentive_ to draw our compute nodes into line. That incentive should drive them to stay online, and to learn well, and train in alignment with a useful network product.
 
-To begin, we assume a standard training scheme within each p2p component. Our component contains a dataset M, with targets X and labels Y, and is attempting to ﬁt a function that predicts the output from the input, yˆ = f(x), by minimizing the loss on the output of the model,
+To begin, we assume a standard training scheme within each p2p component. They may contain a dataset M, with targets X and labels Y, and be attempting to ﬁt a function that predicts the output from the input, yˆ = f(x), by minimizing the loss on the output of the model,
 
   <p align="center"> Loss = Ep[L(f(x), x)]. (1) </p>
 
-Where L is a loss calculation between the targets and outputs, (for instance cross-entropy), and Ep is the expectation over a training subset P of our full dataset M. The global objective for the entire network, L is a summation over each local objective L = Σ Li. Our goal is to incent each component towards optimizing this global loss function. i.e. towards minimizing L.
+Where L is a loss calculation between the targets and outputs, (for instance cross-entropy), and Ep is the expectation over a training subset P of our full dataset M. The global objective for the entire network, L is a summation over each local objective L = Σ Li. Our goal should be to incent each component towards optimizing this global loss function. i.e. towards minimizing L.
 
 To do this, we first scale our global loss with a stake vector S, namely, L = S ◦ L such that the global loss function is scaled towards computers holding stake. This binds the concept of value into the network training process -- attaching more stake towards a loss function directly changes the objective function.
 
@@ -339,4 +344,3 @@ https://arxiv.org/pdf/1801.10198.pdf
 ## License
 
 MIT
-
