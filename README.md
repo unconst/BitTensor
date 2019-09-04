@@ -115,7 +115,7 @@ Each node is differential, it accepts gradient information from upstream compone
 <img src="assets/krgraph.png" width="500" />
 </p>
 
-One problem with the above system would be latency and infinite-recursion. Specifically, message passing between consecutive nodes may involve long jump distances on the wide-internet and in an ad-hoc graph guarantees no protection against cycle loops through the graph. Our solution is to suggest distillation[16] where each component extracts the generalization ability of the downstream models by training a proxy network to learn the outputs of the remaining network. Because of this, Each call to a neighbouring component only involves a single hop, and standalone inference models can be extracted from the network at any point.
+One problem with the above system would be latency and infinite-recursion. Specifically, message passing between consecutive nodes may involve long jump distances on the wide-internet and an ad-hoc structure guarantees no protection graph cycles. Our solution is to suggest distillation [16] where each component extracts knowledge from downstream models by training a proxy network to learn the outputs from their inputs. With distillation, each call to a neighbouring component only involves a single hop, and standalone inference models can be extracted from the network at any point.
 
 ### Representation
 
