@@ -100,21 +100,31 @@ Above: Bitcoin Lightning network nodes from late 2018.
 
 ## Method
 
-To begin, we follow a standard training scheme within each p2p component. Our component contains a dataset M, with targets X and labels Y, and is attempting to ﬁt a function that predicts the output from the input, yˆ = f(x), by minimizing the loss on the output of the model,
+### Components
 
-  <p align="center"> Loss = Ep[L(f(x), x)]. (1) </p>
-
-Where L is a loss calculation between the targets and outputs, (for instance cross-entropy), and Ep is the expectation over a training subset P of our full dataset M. Our component is also networked, and is composing its model with downstream components in the network f(x) = (d1 ◦ d2 ... dn ) and, in reflection, serving its own model to upstream components, u1, u2 ... un = ( ... f(x), ... ) where the output of our model is an input to those models.
+We define each component in our network as a tensor operation containing a Machine Intelligence model. It can be queried with a tensor of defined shape and type, and will return a tensor which is the output of that operation on its input. It may also be networked, and is composing its operation with downstream components in the network f(x) = (d1 ◦ d2 ... dn ) and, in reflection, serving its own model to upstream components, u1, u2 ... un = ( ... f(x), ... ) where the output of our model is an input to those models.
 
 <p align="center">
 <img src="assets/UpDn.png" width="500" />
 </p>
 
-We are continuously receiving streams of gradient information from upstream components (u1, u2 ... un) and simultaneously sending gradients downstream, to components (d1 ◦ d2 ... dn ). These gradients carry information on how to update their parameters θ by moving them in the direction of a our loss -- intuitively, the structure mirrors the behavior of single Neuron in a standard Neural Network, passing signals upstream and gradients downstream. Note, 'Upstream' has been arbitrarily chosen as the direction gradient information originates.
+Each node is differential, it accepts gradient information from upstream components (u1, u2 ... un) and sends gradient information downstream, to components (d1 ◦ d2 ... dn ). The gradients carry information on how to update remote parameters θ by moving them in the direction of a loss function -- intuitively, no different from the operation in a standard differential graph architecture. An network of these components could be constructed which spanned multiple computers across the web and which formed a peer-to-peer version of a Neural Network. 
 
-A number of consideration arise here surrounding infinite recursions, forward and backward pass latency, issues of asynchronous lock-step, and deadlock. These are investigated below.
+One problem with the above system would be latency and infinite-recursion. Specifically, message passing between consecutive nodes may involve long jump distances on the wide-internet and in an ad-hoc graph guarantees no protection against cycle loops through the graph. Our solution is to suggest distillation[16] where each component extracts the generalization ability of the downstream models by training a proxy network to learn the outputs of the remaining network. Because of this, Each call to a neighbouring component only involves a single hop, and standalone inference models can be extracted from the network at any point. 
 
-## Incentive
+### Representation
+
+We need a problem for the network which is sufficiently general enough that there would be stake holders across the globe. The problem should be sufficiently difficult to warrant a global system, and the data used to train it should be ubiquitous and cheap.
+
+For our purposes, we choose unsupervised multi-task [14], where components convert information types (images, speech, text) into a unified representation. Representation learning is used by a large number of downstream tasks including state-or-the-art translation, question answering and sentiment analysis, and many enterprise problems by companies like Google or Facebook with improvements driving baselines by the million.
+
+We initially focus on Language Representation from text. As the most robust input modality, text queries are sent as pure unicode strings in any language. We leave tokenization and parsing to the leaf nodes and push computation onto the network leaves.
+
+<p align="center"> "raw natural language text" ---> [f(x)] ---> [unified vector representation] </p>
+
+State-of-the-art algorithms like BERT, and ERNIE, TranformerXL, RoBerta and XLNet can be unified under this structure.  Hosted pre-trained versions of these networks can be used as initial components within the network where we may wish to have them train more, or lock weights.
+
+### Incentive
 
 We are extending previous work in Neural Network training by moving the training process from a datacenter into a decentralized computing domain where no computer is privileged, there is no single user of the network, and some computers may be incompetent, offline, or malicious. In lieu of these constraints we must use _incentive_ to draw our compute nodes into line. That incentive should drive them to stay online, and to learn well, and train in alignment with a useful network product.
 
@@ -126,7 +136,7 @@ Stake quantities are represented in the form of a digital token using a decentra
 
 In what follows we will explain how the network determines how tokens are emitted. We wish to mint new tokens to compute nodes in-proportion to their contribution optimizing the global loss.
 
-## Attribution
+### Attribution
 Asking which components contribute the most is equivalent to asking what it would cost, in terms of loss, to prune a single component from the network.
 
 <p align="center"> ∆Lj = the change in global loss w.r.t removal of single component j. </p>
@@ -146,7 +156,7 @@ This approximation becomes exact when P and M are close and Eqn. (6) can be view
 
 This information is available during the backward pass of computing the network’s gradient and the pruning signal can therefore be found at little extra computational cost.
 
-## Emission
+### Emission
 
 The totality of ∆Lij scores describe a directed weighted graph G = [V, E] where for each edge eij in E we have a the weight *∆Lij* associated with the connection between component i and j. ∆Lij is a local attribution and we would like to determine the global attribution for a node i, ∆Li. This score should be a sum over every pair-wise path through the graph weighted by stake *Si*.
 
@@ -208,20 +218,6 @@ def emit():
 ```
 
 ----
-
-## Representation
-
-In the standard Machine Learning settings the model is trained for a very specific task, but our network product must be useful for a large number of stake holders with varying task specifications. Because of this, we are seeking a network product which is _general_, similar to that of the human brain -- able to learn many different tasks and benefit from transferring knowledge between them.
-
-The broadest domain in Machine Learning is general unsupervised multi-task [14], where components convert any typed information (images, speech, text) into a unified representation useful to a variety of downstream tasks. In this model each component is training to produce a representation as variables-size projection from the input domain.
-
-We initially focus on Language Representation, from text, since it is used by a large number of downstream tasks including state-or-the-art translation, question answering and sentiment analysis, and many enterprise problems by companies like Google or Facebook with improvements driving baselines by the million.
-
-As the most robust input modality, text queries are sent as pure unicode strings in any language. We leave tokenization and parsing to the leaf nodes. This pushes computation onto the network but allows us to fit the large variety of different parsing techniques into a single protocol.
-
-<p align="center"> "raw natural language text" ---> [f(x)] ---> [unified vector representation] </p>
-
-In what follows we show how state-of-the-art algorithms like BERT, and ERNIE, TranformerXL, RoBerta and XLNet can be unified under this structure. This allows us to host pre-trained versions of these networks as initial components within the network. We may wish to have them train more, or lock weights. Hypothetically by hosting the highest performing Language models as initial nodes, we are guaranteed a network product which reaches or exceeds the performance of those models.
 
 
 ## BitTensor1.
@@ -333,3 +329,4 @@ https://arxiv.org/abs/1407.3561
 ## License
 
 MIT
+
