@@ -2,8 +2,6 @@
 
 <img src="assets/mycellium.jpeg" width="1000" />
 
-> Decentralized Machine Intelligence
-
 ## Table of Contents
 
 - [Overview](#overview)
