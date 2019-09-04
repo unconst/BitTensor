@@ -103,13 +103,13 @@ Above: Bitcoin Lightning network nodes from late 2018.
 
 ### Components
 
-We define each component in our network as a tensor operation containing a Machine Intelligence model. It can be queried with a tensor of defined shape and type, and will return a tensor which is the output of that operation on its input. It may also be networked, and is composing its operation with downstream components in the network f(x) = (d1 ◦ d2 ... dn ) and, in reflection, serving its own model to upstream components, u1, u2 ... un = ( ... f(x), ... ) where the output of our model is an input to those models.
+We define each component in our network as a Machine Intelligence function which operates on tensors. It can be queried with a tensor of defined shape and type and will return a tensor which is the output of that operation on its input. It may also be networked, and is composing its operation with downstream components in the network f(x) = (d1 ◦ d2 ... dn ) and, in reflection, serving its own model to upstream components, u1, u2 ... un = ( ... f(x), ... ) where the output of our model is an input to those models.
 
 <p align="center">
 <img src="assets/UpDn.png" width="500" />
 </p>
 
-Each node is differential, it accepts gradient information from upstream components (u1, u2 ... un) and sends gradient information downstream, to components (d1 ◦ d2 ... dn ). The gradients carry information on how to update remote parameters θ by moving them in the direction of a loss function -- intuitively, no different from the operation in a standard differential graph architecture. An network of these components could be constructed which spanned multiple computers across the web and which formed a peer-to-peer version of a Neural Network.
+Each node is differential, it accepts gradient information from upstream components (u1, u2 ... un) and sends gradient information downstream, to components (d1 ◦ d2 ... dn ). The gradients carry information on how to update remote parameters θ by moving them in the direction of some loss function -- intuitively, no different from a neuron in a standard differential graph architecture. A network of these components could span multiple computers across the web and form a peer-to-peer version of a Neural Network.
 
 <p align="center">
 <img src="assets/krgraph.png" width="500" />
@@ -121,9 +121,9 @@ One problem with the above system would be latency and infinite-recursion. Speci
 
 In our collaborative domain, we require a Machine Intelligence problem which is general enough to interest a diverse set of stake holders. More, the problem should be sufficiently difficult to warrant such a global system and the data used to train it should be ubiquitous and cheap.
 
-For our purposes, we choose unsupervised representation learning [5,6,7,9,10,14,24,25], where components train themselves on large-scale unlabeled corpora to learn a basis ('representation') for downstream tasks. Knowledge attained learning in this way is then transferrable and has been highly successful improving the performance on learning tasks across a wide spectrum of domains.
+For our purposes, we choose unsupervised representation learning [5,6,7,9,10,14,24,25], where components train themselves on large-scale unlabeled corpora to learn a basis ('representation') for downstream tasks. Knowledge attained learning in this way is general and transferrable, and has been highly successful improving performance across a wide spectrum of tasks.
 
-Within this modality, we initially focus on Language Representation from text in the most general sense: queries to a component are pure unicode strings in any language, (we leave tokenization and parsing to each component), and outputs are fixed length representation vectors.
+Within this modality, we initially focus on Language Representation from text in the most general sense. Each components is learning to understand raw language and will respond to queries in pure unicode strings with semantic representations. We leave tokenization and parsing to each component and outputs across the network are fixed length vectors.
 
 <p align="center"> "raw natural language text" ---> [f(x)] ---> [fixed length representation] </p>
 
@@ -133,13 +133,13 @@ Within this modality, we initially focus on Language Representation from text in
 
 Starting initially with word embedding methods [24] and then to more sophisticated contextual word-embeddings [25] and large text inputs [6], this shared high-level paradigm, has seen a range of training methods developed.
 
-For instance, BERT [5] which used multi-word masking strategies. MT-DNN [14] which combined pre-training with multi-task knowledge transfer. GPT-2 [7] who added task information from an independently sourced question answering dataset. XLM who used language embeddings to improve performance for cross-lingual tasks. ERNIE [10] who added entity level and phrase level masking and XLNet[9] who learning across all mask permutations.
+For instance, BERT [5] which used multi-word masking strategies. MT-DNN [14] which combined pre-training with multi-task knowledge transfer. GPT-2 [7] who added task information from an independently sourced question answering dataset. XLM who used language embeddings to improve performance for cross-lingual tasks. ERNIE [10] who added entity/phrase level masking and XLNet[9] who learning across all mask permutations.
 
 The unlabeled datasets used to train them has been equally diverse, ranging from hundreds of freely available datasets, translation corpuses, reddit crawls, wikipedia and books. This reflects the ubiquity and inexpensive nature of unlabeled natural language. There is no need to worry about protecting datasets.
 
 ### Incentive
 
-We are extending previous work in Neural Network training by moving the training process from a datacenter into a decentralized computing domain where no computer is privileged, there is no single user of the network, and some computers may be incompetent, offline, or malicious. In lieu of these constraints we must use _incentive_ to draw our compute nodes into line. That incentive should drive them to stay online, and to learn well, and train in alignment with a useful network product.
+We are extending previous work in Neural Network training by moving the training process from a datacenter into a decentralized computing domain where no computer is privileged, there is no single user of the network, and some computers may be incompetent, offline, or malicious. In lieu of these constraints we must use _incentive_ to draw our compute nodes into line. That incentive should drive them to stay online, to learn well, and train in alignment with a useful network product.
 
 To begin, we assume a standard training scheme within each p2p component. They may contain a language dataset M, with targets X and self-supervised labels Y, and be attempting to ﬁt a function that predicts the output from the input, yˆ = f(x), by minimizing the loss on the output of the model,
 
