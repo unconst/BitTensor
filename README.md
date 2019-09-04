@@ -84,11 +84,15 @@ $ ./bittensor.sh --port 9091 --eosurl http://142.93.177.245:8888
 
 ## Introduction
 
-Today, Machine Intelligence is driven by incremental improvements on datasets with the best in class systems owned almost exclusively by large technological institutions with access to compute. While the system has worked well pushing the boundaries of almost every field in Machine Intelligence, we are still very far from achieving the remote goal of strong machine intelligence.
+Today, Machine Intelligence is driven by incremental improvements on datasets by best-in-class systems owned almost exclusively by the large technological institutions that have access to the needed computing power. While the system has worked well to push the boundaries of almost every aspect of Machine Intelligence, we are still very far from achieving the ultimate goal of strong machine intelligence.
 
-For one, work done training the last best-in-class models are thrown out with every new algorithmic improvement. Albeit some use of distillation, there is little transfer of intelligence between new generations of models. The size of the largest Neural Network architectures are still many magnitudes smaller than a single human brain, and consume many magnitude more in energy, and this is to compare our intelligence systems with single organisms as opposed to the life-collective. More, the ownership and profits of Machine Intelligence is centralized in the hands of a few large corporations who have the compute power and the talent to beat out any competitor systems. Companies like OpenAI who have claimed the goal of opening access have failed in their mandate, opening up the algorithms but not the _intelligence_ itself.
+For one thing, work done training the latest best-in-class models is thrown out with every new algorithmic improvement. Though there is some use of distillation, there is little transfer of intelligence between new generations of models. The size of the largest Neural Network architectures is still many magnitudes smaller than a single human brain, and consumes much more energy. 
 
-What is needed is a collaborative machine-learning system based on an incentive which drives advancement through a market rather than academic accreditation. The ownership, access, and profit form the system should be democratized. The network should grow naturally in proportion to its value. It should learn continually not throwing out understanding it had learned in the past. Driven by incentive rather than executive overhead it should be able to harness the largest pool of computing power and the largest pool of collaborators -- with any computer or any engineer able to contribute allowing the structure to grow to arbitrary size across the internet
+Moreover, the ownership and profits of Machine Intelligence are in the hands of a few large corporations who have the computing power and the talent to beat out competitor systems. Companies like OpenAI who have claimed the goal of opening access have failed in their mandate, opening up the algorithms but not the intelligence itself.
+
+What is needed is a collaborative machine-learning system based on incentives. This will drive advancement via a market rather than, say, through academic accreditation. The ownership, access, and profits from the system should be decentralized. When this occurs, the network will grow naturally in proportion to its value. 
+
+In addition, it should accumulate learning, not be discarding work that it has generated in the past. Driven by incentives, this type of network will be able to harness a much larger pool of computing power and  collaborators. In essense, because any computer or any interested party will be able to contribute, this will allow the structure to grow to an arbitrary size across the internet
 
 <img src="assets/Lightning.png" width="1000" />
 
@@ -96,25 +100,39 @@ Above: Bitcoin Lightning network nodes from late 2018.
 
 ## Method
 
-To begin, we follow a standard training scheme within each p2p component. Our component contains a dataset M, with targets X and labels Y, and is attempting to ﬁt a function that predicts the output from the input, yˆ = f(x), by minimizing the loss on the output of the model,
+### Components
 
-  <p align="center"> Loss = Ep[L(f(x), x)]. (1) </p>
-
-Where L is a loss calculation between the targets and outputs, (for instance cross-entropy), and Ep is the expectation over a training subset P of our full dataset M. Our component is also networked, and is composing its model with downstream components in the network f(x) = (d1 ◦ d2 ... dn ) and, in reflection, serving its own model to upstream components, u1, u2 ... un = ( ... f(x), ... ) where the output of our model is an input to those models.
+We define each component in our network as a tensor operation containing a Machine Intelligence model. It can be queried with a tensor of defined shape and type, and will return a tensor which is the output of that operation on its input. It may also be networked, and is composing its operation with downstream components in the network f(x) = (d1 ◦ d2 ... dn ) and, in reflection, serving its own model to upstream components, u1, u2 ... un = ( ... f(x), ... ) where the output of our model is an input to those models.
 
 <p align="center">
 <img src="assets/UpDn.png" width="500" />
 </p>
 
-We are continuously receiving streams of gradient information from upstream components (u1, u2 ... un) and simultaneously sending gradients downstream, to components (d1 ◦ d2 ... dn ). These gradients carry information on how to update their parameters θ by moving them in the direction of a our loss -- intuitively, the structure mirrors the behavior of single Neuron in a standard Neural Network, passing signals upstream and gradients downstream. Note, 'Upstream' has been arbitrarily chosen as the direction gradient information originates.
+Each node is differential, it accepts gradient information from upstream components (u1, u2 ... un) and sends gradient information downstream, to components (d1 ◦ d2 ... dn ). The gradients carry information on how to update remote parameters θ by moving them in the direction of a loss function -- intuitively, no different from the operation in a standard differential graph architecture. An network of these components could be constructed which spanned multiple computers across the web and which formed a peer-to-peer version of a Neural Network. 
 
-A number of consideration arise here surrounding infinite recursions, forward and backward pass latency, issues of asynchronous lock-step, and deadlock. These are investigated below.
+One problem with the above system would be latency and infinite-recursion. Specifically, message passing between consecutive nodes may involve long jump distances on the wide-internet and in an ad-hoc graph guarantees no protection against cycle loops through the graph. Our solution is to suggest distillation[16] where each component extracts the generalization ability of the downstream models by training a proxy network to learn the outputs of the remaining network. Because of this, Each call to a neighbouring component only involves a single hop, and standalone inference models can be extracted from the network at any point. 
 
-## Incentive
+### Representation
+
+We need a problem for the network which is sufficiently general enough that there would be stake holders across the globe. The problem should be sufficiently difficult to warrant a global system, and the data used to train it should be ubiquitous and cheap.
+
+For our purposes, we choose unsupervised multi-task [14], where components convert information types (images, speech, text) into a unified representation. Representation learning is used by a large number of downstream tasks including state-or-the-art translation, question answering and sentiment analysis, and many enterprise problems by companies like Google or Facebook with improvements driving baselines by the million.
+
+We initially focus on Language Representation from text. As the most robust input modality, text queries are sent as pure unicode strings in any language. We leave tokenization and parsing to the leaf nodes and push computation onto the network leaves.
+
+<p align="center"> "raw natural language text" ---> [f(x)] ---> [unified vector representation] </p>
+
+State-of-the-art algorithms like BERT, and ERNIE, TranformerXL, RoBerta and XLNet can be unified under this structure.  Hosted pre-trained versions of these networks can be used as initial components within the network where we may wish to have them train more, or lock weights.
+
+### Incentive
 
 We are extending previous work in Neural Network training by moving the training process from a datacenter into a decentralized computing domain where no computer is privileged, there is no single user of the network, and some computers may be incompetent, offline, or malicious. In lieu of these constraints we must use _incentive_ to draw our compute nodes into line. That incentive should drive them to stay online, and to learn well, and train in alignment with a useful network product.
 
-We begin by defining our network problem. The global objective for the entire network, L is a summation over each local objective L = Σ Li. Our goal is to incent each component towards optimizing this global loss function. i.e. towards minimizing L.
+To begin, we assume a standard training scheme within each p2p component. Our component contains a dataset M, with targets X and labels Y, and is attempting to ﬁt a function that predicts the output from the input, yˆ = f(x), by minimizing the loss on the output of the model,
+
+  <p align="center"> Loss = Ep[L(f(x), x)]. (1) </p>
+
+Where L is a loss calculation between the targets and outputs, (for instance cross-entropy), and Ep is the expectation over a training subset P of our full dataset M. The global objective for the entire network, L is a summation over each local objective L = Σ Li. Our goal is to incent each component towards optimizing this global loss function. i.e. towards minimizing L.
 
 To do this, we first scale our global loss with a stake vector S, namely, L = S ◦ L such that the global loss function is scaled towards computers holding stake. This binds the concept of value into the network training process -- attaching more stake towards a loss function directly changes the objective function.
 
@@ -122,7 +140,7 @@ Stake quantities are represented in the form of a digital token using a decentra
 
 In what follows we will explain how the network determines how tokens are emitted. We wish to mint new tokens to compute nodes in-proportion to their contribution optimizing the global loss.
 
-## Attribution
+### Attribution
 Asking which components contribute the most is equivalent to asking what it would cost, in terms of loss, to prune a single component from the network.
 
 <p align="center"> ∆Lj = the change in global loss w.r.t removal of single component j. </p>
@@ -142,7 +160,7 @@ This approximation becomes exact when P and M are close and Eqn. (6) can be view
 
 This information is available during the backward pass of computing the network’s gradient and the pruning signal can therefore be found at little extra computational cost.
 
-## Emission
+### Emission
 
 The totality of ∆Lij scores describe a directed weighted graph G = [V, E] where for each edge eij in E we have a the weight *∆Lij* associated with the connection between component i and j. ∆Lij is a local attribution and we would like to determine the global attribution for a node i, ∆Li. This score should be a sum over every pair-wise path through the graph weighted by stake *Si*.
 
@@ -204,20 +222,6 @@ def emit():
 ```
 
 ----
-
-## Representation
-
-In the standard Machine Learning settings the model is trained for a very specific task, but our network product must be useful for a large number of stake holders with varying task specifications. Because of this, we are seeking a network product which is _general_, similar to that of the human brain -- able to learn many different tasks and benefit from transferring knowledge between them.
-
-The broadest domain in Machine Learning is general unsupervised multi-task [14], where components convert any typed information (images, speech, text) into a unified representation useful to a variety of downstream tasks. In this model each component is training to produce a representation as variables-size projection from the input domain.
-
-We initially focus on Language Representation, from text, since it is used by a large number of downstream tasks including state-or-the-art translation, question answering and sentiment analysis, and many enterprise problems by companies like Google or Facebook with improvements driving baselines by the million.
-
-As the most robust input modality, text queries are sent as pure unicode strings in any language. We leave tokenization and parsing to the leaf nodes. This pushes computation onto the network but allows us to fit the large variety of different parsing techniques into a single protocol.
-
-<p align="center"> "raw natural language text" ---> [f(x)] ---> [unified vector representation] </p>
-
-In what follows we show how state-of-the-art algorithms like BERT, and ERNIE, TranformerXL, RoBerta and XLNet can be unified under this structure. This allows us to host pre-trained versions of these networks as initial components within the network. We may wish to have them train more, or lock weights. Hypothetically by hosting the highest performing Language models as initial nodes, we are guaranteed a network product which reaches or exceeds the performance of those models.
 
 
 ## BitTensor1.
@@ -335,3 +339,4 @@ https://arxiv.org/pdf/1801.10198.pdf
 ## License
 
 MIT
+
