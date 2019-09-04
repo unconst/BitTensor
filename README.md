@@ -268,62 +268,68 @@ The EOS contract is separate from Dendrite. Nucleus, Synapse and Metagraph objec
 
 ## References
 
-[1] The PageRank Citation Ranking
+[1] The PageRank Citation Ranking <br/>
 http://ilpubs.stanford.edu:8090/422/1/1999-66.pdf
 
-[2] Brain-derived neurotrophic factor and its clinical implications
+[2] Brain-derived neurotrophic factor and its clinical implications <br/>
 https://www.ncbi.nlm.nih.gov/pmc/articles/PMC4697050/
 
-[3] Attention is all you need.
+[3] Attention is all you need <br/>
 https://arxiv.org/abs/1706.03762
 
-[4] Universal Language Model Fine-Tuning for Text Classification
+[4] Universal Language Model Fine-Tuning for Text Classification <br/>
 https://arxiv.org/abs/1801.06146
 
-[5] Bi-directional Encoder Representations from Transformers
+[5] Bi-directional Encoder Representations from Transformers <br/>
 https://arxiv.org/abs/1810.04805
 
-[6] Googles Transformer-XL
+[6] Googles Transformer-XL <br/>
 https://arxiv.org/abs/1901.02860
 
-[7] Open AI GPT-2
+[7] Open AI GPT2 <br/>
 https://openai.com/blog/better-language-models/
 
-[9] XLNet
+[9] XLNet <br/>
 https://arxiv.org/abs/1906.08237
 
-[10] ERNIE: Enhanced Representation through Knowledge Integration
+[10] ERNIE: Enhanced Representation through Knowledge Integration <br/>
 https://arxiv.org/abs/1904.09223
 
-[11] RoBerta: A Robustly Optimized Bert Pre-training Approach
+[11] RoBerta: A Robustly Optimized Bert Pre-training Approach <br/>
 https://arxiv.org/abs/1907.11692
 
-[12] Cross-lingual Language Model Pre-training
+[12] Cross-lingual Language Model Pre-training <br/>
 https://arxiv.org/pdf/1901.07291.pdf
 
-[13] Outrageously Large Neural Networks: The Sparsely-Gated Mixture-of-Experts Layer
+[13] Outrageously Large Neural Networks: The Sparsely-Gated Mixture-of-Experts Layer<br/>
 https://arxiv.org/abs/1701.06538
 
-[14] One Model To Learn Them All
+[14] One Model To Learn Them All<br/>
 https://arxiv.org/abs/1706.05137
 
-[15] AHaH Computing–From Metastable Switches to Attractors to Machine Learning
+[15] AHaH Computing–From Metastable Switches to Attractors to Machine Learning<br/>
 https://journals.plos.org/plosone/article?id=10.1371/journal.pone.0085175
 
-[16] Distilling the Knowledge in a Neural Network
+[16] Distilling the Knowledge in a Neural Network <br/>
 https://www.cs.toronto.edu/~hinton/absps/distillation.pdf
 
-[17] Faster Gaze Prediction With Dense Networks and Fisher Pruning
+[17] Faster Gaze Prediction With Dense Networks and Fisher Pruning <br/>
 https://arxiv.org/pdf/1801.05787.pdf
 
-[18] Overcoming catastrophic forgetting in neural networks
+[18] Overcoming catastrophic forgetting in neural networks <br/>
 https://arxiv.org/abs/1612.00796
 
-[19] Bitcoin: A Peer-to-Peer Electronic Cash System
+[19] Bitcoin: A Peer-to-Peer Electronic Cash System <br/>
 https://bitcoin.org/bitcoin.pdf
 
-[20] IPFS - Content Addressed, Versioned, P2P File System
+[20] IPFS - Content Addressed, Versioned, P2P File System <br/>
 https://arxiv.org/abs/1407.3561
+
+[21] Self-Attention with Relative Position Representations <br/>
+https://arxiv.org/pdf/1803.02155.pdf
+
+[22] Generating Wikipedia by Summarizing long sequences <br/>
+https://arxiv.org/pdf/1801.10198.pdf
 
 
 ## License
