@@ -11,44 +11,30 @@ import zipfile
 
 import visualization
 
-def fishers_information(activations, outputs):
+def fishers_information_attribution(inputs, activations, loss):
     """ Calculates the fishers information attribution between the input
     activations and the loss.
     """
-
-    activations = tf.reshape(activations, [128, 128])
-    outputs = tf.reshape(outputs, [128, 128])
+    # NOTE(const) Using the inputs vs the activations is a bit of hack but
+    # is required because of the way that TF calculates gradients over placeholders
 
     # Gradients at the activation [batch_size, activation_dim]
-    activation_grads = tf.gradients(xs=[activations], ys=outputs)[0]
-    activation_grads = tf.reshape(activation_grads, [128, 128])
+    xs = [inputs] + [activations]
+    activation_grads = tf.gradients(xs=xs, ys=loss)[1]
 
     # Squared activation grads [batch_size, activation_dim]
     activation_grads_2 = tf.square(activation_grads)
-    activation_grads_2 = tf.reshape(activation_grads_2, [128, 128])
-
-    # Summed across batch [activation_dim]
-    summed_activation_grads_2 = tf.reduce_sum(activation_grads_2, 0)
-    summed_activation_grads_2 = tf.reshape(summed_activation_grads_2, [128])
-
 
     # attributions at each activation [activation_dim]
-    attributions = tf.multiply(activations, summed_activation_grads_2)
-    attributions = tf.reshape(attributions, [128])
+    attributions = tf.multiply(tf.abs(activations), activation_grads_2)
+
+    # expectation across batch [activation_dim]
+    attribution_expectation = 0.5 * tf.reduce_mean(attributions, 0)
 
     # input wide attributions [1]
-    full_attributions = tf.reduce_sum(attributions, 0)
-    full_attributions = tf.reshape(full_attributions, [1])
-
+    full_attributions = tf.reduce_sum(attribution_expectation, 0)
+    full_attributions = tf.squeeze(tf.reshape(full_attributions, [1]))
     return full_attributions
-
-
-
-    #return tf.reshape(tf.reduce_sum(tf.reduce_sum(tf.square(activation_grads),0),0), [1])
-    # gn2_i = tf.square(tf.gradients(xs=[activations], ys=batch_loss))
-    # sum_gn2_i = tf.reduce_sum(gn2_i, 0)
-    # fishers_information = tf.tensordot(-activations, sum_gn2_i, 0)
-    # return fishers_information
 
 class Nucleus():
     def __init__(self, config, metagraph, dendrite):
@@ -234,7 +220,7 @@ class Nucleus():
         softmax_biases = tf.Variable(tf.zeros([self.vocabulary_size]))
 
         # Sampled Softmax Loss.
-        batch_loss = tf.nn.sampled_softmax_loss(
+        self.batch_loss = tf.nn.sampled_softmax_loss(
             weights=softmax_weights,
             biases=softmax_biases,
             labels=next_label_ids,
@@ -248,49 +234,18 @@ class Nucleus():
             name='sampled_softmax_loss',
             seed=None)
 
+        # Average loss.
+        self.loss = tf.reduce_mean(self.batch_loss)
+        tf.compat.v1.summary.scalar('loss', self.loss)
+
         # FIM (attribution) calculations
         self.attributions = []
         for i in range(0, self.config.k + 1):
-
+            inputs = full_inputs[i]
             activations = split_inputs[i]
-            outputs = self.output
-
-            activations = tf.reshape(activations, [128, 128])
-            outputs = tf.reshape(outputs, [128, 128])
-
-            # Gradients at the activation [batch_size, activation_dim]
-            xs = [split_inputs[i]] + [full_inputs[i]]
-            activation_grads = tf.gradients(xs=xs, ys=outputs)[0]
-            print (activation_grads)
-            activation_grads = tf.reshape(activation_grads, [128, 128])
-
-            # Squared activation grads [batch_size, activation_dim]
-            activation_grads_2 = tf.square(activation_grads)
-            activation_grads_2 = tf.reshape(activation_grads_2, [128, 128])
-
-            # attributions at each activation [activation_dim]
-            attributions = tf.multiply(tf.abs(activations), activation_grads_2)
-            attributions = tf.reshape(attributions, [128, 128])
-
-            # expectation across batch [activation_dim]
-            attribution_expectation = 0.5 * tf.reduce_mean(attributions, 0)
-            attribution_expectation = tf.reshape(attribution_expectation, [128])
-
-            # input wide attributions [1]
-            full_attributions = tf.reduce_sum(attribution_expectation, 0)
-            full_attributions = tf.squeeze(tf.reshape(full_attributions, [1]))
-
-            self.attributions.append(full_attributions)
-            tf.compat.v1.summary.scalar('attribution' + str(i), full_attributions)
-
-            # # FIM approximation. FIM should be calculated on the validation loop.
-            # activation_i = full_inputs[0]
-            # input_attribution_i = fishers_information(activation_i, activation_i)
-            # self.attributions.append(input_attribution_i)
-
-        # Average loss.
-        self.loss = tf.reduce_mean(batch_loss)
-        tf.compat.v1.summary.scalar('loss', self.loss)
+            attribution = fishers_information_attribution(inputs, activations, self.loss)
+            self.attributions.append(attribution)
+            tf.compat.v1.summary.scalar('attribution' + str(i), attribution)
 
         # Merge sumaries.
         self.merged_summaries = tf.compat.v1.summary.merge_all()
