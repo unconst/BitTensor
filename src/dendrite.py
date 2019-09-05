@@ -57,7 +57,6 @@ class Dendrite():
         return  str_rep
 
     def _gradrpc(self, channel, spikes, grad):
-        #logger.info('dendrite._gradrpc')
         try:
             # Build Stub and request proto.
             stub = proto.bolt_pb2_grpc.BoltStub(channel)
@@ -69,7 +68,6 @@ class Dendrite():
             stub.Grade(request)
         except Exception as error:
             pass
-            #logger.info('failed grade call with error {}', error)
 
     def _spikerpc(self, channel, spikes):
         #logger.info('dendrite._spikerpc')
@@ -90,7 +88,6 @@ class Dendrite():
         except Exception as error:
             #logger.info('failed call {}', error)
             return None
-
 
     def _grad(self, spikes, *grads):
         for i in range(self.config.k):
