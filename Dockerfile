@@ -31,7 +31,7 @@ RUN pip install --upgrade pip && \
   pip install libeospy && \
   pip install loguru && \
   pip install matplotlib && \
-  pip install numpy && \
+  pip install "numpy<1.17" && \
   pip install networkx && \
   pip install pebble && \
   pip install pickle-mixin && \
