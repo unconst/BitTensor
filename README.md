@@ -117,7 +117,7 @@ One problem with the above system would be latency and infinite-recursion. Speci
 
 ### Representation
 
-In our collaborative domain, we require a Machine Intelligence problem which is general enough to interest a diverse set of stake holders. More, the problem should be sufficiently difficult to warrant such a global system and the data used to train it should be ubiquitous and cheap.
+In our collaborative domain, we require a Machine Intelligence problem which is general enough to interest a diverse set of stake holders. Moreover, the problem should be sufficiently difficult to warrant such a global system and the data used to train it should be ubiquitous and cheap.
 
 For our purposes, we choose unsupervised representation learning [5,6,7,9,10,14,24,25], where components train themselves on large-scale unlabeled corpora to learn a basis ('representation') for downstream tasks. Knowledge attained learning in this way is general and transferrable, and has been highly successful improving performance across a wide spectrum of tasks.
 
@@ -129,11 +129,11 @@ Within this modality, we initially focus on Language Representation from text in
 <img src="assets/UVR.png" width="500" />
 </p>
 
-Starting initially with word embedding methods [24] and then to more sophisticated contextual word-embeddings [25] and large text inputs [6], this shared high-level paradigm, has seen a range of training methods developed.
+Starting initially with word embedding methods [24] and then to more sophisticated contextual word-embeddings [25] and large text inputs [6], this shared high-level paradigm has seen a range of training methods developed.
 
-For instance, BERT [5] which used multi-word masking strategies. MT-DNN [14] which combined pre-training with multi-task knowledge transfer. GPT-2 [7] who added task information from an independently sourced question answering dataset. XLM who used language embeddings to improve performance for cross-lingual tasks. ERNIE [10] who added entity/phrase level masking and XLNet[9] who learning across all mask permutations.
+For instance, BERT [5] which used multi-word masking strategies. MT-DNN [14] which combined pre-training with multi-task knowledge transfer. GPT-2 [7] which added task information from an independently sourced question-answering dataset. XLM which used language embeddings to improve performance for cross-lingual tasks. ERNIE [10] which added entity/phrase level masking and XLNet[9] which implemented learning across all mask permutations.
 
-The unlabeled datasets used to train them has been equally diverse, ranging from hundreds of freely available datasets, translation corpuses, reddit crawls, wikipedia and books. This reflects the ubiquity and inexpensive nature of unlabeled natural language. There is no need to worry about protecting datasets.
+The unlabeled datasets used to train them have been equally diverse, ranging from hundreds of freely available datasets, translation corpuses, reddit crawls, wikipedia entries and books. This reflects the ubiquity and inexpensive nature of unlabeled natural language. There is no need to worry about protecting datasets.
 
 ### Incentive
 
