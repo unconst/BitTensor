@@ -11,6 +11,45 @@ import zipfile
 
 import visualization
 
+def fishers_information(activations, outputs):
+    """ Calculates the fishers information attribution between the input
+    activations and the loss.
+    """
+
+    activations = tf.reshape(activations, [128, 128])
+    outputs = tf.reshape(outputs, [128, 128])
+
+    # Gradients at the activation [batch_size, activation_dim]
+    activation_grads = tf.gradients(xs=[activations], ys=outputs)[0]
+    activation_grads = tf.reshape(activation_grads, [128, 128])
+
+    # Squared activation grads [batch_size, activation_dim]
+    activation_grads_2 = tf.square(activation_grads)
+    activation_grads_2 = tf.reshape(activation_grads_2, [128, 128])
+
+    # Summed across batch [activation_dim]
+    summed_activation_grads_2 = tf.reduce_sum(activation_grads_2, 0)
+    summed_activation_grads_2 = tf.reshape(summed_activation_grads_2, [128])
+
+
+    # attributions at each activation [activation_dim]
+    attributions = tf.multiply(activations, summed_activation_grads_2)
+    attributions = tf.reshape(attributions, [128])
+
+    # input wide attributions [1]
+    full_attributions = tf.reduce_sum(attributions, 0)
+    full_attributions = tf.reshape(full_attributions, [1])
+
+    return full_attributions
+
+
+
+    #return tf.reshape(tf.reduce_sum(tf.reduce_sum(tf.square(activation_grads),0),0), [1])
+    # gn2_i = tf.square(tf.gradients(xs=[activations], ys=batch_loss))
+    # sum_gn2_i = tf.reduce_sum(gn2_i, 0)
+    # fishers_information = tf.tensordot(-activations, sum_gn2_i, 0)
+    # return fishers_information
+
 class Nucleus():
     def __init__(self, config, metagraph, dendrite):
         """ The main Tensorflow graph is defined and trained within the Nucleus object.
@@ -161,22 +200,29 @@ class Nucleus():
         word_embeddings = tf.reshape(word_embeddings, [-1, self.embedding_size])
 
         # Full input layer.
+        num_inputs = (self.config.k + 1)
         full_inputs = [word_embeddings] + next_remote_inputs
+        for i in range(0, self.config.k + 1):
+            full_inputs[i] = tf.Variable(tf.random.uniform([128, 128], -1.0, 1.0))
 
-        # Input subnetwork layers.
-        l1_input_dim = 50
-        l1_inputs = []
-        input_weights = []
-        for input_i in full_inputs:
-            w_i = tf.Variable(tf.random.uniform([self.embedding_size, l1_input_dim], -1.0, 1.0))
-            b_i = tf.Variable(tf.zeros([l1_input_dim]))
-            l1_input = tf.matmul(input_i, w_i) + b_i
-            l1_inputs.append(l1_input)
-            input_weights.append(w_i)
-        l1 = tf.concat(l1_inputs, axis=1)
+        interm = tf.concat(full_inputs, axis=1)
+        split_inputs = tf.split(interm, num_inputs, axis=1)
+        l1 = tf.concat(split_inputs, axis=1)
 
-        # l1 combination layer. inputs --> embeddeding
-        w1 = tf.Variable(tf.random.uniform([l1_input_dim * len(l1_inputs), self.embedding_size], -1.0, 1.0))
+        # # Input subnetwork layers.
+        # l1_input_dim = 50
+        # l1_inputs = []
+        # input_weights = []
+        # for input_i in full_inputs:
+        #     w_i = tf.Variable(tf.random.uniform([self.embedding_size, l1_input_dim], -1.0, 1.0))
+        #     b_i = tf.Variable(tf.zeros([l1_input_dim]))
+        #     l1_input = tf.matmul(input_i, w_i) + b_i
+        #     l1_inputs.append(l1_input)
+        #     input_weights.append(w_i)
+        # l1 = tf.concat(l1_inputs, axis=1)
+        #
+        # # l1 combination layer. inputs --> embeddeding
+        w1 = tf.Variable(tf.random.uniform([128 * (self.config.k + 1), self.embedding_size], -1.0, 1.0))
         b1 = tf.Variable(tf.zeros([self.embedding_size]))
         final_layer = tf.sigmoid(tf.matmul(l1, w1) + b1)
 
@@ -204,17 +250,43 @@ class Nucleus():
 
         # FIM (attribution) calculations
         self.attributions = []
-        for i in range(self.config.k + 1):
+        for i in range(0, self.config.k + 1):
 
-            # FIM approximation. FIM should be calculated on validation loop.
-            #input_i = full_inputs[i]
-            #input_attribution = tf.abs(tf.reduce_sum(tf.gradients(xs=[input_i], ys=self.output)))
-            #self.attributions.append(input_attribution)
+            activations = split_inputs[i]
+            outputs = self.output
 
-            # Weight magnitude attribution.
-            input_attribution = tf.reduce_sum(tf.reduce_sum(tf.abs(input_weights[i]), axis=1), axis=0)
-            self.attributions.append(input_attribution)
-            tf.compat.v1.summary.scalar('attribution' + str(i), input_attribution)
+            activations = tf.reshape(activations, [128, 128])
+            outputs = tf.reshape(outputs, [128, 128])
+
+            # Gradients at the activation [batch_size, activation_dim]
+            xs = [split_inputs[i]] + [full_inputs[i]]
+            activation_grads = tf.gradients(xs=xs, ys=outputs)[0]
+            print (activation_grads)
+            activation_grads = tf.reshape(activation_grads, [128, 128])
+
+            # Squared activation grads [batch_size, activation_dim]
+            activation_grads_2 = tf.square(activation_grads)
+            activation_grads_2 = tf.reshape(activation_grads_2, [128, 128])
+
+            # attributions at each activation [activation_dim]
+            attributions = tf.multiply(tf.abs(activations), activation_grads_2)
+            attributions = tf.reshape(attributions, [128, 128])
+
+            # expectation across batch [activation_dim]
+            attribution_expectation = 0.5 * tf.reduce_mean(attributions, 0)
+            attribution_expectation = tf.reshape(attribution_expectation, [128])
+
+            # input wide attributions [1]
+            full_attributions = tf.reduce_sum(attribution_expectation, 0)
+            full_attributions = tf.squeeze(tf.reshape(full_attributions, [1]))
+
+            self.attributions.append(full_attributions)
+            tf.compat.v1.summary.scalar('attribution' + str(i), full_attributions)
+
+            # # FIM approximation. FIM should be calculated on the validation loop.
+            # activation_i = full_inputs[0]
+            # input_attribution_i = fishers_information(activation_i, activation_i)
+            # self.attributions.append(input_attribution_i)
 
         # Average loss.
         self.loss = tf.reduce_mean(batch_loss)
