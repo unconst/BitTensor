@@ -188,8 +188,6 @@ class Nucleus():
         # Full input layer.
         num_inputs = (self.config.k + 1)
         full_inputs = [word_embeddings] + next_remote_inputs
-        for i in range(0, self.config.k + 1):
-            full_inputs[i] = tf.Variable(tf.random.uniform([128, 128], -1.0, 1.0))
 
         interm = tf.concat(full_inputs, axis=1)
         split_inputs = tf.split(interm, num_inputs, axis=1)
