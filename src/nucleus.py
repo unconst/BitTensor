@@ -133,7 +133,8 @@ class Nucleus():
         label_ids = vocabulary_table.lookup(self.train_batch_labels)
 
         # Get remote inputs. Blocking RPC which multicast queries upstream nodes.
-        remote_inputs = self.dendrite.spike(tf.reshape(self.train_batch_words, [self.batch_size, 1]))
+        spike_inputs = tf.reshape(self.train_batch_words, [self.batch_size, 1])
+        remote_inputs = self.dendrite.spike(spike_inputs)
         remote_inputs = [tf.reshape(rmi, [self.batch_size, self.embedding_size]) for rmi in remote_inputs]
 
         queue_dtypes = [tf.int64] + [tf.int64] + [tf.float32] * self.config.k
@@ -222,6 +223,8 @@ class Nucleus():
         xs = self.activations + self.inputs
         self.activation_grads = tf.gradients(xs=xs, ys=self.loss)[0:num_inputs]
 
+        self.grade_op = self.dendrite.grade(spike_inputs, self.activation_grads)
+
         # FIM (attribution) calculations
         self.attributions = []
         for i in range(0, num_inputs):
@@ -283,6 +286,7 @@ class Nucleus():
             'loss': self.loss,
             'summaries': self.merged_summaries,
             'attributions': self.attributions,
+            'grad_op': self.grade_op,
             'global_step': self.global_step
         }
         return fetches

@@ -71,20 +71,6 @@ class Dendrite():
             pass
             #logger.info('failed grade call with error {}', error)
 
-    def _gradcast(self, op, grad):
-        #logger.info('dendrite._gradcast')
-        spikes = op.inputs[0]
-        for i in range(self.config.k):
-            channel = self.channels[i]
-            grad_i = grad[i]
-            if channel:
-                self._gradrpc(channel, spikes, grad_i)
-
-    def _spikegrad(self, op, grad):
-        #logger.info('dendrite._spikegrad')
-        tf.py_function(self._gradcast, [op, grad])
-        return op.inputs[0]
-
     def _spikerpc(self, channel, spikes):
         #logger.info('dendrite._spikerpc')
         if channel is None:
@@ -105,7 +91,15 @@ class Dendrite():
             #logger.info('failed call {}', error)
             return None
 
-    def _spikecast(self, spikes):
+
+    def _grad(self, spikes, *grads):
+        for i in range(self.config.k):
+            channel = self.channels[i]
+            grad_i = grads[i]
+            if channel:
+                self._gradrpc(channel, spikes, grad_i)
+
+    def _spike(self, spikes):
         #logger.info('dendrite._spikecast')
         # TODO(const) Currently this function is syncronous. Calls to the
         # dendrite nodes should be async to save on time.
@@ -118,16 +112,12 @@ class Dendrite():
                 result.append(res)
         return result
 
-    def _spike(self, inp, Tout, stateful=True, name=None, grad=None):
-        #logger.info('dendrite._spike')
-        rnd_name = 'PyFuncGrad' + str(np.random.randint(0, 1E+8))
-        tf.RegisterGradient(rnd_name)(self._spikegrad)
-        g = tf.get_default_graph()
-        with g.gradient_override_map({"PyFunc": rnd_name}):
-            return tf.py_function(self._spikecast, inp, Tout, name=name)
+    def grade (self, spikes, grads):
+        inputs = [spikes] + grads
+        return tf.py_function(self._grad, inputs, [])
 
-    def spike(self, words_tensor):
+    def spike (self, words_tensor):
         #logger.info('dendrite.spike')
         rtypes = [tf.float32 for _ in range(self.config.k)]
         inputs = [words_tensor]
-        return self._spike(inputs, rtypes, grad=self._spikegrad)
+        return tf.py_function(self._spike, inputs, rtypes)
