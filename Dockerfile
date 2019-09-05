@@ -25,6 +25,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     rm -rf /var/lib/apt/lists/*
 
 RUN pip install --upgrade pip && \
+  pip install argparse && \
   pip install grpcio && \
   pip install grpcio-tools && \
   pip install libeospy && \
@@ -32,7 +33,8 @@ RUN pip install --upgrade pip && \
   pip install matplotlib && \
   pip install numpy && \
   pip install networkx && \
-  pip install sklearn && \
+  pip install pebble && \
+  pip install pickle-mixin && \
   pip install tensorflow && \
   pip install timeloop && \
   pip install zipfile36
@@ -41,5 +43,3 @@ RUN pip install --upgrade pip && \
 RUN mkdir bittensor
 COPY . bittensor/
 WORKDIR /bittensor
-
-RUN pip install --upgrade pip && pip install -r requirements.txt
