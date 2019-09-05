@@ -11,17 +11,10 @@ import zipfile
 
 import visualization
 
-def fishers_information_attribution(inputs, activations, loss):
+def FIM(activations, activation_grads):
     """ Calculates the fishers information attribution between the input
     activations and the loss.
     """
-    # NOTE(const) Using the inputs vs the activations is a bit of hack but
-    # is required because of the way that TF calculates gradients over placeholders
-
-    # Gradients at the activation [batch_size, activation_dim]
-    xs = [inputs] + [activations]
-    activation_grads = tf.gradients(xs=xs, ys=loss)[1]
-
     # Squared activation grads [batch_size, activation_dim]
     activation_grads_2 = tf.square(activation_grads)
 
@@ -35,6 +28,8 @@ def fishers_information_attribution(inputs, activations, loss):
     full_attributions = tf.reduce_sum(attribution_expectation, 0)
     full_attributions = tf.squeeze(tf.reshape(full_attributions, [1]))
     return full_attributions
+
+
 
 class Nucleus():
     def __init__(self, config, metagraph, dendrite):
@@ -113,6 +108,8 @@ class Nucleus():
         """ Builds the training and inference graphs.
         """
 
+        # TODO (const): clean this code.
+
         # Global step.
         self.global_step = tf.compat.v1.train.create_global_step()
 
@@ -187,37 +184,21 @@ class Nucleus():
 
         # Full input layer.
         num_inputs = (self.config.k + 1)
-        full_inputs = [word_embeddings] + next_remote_inputs
+        self.inputs = [word_embeddings] + next_remote_inputs
+        self.activations = tf.split(tf.concat(self.inputs, axis=1), num_inputs, axis=1)
 
-        interm = tf.concat(full_inputs, axis=1)
-        split_inputs = tf.split(interm, num_inputs, axis=1)
-        l1 = tf.concat(split_inputs, axis=1)
-
-        # # Input subnetwork layers.
-        # l1_input_dim = 50
-        # l1_inputs = []
-        # input_weights = []
-        # for input_i in full_inputs:
-        #     w_i = tf.Variable(tf.random.uniform([self.embedding_size, l1_input_dim], -1.0, 1.0))
-        #     b_i = tf.Variable(tf.zeros([l1_input_dim]))
-        #     l1_input = tf.matmul(input_i, w_i) + b_i
-        #     l1_inputs.append(l1_input)
-        #     input_weights.append(w_i)
-        # l1 = tf.concat(l1_inputs, axis=1)
-        #
-        # # l1 combination layer. inputs --> embeddeding
-        w1 = tf.Variable(tf.random.uniform([128 * (self.config.k + 1), self.embedding_size], -1.0, 1.0))
+        # Layer 1.
+        l1 = tf.concat(self.activations, axis=1)
+        w1 = tf.Variable(tf.random.uniform([self.embedding_size * num_inputs, self.embedding_size], -1.0, 1.0))
         b1 = tf.Variable(tf.zeros([self.embedding_size]))
         final_layer = tf.sigmoid(tf.matmul(l1, w1) + b1)
 
-        # Embedding output.
+        # Representation.
         self.output = tf.identity(final_layer, name="embedding_output")
 
-        # Embedding Weights
+        # Representation Weights & Sampled Softmax Loss.
         softmax_weights = tf.Variable(tf.random.truncated_normal([self.vocabulary_size, self.embedding_size], stddev=1.0 / math.sqrt(self.embedding_size)))
         softmax_biases = tf.Variable(tf.zeros([self.vocabulary_size]))
-
-        # Sampled Softmax Loss.
         self.batch_loss = tf.nn.sampled_softmax_loss(
             weights=softmax_weights,
             biases=softmax_biases,
@@ -236,12 +217,17 @@ class Nucleus():
         self.loss = tf.reduce_mean(self.batch_loss)
         tf.compat.v1.summary.scalar('loss', self.loss)
 
+        # NOTE(const) Using the inputs vs the activations is a bit of hack but
+        # is required because of the way that TF calculates gradients over placeholders
+        xs = self.activations + self.inputs
+        self.activation_grads = tf.gradients(xs=xs, ys=self.loss)[0:num_inputs]
+
         # FIM (attribution) calculations
         self.attributions = []
-        for i in range(0, self.config.k + 1):
-            inputs = full_inputs[i]
-            activations = split_inputs[i]
-            attribution = fishers_information_attribution(inputs, activations, self.loss)
+        for i in range(0, num_inputs):
+            activation = self.activations[i]
+            activation_grad = self.activation_grads[i]
+            attribution = FIM(activation, activation_grad)
             self.attributions.append(attribution)
             tf.compat.v1.summary.scalar('attribution' + str(i), attribution)
 
