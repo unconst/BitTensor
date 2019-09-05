@@ -38,8 +38,8 @@ serve_address="127.0.0.1"
 port=$(( ( RANDOM % 60000 ) + 5000 ))
 # Tensorboard port.
 tbport=$((port+1))
-# URL of eos chain for pulling updates.
-eosurl="http://0.0.0.0:8888"
+# URL of eos chain for pulling updates. DEFAULT to localhost on host.
+eosurl="http://host.docker.internal:8888"
 # Directory for sinking logs and model updates.
 # TODO(const) Should be root dir.
 logdir="data/$identity/logs"
@@ -157,13 +157,15 @@ function start_service () {
   log "=== run docker container from the $DOCKER_IMAGE_NAME:$DOCKER_IMAGE_TAG image ==="
   if [ "$remote" == "false" ]; then
     docker run --rm --name bittensor-$identity -d  -t \
-    --network="host" \
+    -p $port:$port \
+    -p $tbport:$tbport \
     --mount type=bind,src="$(pwd)"/scripts,dst=/bittensor/scripts \
     --mount type=bind,src="$(pwd)"/src,dst=/bittensor/src \
     $DOCKER_IMAGE_NAME:$DOCKER_IMAGE_TAG /bin/bash -c "$COMMAND"
   else
     docker run --rm --name bittensor-$identity -d  -t \
-    --network="host" \
+    -p $port:$port \
+    -p $tbport:$tbport \
     $DOCKER_IMAGE_NAME:$DOCKER_IMAGE_TAG /bin/bash -c "$COMMAND"
   fi
 
