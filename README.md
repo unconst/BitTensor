@@ -85,13 +85,13 @@ $ ./bittensor.sh --port 9091 --eosurl http://142.93.177.245:8888
 
 Today, Machine Intelligence is driven by incremental improvements on datasets by best-in-class systems owned almost exclusively by the large technological institutions that have access to the needed computing power. While the system has worked well to push the boundaries of almost every aspect of Machine Intelligence, we are still very far from achieving the ultimate goal of strong machine intelligence.
 
-For one thing, work done training the latest best-in-class models is thrown out with every new algorithmic improvement. Though there is some use of distillation, there is little transfer of intelligence between new generations of models. The size of the largest Neural Network architectures is still many magnitudes smaller than a single human brain, and consume much more energy.
+For one thing, work done training the latest best-in-class models is thrown out with every new algorithmic improvement. Though there is some use of distillation, there is little transfer of intelligence between new generations of models. The size of the largest Neural Network architectures is still many magnitudes smaller than a single human brain, and it consumes much more energy.
 
-Moreover, the ownership and profits of Machine Intelligence are in the hands of a few large corporations who have the computing power and the talent to beat out competitor systems. Companies like OpenAI who have claimed the goal of opening access have failed in their mandate, opening up the algorithms but not the intelligence itself.
+Moreover, the ownership of and profits from Machine Intelligence are in the hands of the few large corporations that have the computing power and the talent to beat out competitor systems. Companies like OpenAI who have claimed the goal of opening access have failed in their mandate, opening up the algorithms but not the intelligence itself.
 
 What is needed is a collaborative machine-learning system based on incentives. This will drive advancement via a market rather than, say, through academic accreditation. The ownership, access, and profits from the system should be decentralized. When this occurs, the network will grow naturally in proportion to its value.
 
-In addition, it should accumulate learning, not be discarding work that it has generated in the past. Driven by incentives, this type of network will be able to harness a much larger pool of computing power and  collaborators. In essense, because any computer or any interested party will be able to contribute, this will allow the structure to grow to an arbitrary size across the internet
+In addition, it should accumulate learning, not be discarding work that it has generated in the past. Driven by incentives, this type of network will be able to harness a much larger pool of computing power and collaborators. In essense, because any computer or any interested party will be able to contribute, this will allow the structure to grow to an arbitrary size across the internet
 
 <img src="assets/Lightning.png" width="1000" />
 
@@ -101,7 +101,7 @@ Above: Bitcoin Lightning network nodes from late 2018.
 
 ### Components
 
-We define each component in our network as a Machine Intelligence function which operates on tensors. It can be queried with a tensor of defined shape and type and will return a tensor which is the output of that operation on its input. It may also be networked, and is composing its operation with downstream components in the network f(x) = (d1 ◦ d2 ... dn ) and, in reflection, serving its own model to upstream components, u1, u2 ... un = ( ... f(x), ... ) where the output of our model is an input to those models.
+We define each node in our network as a Machine Intelligence function which operates on tensors. Each node can be queried with a tensor of defined shape and type, and will return a tensor which is the output of that operation on its input. It may also be networked, and is composing its operation with downstream components in the network f(x) = (d1 ◦ d2 ... dn ) and, in reflection, serving its own model to upstream components, u1, u2 ... un = ( ... f(x), ... ) where the output of our model is an input to those models.
 
 <p align="center">
 <img src="assets/UpDn.png" width="500" />
@@ -119,7 +119,7 @@ One problem with the above system would be latency and infinite-recursion. Speci
 
 In our collaborative domain, we require a Machine Intelligence problem which is general enough to interest a diverse set of stake holders. Moreover, the problem should be sufficiently difficult to warrant such a global system and the data used to train it should be ubiquitous and cheap.
 
-For our purposes, we choose unsupervised representation learning [5,6,7,9,10,14,24,25], where components train themselves on large-scale unlabeled corpora to learn a basis ('representation') for downstream tasks. Knowledge attained learning in this way is general and transferrable, and has been highly successful improving performance across a wide spectrum of tasks.
+For our purposes, we choose unsupervised representation learning [5,6,7,9,10,14,24,25], where components train themselves on large-scale unlabeled corpora to learn a basis ('representation') for downstream tasks. Knowledge attained by learning in this way is general and transferrable. It is also highly successful at improving performance across a wide spectrum of tasks.
 
 Within this modality, we initially focus on Language Representation from text in the most general sense. Each components is learning to understand raw language and will respond to queries in pure unicode strings with semantic representations. We leave tokenization and parsing to each component and outputs across the network are fixed length vectors.
 
@@ -129,9 +129,19 @@ Within this modality, we initially focus on Language Representation from text in
 <img src="assets/UVR.png" width="500" />
 </p>
 
-Starting initially with word embedding methods [24] and then to more sophisticated contextual word-embeddings [25] and large text inputs [6], this shared high-level paradigm has seen a range of training methods developed.
+Starting initially with word embedding methods [24] and then moving on to more sophisticated contextual word-embeddings [25] and larger text inputs [6], this shared high-level paradigm has seen a range of training methods developed. For example:
 
-For instance, BERT [5] which used multi-word masking strategies. MT-DNN [14] which combined pre-training with multi-task knowledge transfer. GPT-2 [7] which added task information from an independently sourced question-answering dataset. XLM which used language embeddings to improve performance for cross-lingual tasks. ERNIE [10] which added entity/phrase level masking and XLNet[9] which implemented learning across all mask permutations.
+BERT [5] which used multi-word masking strategies. 
+
+MT-DNN [14] which combined pre-training with multi-task knowledge transfer. 
+
+GPT-2 [7] which added task information from an independently sourced question-answering dataset. 
+
+XLM which used language embeddings to improve performance for cross-lingual tasks. 
+
+ERNIE [10] which added entity/phrase level masking and 
+
+XLNet[9] which implemented learning across all mask permutations.
 
 The unlabeled datasets used to train them have been equally diverse, ranging from hundreds of freely available datasets, translation corpuses, reddit crawls, wikipedia entries and books. This reflects the ubiquity and inexpensive nature of unlabeled natural language. There is no need to worry about protecting datasets.
 
