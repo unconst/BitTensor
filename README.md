@@ -130,18 +130,19 @@ Within this modality, we initially focus on Language Representation from text in
 </p>
 
 Starting initially with word embedding methods [24] and then moving on to more sophisticated contextual word-embeddings [25] and larger text inputs [6], this shared high-level paradigm has seen a range of training methods developed. For example:
+<ul>
+<li>BERT [5] which used multi-word masking strategies.</li> 
 
-BERT [5] which used multi-word masking strategies. 
+<li>MT-DNN [14] which combined pre-training with multi-task knowledge transfer.</li> 
 
-MT-DNN [14] which combined pre-training with multi-task knowledge transfer. 
+<li>GPT-2 [7] which added task information from an independently sourced question-answering dataset.</li> 
 
-GPT-2 [7] which added task information from an independently sourced question-answering dataset. 
+<li>XLM which used language embeddings to improve performance for cross-lingual tasks.</li> 
 
-XLM which used language embeddings to improve performance for cross-lingual tasks. 
+<li>ERNIE [10] which added entity/phrase level masking and</li> 
 
-ERNIE [10] which added entity/phrase level masking and 
-
-XLNet[9] which implemented learning across all mask permutations.
+<li>XLNet[9] which implemented learning across all mask permutations.</li>
+</ul>
 
 The unlabeled datasets used to train them have been equally diverse, ranging from hundreds of freely available datasets, translation corpuses, reddit crawls, wikipedia entries and books. This reflects the ubiquity and inexpensive nature of unlabeled natural language. There is no need to worry about protecting datasets.
 
