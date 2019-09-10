@@ -125,10 +125,6 @@ Within this modality, we initially focus on Language Representation from text in
 
 <p align="center"> "raw natural language text" ---> [f(x)] ---> [fixed length representation] </p>
 
-<p align="center">
-<img src="assets/UVR.png" width="500" />
-</p>
-
 Starting initially with word embedding methods [24] and then moving on to more sophisticated contextual word-embeddings [25] and larger text inputs [6], this shared high-level paradigm has seen a range of training methods developed. For example:
 <ul>
 <li>BERT [5] which used multi-word masking strategies.</li> 
