@@ -112,19 +112,18 @@ The unlabeled datasets used to train them have been equally diverse, ranging fro
 
 We are extending previous work in Neural Network training by moving the training process from a datacenter into a decentralized computing domain where no computer is privileged, there is no single user of the network, and some computers may be incompetent, offline, or malicious. In lieu of these constraints we must use _incentive_ to draw our compute nodes into line. That incentive should drive them to stay online, to learn well, and train in alignment with a useful network product.
 
-To begin, we assume a standard training scheme within each p2p component. They may contain a language dataset M, with targets X and self-supervised labels Y, and be attempting to ﬁt a function that predicts the output from the input, yˆ = f(x), by minimizing the loss on the output of the model,
+To begin, if we assume a standard training scheme for the ith p2p component. It contains a language dataset M, with targets X and self-supervised labels Y, and be attempting to ﬁt a function that predicts the output from the input, yˆ = f(x), by minimizing the loss on the output of the model,
 
-  <p align="center"> Loss = Ep[L(f(x), x)]. (1) </p>
+  <p align="center"> Li = Ep[ Q(f(x), x) ]. (1) </p>
 
-Where L is a loss calculation between the targets and outputs, (for instance cross-entropy), and Ep is the expectation over a training subset P of our full dataset M. The global objective for the entire network, L is a summation over each local objective L = Σ Li. Our goal should be to incent each component towards optimizing this global loss function. i.e. towards minimizing L.
+Where Q is a loss calculation between the targets and outputs and Ep is the expectation over a training subset P of our full dataset M. The global loss for the entire network, L is a summation over each local objective L = Σ Li. Our goal should be to incent each component towards optimizing this global loss function. i.e. towards minimizing L.
 
 To do this, we first scale our global loss with a stake vector S, namely, L = S ◦ L such that the global loss function is scaled towards computers holding stake. This binds the concept of value into the network training process -- attaching more stake towards a loss function directly changes the objective function.
 
-Stake quantities are represented in the form of a digital token using a decentralized compute and storage network known as a blockchain. The tokens can be transferred and bought by computers who wish to attain more power over the network. For instance, to fine tune a translation or sentiment analysis problem deriving its performance from an understanding of language.
+Stake quantities are represented in the form of a digital token using a decentralized compute and storage network. The tokens can be transferred and bought by computers who wish to attain more power over the network. For instance, to fine tune a translation or sentiment analysis problem deriving its performance from an understanding of language.
 
 ### Attribution
-We wish to mint new tokens to components in-proportion to their contribution optimizing the global loss.
-Following methods used to prune neural networks[17][18], asking how much a components contributes is equivalent to asking what it would cost, in terms of loss, to prune that from the network.
+We wish to mint new tokens to components in-proportion to their contribution optimizing the global loss. Asking how much a components contributes is equivalent to asking what it would cost, in terms of loss, to prune that from the network.
 
 <p align="center"> ∆Lj = the change in global loss w.r.t removal of single component j. </p>
 
