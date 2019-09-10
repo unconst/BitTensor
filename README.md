@@ -90,22 +90,22 @@ We initially focus on Language Representation from text, where components build 
 
 <p align="center"> "raw natural language text"  ---> [ f(x) ]  --->  [fixed length representation] </p>
 
-Starting initially with word embedding methods [24] and then moving on to more sophisticated contextual word-embeddings [25] and larger text inputs [6], this shared high-level paradigm has seen a range of training methods developed. For example:
+This high-level paradigm is shared between a range of training methods which can be combined and shared across the network. These include:
 <ul>
-<li>BERT [5] which used multi-word masking strategies.</li>
+<li>BERT [5] which uses multi-word masking strategies.</li>
 
-<li>MT-DNN [14] which combined pre-training with multi-task knowledge transfer.</li>
+<li>MT-DNN [14] which combines pre-training with multi-task knowledge transfer.</li>
 
-<li>GPT-2 [7] which added task information from an independently sourced question-answering dataset.</li>
+<li>GPT-2 [7] which adds task information from an independently sourced question-answering dataset.</li>
 
-<li>XLM which used language embeddings to improve performance for cross-lingual tasks.</li>
+<li>XLM which uses language embeddings to improve performance for cross-lingual tasks.</li>
 
-<li>ERNIE [10] which added entity/phrase level masking and</li>
+<li>ERNIE [10] which adds entity/phrase level masking and</li>
 
-<li>XLNet [9] which implemented learning across all mask permutations.</li>
+<li>XLNet [9] which implements learning across all mask permutations.</li>
 </ul>
 
-The unlabeled datasets used to train them have been equally diverse, ranging from hundreds of freely available datasets, translation corpuses, reddit crawls, wikipedia entries and books. This reflects the ubiquity and inexpensive nature of unlabeled natural language. There is no need to worry about protecting datasets.
+We intend on running network components which use these algorithmic approaches and others, and also to take advantage of differing training sets which range from freely available datasets, translation corpuses, reddit crawls, wikipedia entries and books. Thankfully langauge is ubiquitous and cheap so there is no need to worry about protecting datasets. And the domain arguably contains the total of articulated human knowledge, so is sufficiently deep.
 
 ### Incentive
 
@@ -122,11 +122,11 @@ Further more, it makes sense to scale our global objective with a stake vector S
   <p align="center"> _Global Objective_ = G = min Σ Si ◦ Li . (2) </p>
 
 ### Attribution
-We wish to mint new tokens to components in-proportion to their contribution optimizing the _Global Objective_. We answer this by asking what it would cost, in terms of loss, to prune that from the network.
+We wish to mint new tokens to components in-proportion to their contribution optimizing the _Global Objective_. We answer this by asking what it would cost, in terms of loss, to prune each node from the network.
 
 <p align="center"> ∆Lj = the change in global objective w.r.t removal of single component j. </p>
 
-Beginning with the local estimation, ∆Lij, with respect to a single loss Li, and a connected component j. We can calculate ∆Lij using a 2nd order approximation of the loss with respect to its input activations aj, and a change ∆aj reflecting the removal of the component j.
+An approximation of ∆Lj can be attained by working first with each local estimation, ∆Lij, between a single loss Li, and a connected component j, and then transitively deriving all pair-wise paths through the network. We can calculate ∆Lij using a 2nd order approximation of the loss with respect to its input activations aj, and a change ∆aj reflecting the removal of the component j.
 
 <p align="center"> ∆Lij = L(aj + ∆aj) − L(aj) ≈ g' ∙ ∆aj  +  1/2 ∆aj ∙ H ∙ ∆aj (4) </p>
 
