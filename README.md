@@ -122,7 +122,7 @@ Further more, it makes sense to scale our global objective with a stake vector S
   <p align="center"> _Global Objective_ = G = min Σ Si ◦ Li . (2) </p>
 
 ### Attribution
-We wish to mint new tokens to components in-proportion to their contribution optimizing the _Global Objective_. We answer this by asking what it would cost, in terms of loss, to prune that from the network.
+We wish to mint new tokens to components in-proportion to their contribution optimizing the _Global Objective_. We answer this by asking what it would cost, in terms of loss, to prune each node from the network.
 
 <p align="center"> ∆Lj = the change in global objective w.r.t removal of single component j. </p>
 
