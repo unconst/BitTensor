@@ -7,9 +7,7 @@
 - [Overview](#overview)
 - [To-Run-Locally](#to-run-locally)
 - [To-Run-Testnet](#to-run-testnet)
-- [Introduction](#introduction)
 - [Method](#method)
-  - [Components](#components)
   - [Representation](#representation)
   - [Incentive](#incentive)
   - [Attribution](#attribution)
@@ -79,31 +77,32 @@ $ ./bittensor.sh --port 9091 --eosurl http://142.93.177.245:8888
 
 ```
 
+## Method
 <img src="assets/brain.png" width="1000" />
 
 ### Representation
 
-In our collaborative domain, we require a Machine Intelligence problem which is general enough to interest a diverse set of stake holders. Moreover, the problem should be sufficiently difficult to warrant such a global system and the data used to train it should be ubiquitous and cheap.
+In a collaborative domain, we require a Machine Intelligence problem which is general enough to interest a diverse set of stake holders. Moreover, the problem should be sufficiently difficult to warrant such a global system and the data used to train it should be ubiquitous and cheap.
 
-For our purposes, we choose unsupervised representation learning [5,6,7,9,10,14,24,25], where components train themselves on large-scale unlabeled corpora to learn a basis ('representation') for downstream tasks. Knowledge attained by learning in this way is general and transferrable. It is also highly successful at improving performance across a wide spectrum of tasks.
+For our purposes, we choose unsupervised representation learning [5, 6, 7, 9, 10, 14, 24, 25], where components train themselves on large-scale unlabeled corpora to learn a feature basis ('representation') of inputs. These representations are a form of product, which uniquely identifies and disentangles the underlying explanatory factors of an input and are arguably a fundamental task in the development of an AI which understands the world around it. [26]
 
-Within this modality, we initially focus on Language Representation from text in the most general sense. Each components is learning to understand raw language and will respond to queries in pure unicode strings with semantic representations. We leave tokenization and parsing to each component and outputs across the network are fixed length vectors.
+We initially focus on Language Representation from text, where components build an understanding of natural language and will respond to queries in pure unicode strings with their semantic representation. For the sake of generality we leave tokenization and parsing to each component and fix outputs across the network to fixed length vectors.
 
-<p align="center"> "raw natural language text" ---> [f(x)] ---> [fixed length representation] </p>
+<p align="center"> "raw natural language text"  ---> [ f(x) ]  --->  [fixed length representation] </p>
 
 Starting initially with word embedding methods [24] and then moving on to more sophisticated contextual word-embeddings [25] and larger text inputs [6], this shared high-level paradigm has seen a range of training methods developed. For example:
 <ul>
-<li>BERT [5] which used multi-word masking strategies.</li> 
+<li>BERT [5] which used multi-word masking strategies.</li>
 
-<li>MT-DNN [14] which combined pre-training with multi-task knowledge transfer.</li> 
+<li>MT-DNN [14] which combined pre-training with multi-task knowledge transfer.</li>
 
-<li>GPT-2 [7] which added task information from an independently sourced question-answering dataset.</li> 
+<li>GPT-2 [7] which added task information from an independently sourced question-answering dataset.</li>
 
-<li>XLM which used language embeddings to improve performance for cross-lingual tasks.</li> 
+<li>XLM which used language embeddings to improve performance for cross-lingual tasks.</li>
 
-<li>ERNIE [10] which added entity/phrase level masking and</li> 
+<li>ERNIE [10] which added entity/phrase level masking and</li>
 
-<li>XLNet[9] which implemented learning across all mask permutations.</li>
+<li>XLNet [9] which implemented learning across all mask permutations.</li>
 </ul>
 
 The unlabeled datasets used to train them have been equally diverse, ranging from hundreds of freely available datasets, translation corpuses, reddit crawls, wikipedia entries and books. This reflects the ubiquity and inexpensive nature of unlabeled natural language. There is no need to worry about protecting datasets.
@@ -112,30 +111,30 @@ The unlabeled datasets used to train them have been equally diverse, ranging fro
 
 We are extending previous work in Neural Network training by moving the training process from a datacenter into a decentralized computing domain where no computer is privileged, there is no single user of the network, and some computers may be incompetent, offline, or malicious. In lieu of these constraints we must use _incentive_ to draw our compute nodes into line. That incentive should drive them to stay online, to learn well, and train in alignment with a useful network product.
 
-To begin, if we assume a standard training scheme for the ith p2p component. It contains a language dataset M, with targets X and self-supervised labels Y, and be attempting to ﬁt a function that predicts the output from the input, yˆ = f(x), by minimizing the loss on the output of the model,
+To begin, if we assume a standard training scheme for the ith p2p component. It contains a dataset M, with targets X and labels Y, and is attempting to ﬁt a function that predicts the output from the input, yˆ = f(x), by minimizing the loss on the output of the model,
 
-  <p align="center"> Li = Ep[ Q(f(x), x) ]. (1) </p>
+  <p align="center"> _ith loss_ = Li = Ep[ Q(f(x), x) ]. (1) </p>
 
-Where Q is a loss calculation between the targets and outputs and Ep is the expectation over a training subset P of our full dataset M. The global loss for the entire network, L is a summation over each local objective L = Σ Li. Our goal should be to incent each component towards optimizing this global loss function. i.e. towards minimizing L.
+Where Q is a loss calculation between the targets and outputs and Ep is the expectation over a subset P of our full dataset M. Then a global objective for the entire network, G, should be to minimize the sum over each local objective.
 
-To do this, we first scale our global loss with a stake vector S, namely, L = S ◦ L such that the global loss function is scaled towards computers holding stake. This binds the concept of value into the network training process -- attaching more stake towards a loss function directly changes the objective function.
+Further more, it makes sense to scale our global objective with a stake vector S. This binds the concept of value into the network training process -- attaching more stake towards a loss function directly changes the global objective. Then for Si, the stake attached to the ith loss, we have:
 
-Stake quantities are represented in the form of a digital token using a decentralized compute and storage network. The tokens can be transferred and bought by computers who wish to attain more power over the network. For instance, to fine tune a translation or sentiment analysis problem deriving its performance from an understanding of language.
+  <p align="center"> _Global Objective_ = G = min Σ Si ◦ Li . (2) </p>
 
 ### Attribution
-We wish to mint new tokens to components in-proportion to their contribution optimizing the global loss. Asking how much a components contributes is equivalent to asking what it would cost, in terms of loss, to prune that from the network.
+We wish to mint new tokens to components in-proportion to their contribution optimizing the _Global Objective_. We answer this by asking what it would cost, in terms of loss, to prune that from the network.
 
-<p align="center"> ∆Lj = the change in global loss w.r.t removal of single component j. </p>
+<p align="center"> ∆Lj = the change in global objective w.r.t removal of single component j. </p>
 
-We begin with the local estimation, ∆Lij, with respect to a single loss Li, and a connected component j. We can calculate ∆Lij using a 2nd order approximation of the loss with respect to its input activations aj, and a change ∆aj reflecting the removal of the component j.
+Beginning with the local estimation, ∆Lij, with respect to a single loss Li, and a connected component j. We can calculate ∆Lij using a 2nd order approximation of the loss with respect to its input activations aj, and a change ∆aj reflecting the removal of the component j.
 
 <p align="center"> ∆Lij = L(aj + ∆aj) − L(aj) ≈ g' ∙ ∆aj  +  1/2 ∆aj ∙ H ∙ ∆aj (4) </p>
 
-Where g is the gradient of the loss which vanishes if we assume the loss is at a local optimum. The remaining term is the Hessian and can be approximated using the following expectation over our training subset P:
+Where g is the gradient of the loss which vanishes if we assume the loss is at a local optimum and the remaining term is the Hessian which can be approximated using an expectation over our training subset P:
 
 <p align="center"> H ≈ Ep [ ( ∂L(x)/∂aj ) ^2] (6)</p>
 
-This approximation becomes exact when P and M are close and Eqn. (6) can be viewed as an empirical estimate of the Fisher information of our activations. We can use N data points to estimate our pruning signal *∆Lij*.
+This approximation becomes exact when P and M are close and Eqn. (6) can be viewed as an empirical estimate of the Fisher information of our activations. [17] We can use N data points to estimate our pruning signal *∆Lij*.
 
 <p align="center"> gn = ( ∂L(xn)/∂aj )^2. </p>
 <p align="center"> ∆Lij = 1/2N   ∆aj   Σn gn^2 (7)</p>
@@ -148,7 +147,7 @@ The totality of ∆Lij scores describe a directed weighted graph G = [V, E] wher
 
 <p align="center"> ∆Lj = Σi Si x ∆Lij </p>
 
-We can derive all pair-wise paths by applying the chain rule to (7) to find the following recursive relation:
+We can derive all pair-wise paths by applying the chain rule to (7) to find the following transitive relation:
 
 <p align="center"> Given ∆Lij and ∆Ljk </p>
 <p align="center"> ∆Lik = ∆Lij x ∆Ljk (8) </p>
@@ -163,7 +162,7 @@ This is similar to the EigenTrust algorithm [23] or Google Page Rank [1], but wi
 
 We note that this form of local attribution emission scheme may be similar in nature to the propagation of the neurotrophic factor BDNF in the brain.[2]
 
-below is an approximate method written below using python-numpy:
+below is an approximate method written using python-numpy:
 ```
 N_BLOCKS = 100
 DEPTH = 100
@@ -327,6 +326,9 @@ https://arxiv.org/pdf/1310.4546.pdf
 
 [25] Skip-Thought Vectors <br/>
 https://arxiv.org/abs/1506.06726
+
+[26] Representation Learning: A Review and New Perspectives <br/>
+https://arxiv.org/pdf/1206.5538.pdf
 
 ## License
 

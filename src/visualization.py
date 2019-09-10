@@ -1,14 +1,11 @@
 from __future__ import division
+import io
 import matplotlib as mpl
 import matplotlib.pyplot as plt
 import networkx as nx
 import numpy
-
-import io
-import tensorflow as tf
-
 import os
-
+import tensorflow as tf
 
 def figure_to_buff(figure):
   """Converts the matplotlib plot specified by 'figure' to a PNG image and
@@ -24,6 +21,7 @@ def figure_to_buff(figure):
 
 def generate_edge_weight_buffer(nodes):
     b_nodes = list(nodes.values())
+    print (b_nodes)
     G = nx.DiGraph()
 
     total_stake = sum([node.stake for node in b_nodes])
