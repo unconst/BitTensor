@@ -81,40 +81,6 @@ $ ./bittensor.sh --port 9091 --eosurl http://142.93.177.245:8888
 
 <img src="assets/brain.png" width="1000" />
 
-## Introduction
-
-Today, Machine Intelligence is driven by incremental improvements on datasets by best-in-class systems owned almost exclusively by the large technological institutions that have access to the needed computing power. While the system has worked well to push the boundaries of almost every aspect of Machine Intelligence, we are still very far from achieving the ultimate goal of strong machine intelligence.
-
-For one thing, work done training the latest best-in-class models is thrown out with every new algorithmic improvement. Though there is some use of distillation, there is little transfer of intelligence between new generations of models. The size of the largest Neural Network architectures is still many magnitudes smaller than a single human brain, and it consumes much more energy.
-
-Moreover, the ownership of and profits from Machine Intelligence are in the hands of the few large corporations that have the computing power and the talent to beat out competitor systems. Companies like OpenAI who have claimed the goal of opening access have failed in their mandate, opening up the algorithms but not the intelligence itself.
-
-What is needed is a collaborative machine-learning system based on incentives. This will drive advancement via a market rather than, say, through academic accreditation. The ownership, access, and profits from the system should be decentralized. When this occurs, the network will grow naturally in proportion to its value.
-
-In addition, it should accumulate learning, not be discarding work that it has generated in the past. Driven by incentives, this type of network will be able to harness a much larger pool of computing power and collaborators. In essense, because any computer or any interested party will be able to contribute, this will allow the structure to grow to an arbitrary size across the internet
-
-<img src="assets/Lightning.png" width="1000" />
-
-Above: Bitcoin Lightning network nodes from late 2018.
-
-## Method
-
-### Components
-
-We define each node in our network as a Machine Intelligence function which operates on tensors. Each node can be queried with a tensor of defined shape and type, and will return a tensor which is the output of that operation on its input. It may also be networked, and is composing its operation with downstream components in the network f(x) = (d1 ◦ d2 ... dn ) and, in reflection, serving its own model to upstream components, u1, u2 ... un = ( ... f(x), ... ) where the output of our model is an input to those models.
-
-<p align="center">
-<img src="assets/UpDn.png" width="500" />
-</p>
-
-Each node is differential, it accepts gradient information from upstream components (u1, u2 ... un) and sends gradient information downstream, to components (d1 ◦ d2 ... dn ). The gradients carry information on how to update remote parameters θ by moving them in the direction of some loss function -- intuitively, no different from a neuron in a standard differential graph architecture. A network of these components could span multiple computers across the web and form a peer-to-peer version of a Neural Network.
-
-<p align="center">
-<img src="assets/krgraph.png" width="500" />
-</p>
-
-One problem with the above system would be latency and infinite-recursion. Specifically, message passing between consecutive nodes may involve long jump distances on the wide-internet and an ad-hoc structure guarantees no protection against graph cycles. Our solution is to suggest distillation [16] where each component extracts knowledge from downstream models by training a proxy network to learn the outputs from their inputs. With distillation, each call to a neighboring component only involves a single hop, and standalone inference models can be extracted from the network at any point.
-
 ### Representation
 
 In our collaborative domain, we require a Machine Intelligence problem which is general enough to interest a diverse set of stake holders. Moreover, the problem should be sufficiently difficult to warrant such a global system and the data used to train it should be ubiquitous and cheap.
