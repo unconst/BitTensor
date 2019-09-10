@@ -126,7 +126,7 @@ We wish to mint new tokens to components in-proportion to their contribution opt
 
 <p align="center"> ∆Lj = the change in global objective w.r.t removal of single component j. </p>
 
-Beginning with the local estimation, ∆Lij, with respect to a single loss Li, and a connected component j. We can calculate ∆Lij using a 2nd order approximation of the loss with respect to its input activations aj, and a change ∆aj reflecting the removal of the component j.
+An approximation of ∆Lj can be attained by working first with each local estimation, ∆Lij, between a single loss Li, and a connected component j, and then transitively deriving all pair-wise paths through the network. We can calculate ∆Lij using a 2nd order approximation of the loss with respect to its input activations aj, and a change ∆aj reflecting the removal of the component j.
 
 <p align="center"> ∆Lij = L(aj + ∆aj) − L(aj) ≈ g' ∙ ∆aj  +  1/2 ∆aj ∙ H ∙ ∆aj (4) </p>
 
