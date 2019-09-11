@@ -122,7 +122,7 @@ Furthermore, it makes sense to scale our global objective with a stake vector S.
   <p align="center"> _Global Objective_ = G = min Σ Si ◦ Li . (2) </p>
 
 ### Attribution
-We wish to mint new tokens to components in-proportion to their contribution optimizing the _Global Objective_. We answer this by asking what it would cost, in terms of loss, to prune each node from the network.
+We wish to mint new tokens to components in-proportion to their contribution to optimizing the _Global Objective_. We do this by asking what it would cost, in terms of loss, to prune each node from the network.
 
 <p align="center"> ∆Lj = the change in global objective w.r.t removal of single component j. </p>
 
@@ -154,7 +154,7 @@ We can derive all pair-wise paths by applying the chain rule to (7) to find the 
 
 Which is intuitive, following immediately from the notion of transitive contribution: If a component i contributes to component j, it should multiplicatively contribute to the components using j since they are compositions of its parent.
 
-As a corollary of (8) global attribution scores for component _i_ can be calculated with a Power Iteration over adjacency matrix described by G.
+As a corollary of (8) global attribution scores for component _i_ can be calculated with a Power Iteration over the adjacency matrix described by G.
 
 <p align="center">  ∆L(t+1) = G ∙ ∆L (t). (9) </p>
 
@@ -162,7 +162,7 @@ This is similar to the EigenTrust algorithm [23] or Google Page Rank [1], but wi
 
 We note that this form of local attribution emission scheme may be similar in nature to the propagation of the neurotrophic factor BDNF in the brain.[2]
 
-below is an approximate method written using python-numpy:
+Below is an approximate method written using python-numpy:
 ```
 N_BLOCKS = 100
 DEPTH = 100
