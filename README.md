@@ -26,13 +26,13 @@
 
 BitTensor allows a new class of Machine Learning model which trains across a peer-to-peer network. It enables any computer and any engineer in the world to contribute to its training.
 
-The nature of trust-less computing necessitates that these contributions are driven by incentives rather than by direct control from any one computer. We use a digital token to carry that incentive signal through the network: Where the magnitude of this incentive is derived from a p2p collaborative filtering technique similar to Google's Page rank algorithm.  
+The nature of trust-less computing necessitates that these contributions are driven by incentives rather than by direct control from any one computer. We use a digital token to carry that incentive signal through the network. The magnitude of this incentive is derived from a p2p collaborative filtering technique similar to Google's Page Rank algorithm.  
 
 As a network product we focus on learning unsupervised multi-task representations, starting from language and extending the network to image and speech. The result is a sufficiently general product which is useful to a large number of downstream stake holders.
 
-The lack of centrality allows the structure to grow to arbitrary size across the internet. Both the cost and control of the system is distributed and the network's informational product is priced into the reward token's value.
+The lack of centralization allows the structure to grow to an arbitrary size across the internet. Both the cost and control of the system is distributed and the network's informational product is priced into the reward token's value.
 
-When run, this software folds your computing power into a p2p network and rewards you with an EOS-based digital token for your contribution.
+When run, this software integrates your computing power into a p2p network and rewards you with an EOS-based digital token for your contribution.
 
 ## To-Run-Locally
 1. [Install Docker](https://docs.docker.com/install/)
@@ -86,7 +86,7 @@ In a collaborative domain, we require a Machine Intelligence problem which is ge
 
 For our purposes, we choose unsupervised representation learning [5, 6, 7, 9, 10, 14, 24, 25], where components train themselves on large-scale unlabeled corpora to learn a feature basis ('representation') of inputs. These representations are a form of product, which uniquely identifies and disentangles the underlying explanatory factors of an input and are arguably a fundamental task in the development of an AI which understands the world around it. [26]
 
-We initially focus on Language Representation from text, where components build an understanding of natural language and will respond to queries in pure unicode strings with their semantic representation. For the sake of generality we leave tokenization and parsing to each component and fix outputs across the network to fixed length vectors.
+We initially focus on Language Representation from text, where components build an understanding of natural language and will respond to queries in pure unicode strings with their semantic representation. For the sake of generality, we leave tokenization and parsing to each component and limit outputs across the network to fixed length vectors.
 
 <p align="center"> "raw natural language text"  ---> [ f(x) ]  --->  [fixed length representation] </p>
 
@@ -105,19 +105,19 @@ This high-level paradigm is shared between a range of training methods which can
 <li>XLNet [9] which implements learning across all mask permutations.</li>
 </ul>
 
-We intend on running network components which use these algorithmic approaches and others, and also to take advantage of differing training sets which range from freely available datasets, translation corpuses, reddit crawls, wikipedia entries and books. Thankfully langauge is ubiquitous and cheap so there is no need to worry about protecting datasets. And the domain arguably contains the total of articulated human knowledge, so is sufficiently deep.
+We intend on running network components which use these algorithmic approaches and others. We will also take advantage of differing training sets which range from freely available datasets, translation corpuses, reddit crawls, wikipedia entries and books. Thankfully langauge is ubiquitous and cheap so there is no need to worry about protecting datasets. In addition, the domain arguably contains the total of articulated human knowledge, so it is sufficiently deep.
 
-### Incentive
+### Incentives
 
-We are extending previous work in Neural Network training by moving the training process from a datacenter into a decentralized computing domain where no computer is privileged, there is no single user of the network, and some computers may be incompetent, offline, or malicious. In lieu of these constraints we must use _incentive_ to draw our compute nodes into line. That incentive should drive them to stay online, to learn well, and train in alignment with a useful network product.
+We are extending previous work in Neural Network training by moving the training process from a datacenter into a decentralized computing domain where no computer is privileged, there is no single user of the network, and some computers may be incompetent, offline, or malicious. Because of these constraints, we must use _incentive_ to draw our compute nodes into line. That incentive should drive them to stay online, to learn well, and to train in alignment with a useful network product.
 
-To begin, if we assume a standard training scheme for the ith p2p component. It contains a dataset M, with targets X and labels Y, and is attempting to ﬁt a function that predicts the output from the input, yˆ = f(x), by minimizing the loss on the output of the model,
+To begin, we assume a standard training scheme for the ith p2p component. It contains a dataset M, with targets X and labels Y, and is attempting to ﬁt a function that predicts the output from the input, yˆ = f(x), by minimizing the loss on the output of the model,
 
   <p align="center"> _ith loss_ = Li = Ep[ Q(f(x), x) ]. (1) </p>
 
 Where Q is a loss calculation between the targets and outputs and Ep is the expectation over a subset P of our full dataset M. Then a global objective for the entire network, G, should be to minimize the sum over each local objective.
 
-Further more, it makes sense to scale our global objective with a stake vector S. This binds the concept of value into the network training process -- attaching more stake towards a loss function directly changes the global objective. Then for Si, the stake attached to the ith loss, we have:
+Furthermore, it makes sense to scale our global objective with a stake vector S. This binds the concept of value into the network training process -- attaching more stake towards a loss function directly changes the global objective. Then for Si, the stake attached to the ith loss, we have:
 
   <p align="center"> _Global Objective_ = G = min Σ Si ◦ Li . (2) </p>
 
