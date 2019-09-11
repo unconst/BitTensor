@@ -330,6 +330,9 @@ https://arxiv.org/abs/1506.06726
 [26] Representation Learning: A Review and New Perspectives <br/>
 https://arxiv.org/pdf/1206.5538.pdf
 
+[27] Optimal Brain Damage  <br/>
+http://yann.lecun.com/exdb/publis/pdf/lecun-90b.pdf
+
 ## License
 
 MIT

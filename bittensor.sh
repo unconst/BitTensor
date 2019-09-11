@@ -171,13 +171,15 @@ function start_service () {
 
   #Trap control C (for clean docker container tear down.)
   function teardown() {
-    log "=== stop bittensor_container ==="
-    docker stop bittensor-$identity
+
 
     if [ "$remote" == "true" ]; then
       eval $(docker-machine env -u)
       echo "To tear down this host run:"
       echo "  docker-machine stop bittensor-$identity & docker-machine rm bittensor-$identity --force "
+    else
+      log "=== stop bittensor_container ==="
+      docker stop bittensor-$identity
     fi
     exit 0
   }
