@@ -82,11 +82,11 @@ $ ./bittensor.sh --port 9091 --eosurl http://142.93.177.245:8888
 
 ### Representation
 
-In a collaborative domain, we require a Machine Intelligence problem which is general enough to interest a diverse set of stake holders. Moreover, the problem should be sufficiently difficult to warrant such a global system and the data used to train it should be ubiquitous and cheap.
+We require a Machine Intelligence problem which is general enough to interest a diverse set of stake holders. The problem should be sufficiently difficult to warrant a collaborative approach and the data used to train it should be ubiquitous and cheap.
 
-For our purposes, we choose unsupervised representation learning [5, 6, 7, 9, 10, 14, 24, 25], where components train themselves on large-scale unlabeled corpora to learn a feature basis ('representation') of inputs. These representations are a form of product, which uniquely identifies and disentangles the underlying explanatory factors of an input and are arguably a fundamental task in the development of an AI which understands the world around it. [26]
+For our purposes, we choose unsupervised representation learning [5, 6, 7, 9, 10, 14, 24, 25], where the network trains on large-scale unlabeled corpora to learn a feature basis ('representation') of inputs. These representations are a form of product, which uniquely identifies and disentangles the underlying explanatory factors of an input. This is a widely used product and arguably a fundamental task in the development of an AI which understands the world around it. [26]
 
-We initially focus on Language Representation from text, where components build an understanding of natural language and will respond to queries in pure unicode strings with their semantic representation. For the sake of generality, we leave tokenization and parsing to each component and limit outputs across the network to fixed length vectors.
+We initially focus on Language Representation from text, where components build an understanding of natural language and will respond to queries in pure unicode strings with a vector representation. For the sake of generality, we leave tokenization and parsing to each component and limit outputs across the network to fixed length vectors.
 
 <p align="center"> "raw natural language text"  ---> [ f(x) ]  --->  [fixed length representation] </p>
 
