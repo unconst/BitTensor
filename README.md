@@ -80,6 +80,7 @@ $ ./bittensor.sh --port 9091 --eosurl http://142.93.177.245:8888
 ## Method
 <img src="assets/brain.png" width="1000" />
 
+
 ### Representation
 
 In a collaborative domain, we require a Machine Intelligence problem which is general enough to interest a diverse set of stake holders. Moreover, the problem should be sufficiently difficult to warrant such a global system and the data used to train it should be ubiquitous and cheap.
@@ -186,7 +187,7 @@ def emit():
   Lii = [0.6 0.9 0.4 0.5 0.5 0.5  1.  1.  1.  1. ]
 
   # i to j attributions
-  Lij =[[0.  0.1 0.3 0.2 0.  0.  0.  0.  0.  0. ]
+  Lij = [[0.  0.1 0.3 0.2 0.  0.  0.  0.  0.  0. ]
     [0.1 0.  0.  0.1 0.  0.  0.  0.  0.  0. ]
     [0.1 0.  0.  0.2 0.  0.  0.  0.  0.  0. ]
     [0.2 0.  0.3 0.  0.  0.  0.  0.  0.  0. ]
@@ -199,10 +200,31 @@ def emit():
 
   # Loop over blocks.
   for _ in range(N_BLOCKS):        
-    ∆L = get∆L()               // Modified EigenTrust
+    ∆L = get∆L()                          // Modified EigenTrust
     E = ∆L * TOKENS_PER_BLOCK             // Emission this block
     S = S + E                             // Stake update.
 ```
+
+
+### Market
+
+Our p2p network is composed of a set of functions, the ith of which produces an output yi given an input x as follows: yi = fi(x, d0(x), d1(x), ..., dn(x)), where d0 to dn are downstream compositions of the ith. Inputs to each function are variable length unicode strings and outputs are fixed length representation vectors. Reflexively, the ith function is one compositional component to a set of upstream components, u0, u1, ... uj ... uN. It may also be the compositional client to its own loss function, L(y, x).
+
+
+<p align="center"> <img src="assets/UpDn.png" width="500" /> </p>
+
+
+A finite quantity of stake, sj is being allocated to each loss term in the network. This is global knowledge which when combined with local ∆Lij calculations and the deterministic emission system described above, produces a stream of newly minted tokens for each component in the network. The magnitude of the stream from upstream jth component to the downstream ith is wji.
+
+The ith component is making discrete SGD steps to its parameters θ. These updates are made w.r.t gradient information passed from upstream components. We assume SGD steps are being made in proportion to individual stream scores wji such that the next parameter update is a scaled summation of the upstream gradients ∆θ1, ∆θ2 ... ∆θN:
+
+<p align="center"> ∆θ = ∆θ1 (w1i/Σjwji) + ∆θ2 (w2i/Σjwji) + ... + ∆θN (wNi/Σj wji) (10) </p>  
+
+For simplicity we imagine this as a single update over a single example, but in reality these updates are over batches of different size and w.r.t different text inputs. This construction is a proportional allocation game. Where from (4) we know the utility for the jth component:
+
+<p align="center"> ∆Lj= L(θ + ∆θ) − L(θ) ≈ g' ∙ ∆θ  +  1/2 ∆θ ∙ H ∙ ∆θ (11) </p>
+
+and ∆Lj is strictly increasing and continuous in wji. We have by [--] that there exists a unique optimal solution to bids wij where the sum of weighted losses (global loss) is minimized. Omitting the utility function overlap i.e. gradient steps may harm or help each other. We know from [--] that the market is at least 75% percent efficient. And if we introduce a Vicker Clark Groves (VCG) pricing method then the Nash Equilibrium is optimal. With VCG pricing the optimal bidding for each component is its raw utility, or exactly ∆Lij.
 
 ----
 
