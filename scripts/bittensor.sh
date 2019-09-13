@@ -17,6 +17,8 @@ TBPORT=$5
 EOSURL=$6
 # Directory to save checkpoints and logs.
 LOGDIR=$7
+# Python client to run.
+CLIENT=$8
 
 # Creates the system eoisio wallet. This is used to build our unique account.
 # In the future the eosio account will be replaced with your own.
@@ -121,7 +123,7 @@ function start_neuron() {
   log ""
   log "=== start Neuron ==="
   log "python src/main.py $IDENTITY $SERVE_ADDRESS $BIND_ADDRESS $PORT $EOSURL $LOGDIR"
-  python src/main.py $IDENTITY $SERVE_ADDRESS $BIND_ADDRESS $PORT $EOSURL $LOGDIR &
+  python "clients/$CLIENT/main.py" $IDENTITY $SERVE_ADDRESS $BIND_ADDRESS $PORT $EOSURL $LOGDIR &
   NueronPID=$!
 }
 
@@ -141,6 +143,7 @@ function main() {
   log "   PORT: $PORT"
   log "   TBPORT: $TBPORT"
   log "   LOGDIR: $LOGDIR"
+  log "   CLIENT: clients/$CLIENT/main.py"
   log "}"
   log ""
   log "=== setup accounts ==="
@@ -181,7 +184,7 @@ function main() {
   print_metagraph
 
   # Build protos
-  ./src/build.sh
+  ./scripts/build_protos.sh
 
   # Start Tensorboard.
   start_tensorboard

@@ -55,6 +55,7 @@ setup(
         'networkx',
         'numpy',
         'pebble',
+        'pickle-mixin',
         'sklearn',
         'tensorflow',
         'timeloop',

@@ -9,14 +9,12 @@ message SpikeRequest {
   string sender_identity = 1;
 	string message_identity = 2;
 	bytes payload = 3;
-	repeated int32 shape = 4;
 }
 
 message SpikeResponse {
   string responder_identity = 1;
 	string message_identity = 2;
 	bytes payload = 3;
-	repeated int32 shape = 4;
 }
 
 message GradeRequest {

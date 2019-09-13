@@ -38,3 +38,12 @@ RUN pip install --upgrade pip && \
   pip install tensorflow && \
   pip install timeloop && \
   pip install zipfile36
+
+
+# Copy BitTensor source to this image.
+RUN mkdir bittensor
+COPY . bittensor/
+WORKDIR /bittensor
+
+# Install Bittensor
+RUN pip3 install -e .

@@ -12,6 +12,7 @@
   - [Incentive](#incentive)
   - [Attribution](#attribution)
   - [Emission](#emission)
+  - [Market](#market)
 - [BitTensor1](#bitTensor1)
   - [Nucleus](#nucleus)
   - [Dendrite](#dendrite)
@@ -229,7 +230,7 @@ and ∆Lj is strictly increasing and continuous in wji. We have by [--] that the
 ----
 
 
-## BitTensor1.
+## BitTensor 1.
 
 <img src="assets/brain_engineering_diagram.png" width="1000" />
 
@@ -252,7 +253,6 @@ Above: An Engineering diagram of the brain. For inspiration.
                                      [Main]
 ```
 
-
 ###### Nucleus
 The main Tensorflow graph is defined and trained within the Nucleus object. As is, the class is training a self supervised word-embedding over a dummy corpus of sentences in text8.zip. The result is a mapping which takes word to a 128 dimension vector, representing that word while maintaining its semantic properties.
 
@@ -273,6 +273,61 @@ The Metagraph object acts as an interface between the EOS blockchain and the res
 
 ###### EOS
 The EOS contract is separate from Dendrite. Nucleus, Synapse and Metagraph objects during execution. During testing, this class is run on a local EOS instance, but during production the contract is running in a decentralized manner across the EOS network.  
+
+
+## Control Flow
+```
+ Upstream           Downstream           Synapse            Dendrite              Nucleus
+    +                   +                   +                   +                   +
+    |      FSpike       |                   |                   |                   |
+    +-------------------------------------> X                   |                   |
+    |                   |                   |                   |                   |
+    |                   |                   |                   |                   |
+    |                   |      FSpike       |                   |                   |
+    |                   X <-----------------+                   |                   |
+    |                   X - - - - - - - - - +                   |                   |
+    |                   X <-----------------+                   |                   |
+    |                   |                   |                   |                   |
+    |                   |                   |                   |                   |
+    |                   |      RSpike       |                   |                   |
+    |                   +-----------------> o ----------------> X                   |
+    |                   + - - - - - - - - - o - - - - - - - - - X (Concatenation)   |
+    |                   +-----------------> o ----------------> X                   |
+    |                   |                   |                   |                   |
+    |                   |                   |                   |                   |
+    |                   |                   |                   |      Spike        +
+    |                   |                   |                   +-----------------> X
+    |                   |                   |                   |                   |
+    |                   |                   X <-------------------------------------+
+    |      RSpike       |                   |                   |                   |
+    X <-------------------------------------+                   |                   |
+    |                   |                   |                   |                   |
+    |                   |                   |                   |                   |
+    |      FGrade       |                   |                   |                   |
+    +-------------------------------------> X                   |                   |
+    |                   |                   |                   |      Grade        |
+    |                   |                   +-------------------------------------> X
+    |                   |                   |                   |                   |
+    |                   |                   X <-------------------------------------+
+    |                   |                   |                   |                   |
+    |                   |      FGrade       |                   |                   |
+    |                   X <-----------------+                   |                   |
+    |                   X - - - - - - - - - +                   |                   |
+    |                   X <-----------------+                   |                   |
+    |                   |                   |                   |                   |
+    |                   |                   |                   |                   |
+    |                   |      RGrade       |                   |                   |
+    |                   +-------------------o-----------------> X                   |
+    |                   + - - - - - - - - - o - - - - - - - - - X (Summation)       |
+    |                   +-------------------o-----------------> X                   |
+    |                   |                   |                   |                   |
+    |                   |                   |                   |                   |
+    |                   |                   X <-----------------+                   |
+    |      RGrade       |                   |                   |                   |
+    X <-------------------------------------+                   +                   +
+
+```
+
 
 
 ## References

@@ -21,6 +21,7 @@ function print_help () {
   echo "Options:"
   echo " -h, --help       Print this help message and exit"
   echo " -i, --identity   EOS identity."
+  echo " -c, --client     bittensor client name e.g. bittensor1"
   echo " -l, --logdir     Logging directory."
   echo " -p, --port       Server side port for accepting requests."
   echo " -e, --eosurl     URL for EOS blockchain isntance."
@@ -47,9 +48,11 @@ logdir="data/$identity/logs"
 remote="false"
 # Digital ocean API token for creating remote instances.
 token="none"
+# Client: The protocol client adhering to the Bittensor protocol.
+client="bittensor1"
 
 # Read command line args
-while test 7 -gt 0; do
+while test 8 -gt 0; do
   case "$1" in
     -h|--help)
       print_help
@@ -82,6 +85,11 @@ while test 7 -gt 0; do
       ;;
     -t|--token)
       token=`echo $2`
+      shift
+      shift
+      ;;
+    -c|--client)
+      client=`echo $2`
       shift
       shift
       ;;
@@ -149,7 +157,7 @@ function start_service () {
 
   # Build start command.
   script="./scripts/bittensor.sh"
-  COMMAND="$script $identity $serve_address $bind_address $port $tbport $eosurl $logdir"
+  COMMAND="$script $identity $serve_address $bind_address $port $tbport $eosurl $logdir $client"
   log "Run command: $COMMAND"
 
 
@@ -160,7 +168,7 @@ function start_service () {
     -p $port:$port \
     -p $tbport:$tbport \
     --mount type=bind,src="$(pwd)"/scripts,dst=/bittensor/scripts \
-    --mount type=bind,src="$(pwd)"/src,dst=/bittensor/src \
+    --mount type=bind,src="$(pwd)"/clients,dst=/bittensor/clients \
     $DOCKER_IMAGE_NAME:$DOCKER_IMAGE_TAG /bin/bash -c "$COMMAND"
   else
     docker run --rm --name bittensor-$identity -d  -t \
@@ -200,6 +208,7 @@ function main() {
   log "port: $port"
   log "tbport: $tbport"
   log "logdir: $logdir"
+  log "client: $client"
 
   if [ "$remote" == "true" ]; then
     if [ "$token" == "none" ]; then

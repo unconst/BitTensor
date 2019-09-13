@@ -1,5 +1,6 @@
-from config import Config
+import bittensor
 
+from config import Config
 from metagraph import Metagraph
 from dendrite import Dendrite
 from nucleus import Nucleus
@@ -7,14 +8,12 @@ from synapse import BoltServicer
 import visualization
 
 from concurrent import futures
+import grpc
 from loguru import logger
 import sys
 import time
 from timeloop import Timeloop
 from datetime import timedelta
-
-import grpc
-import proto.bolt_pb2_grpc
 
 def set_timed_loops(tl, metagraph, nucleus, synapse, dendrite):
 
@@ -56,7 +55,6 @@ def serve():
     nucleus = Nucleus(config, metagraph, dendrite)
 
     # The synapse manages our connection to downstream nodes.
-    # TODO(const) Market driven bidding for neighbors with FAN-IN K value.
     synapse = BoltServicer(config, metagraph)
     logger.info('Started Synapse.')
 
@@ -73,7 +71,7 @@ def serve():
     # Serve the synapse on a grpc server.
     server_address = config.bind_address + ":" + config.port
     grpc_server = grpc.server(futures.ThreadPoolExecutor(max_workers=10))
-    proto.bolt_pb2_grpc.add_BoltServicer_to_server(synapse, grpc_server)
+    bittensor.proto.bolt_pb2_grpc.add_BoltServicer_to_server(synapse, grpc_server)
     grpc_server.add_insecure_port(server_address)
     logger.debug('Served synapse on: {}.', server_address)
     grpc_server.start()
@@ -94,8 +92,7 @@ def serve():
             image_buffer = visualization.generate_edge_weight_buffer(metagraph.nodes)
             nucleus.update_metagraph_summary(image_buffer)
             logger.info('Updated metagraph image.')
-
-            time.sleep(5)
+            time.sleep(30)
 
     except KeyboardInterrupt:
         logger.debug('keyboard interrupt.')

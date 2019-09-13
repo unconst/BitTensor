@@ -1,14 +1,14 @@
+import bittensor
+
 from loguru import logger
 import numpy as np
 import pickle
 import sys
 import time
 import tensorflow as tf
-import proto.bolt_pb2_grpc
 
 # TODO (const): Rate limit and block ip.
-
-class BoltServicer(proto.bolt_pb2_grpc.BoltServicer):
+class BoltServicer(bittensor.proto.bolt_pb2_grpc.BoltServicer):
     def __init__(self, config, metagraph):
         """ Serves the inference graph for use by the network.
         Graphs being produced in trainging are served by the Synapse object.
@@ -80,7 +80,7 @@ class BoltServicer(proto.bolt_pb2_grpc.BoltServicer):
                                     'is_training:0': False
                                 })
         payload = pickle.dumps(embeddings, protocol=0)
-        response = proto.bolt_pb2.SpikeResponse(
+        response = bittensor.proto.bolt_pb2.SpikeResponse(
                         responder_identity = self.config.identity,
                         message_identity = request.message_identity,
                         payload = payload)
@@ -99,7 +99,7 @@ class BoltServicer(proto.bolt_pb2_grpc.BoltServicer):
             response: A GradeResponse proto containing an accepted message.
         """
         # TODO(const) this should append gradient messages to a training queue.
-        return proto.bolt_pb2.GradeResponse(accept=True)
+        return bittensor.proto.bolt_pb2.GradeResponse(accept=True)
         # pass
         # # TODO (const) The synapse should be competitively selecting which nodes
         # # are allowed to query us based on the Metagraph information.

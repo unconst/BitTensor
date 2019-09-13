@@ -1,6 +1,4 @@
 .git
 checkpoints/
-docker/*
 data/*
-README.md
 __pycach__

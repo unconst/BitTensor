@@ -1,8 +1,8 @@
+import bittensor
+
 import grpc
 from loguru import logger
 import pickle
-import proto.bolt_pb2
-import proto.bolt_pb2_grpc
 import numpy as np
 import random
 import struct
@@ -59,8 +59,8 @@ class Dendrite():
     def _gradrpc(self, channel, spikes, grad):
         try:
             # Build Stub and request proto.
-            stub = proto.bolt_pb2_grpc.BoltStub(channel)
-            request = proto.bolt_pb2.GradeRequest(
+            stub = bittensor.proto.bolt_pb2_grpc.BoltStub(channel)
+            request = bittensor.proto.bolt_pb2.GradeRequest(
                         sender_identity = self.config.identity,
                         message_identity = str(random.randint(0,1000000000)),
                         spike_payload = pickle.dumps(spikes.numpy(),  protocol=0),
@@ -76,8 +76,8 @@ class Dendrite():
 
         try:
             # Build Stub and request proto.
-            stub = proto.bolt_pb2_grpc.BoltStub(channel)
-            request = proto.bolt_pb2.SpikeRequest(
+            stub = bittensor.proto.bolt_pb2_grpc.BoltStub(channel)
+            request = bittensor.proto.bolt_pb2.SpikeRequest(
                         sender_identity = self.config.identity,
                         message_identity = str(random.randint(0,1000000000)),
                         payload = pickle.dumps(spikes.numpy(),  protocol=0))
