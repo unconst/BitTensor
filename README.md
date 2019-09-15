@@ -115,13 +115,13 @@ We are extending previous work in Neural Network training by moving the training
 
 To begin, we assume a standard training scheme for the ith p2p component. It contains a dataset M, with targets X and labels Y, and is attempting to ﬁt a function that predicts the output from the input, yˆ = f(x), by minimizing the loss on the output of the model,
 
-  <p align="center"> _ith loss_ = Li = Ep[ Q(f(x), x) ]. (1) </p>
+  <p align="center"> ith loss = Li = Ep[ Q(f(x), x) ]. (1) </p>
 
 Where Q is a loss calculation between the targets and outputs and Ep is the expectation over a subset P of our full dataset M. Then a global objective for the entire network, G, should be to minimize the sum over each local objective.
 
 Furthermore, it makes sense to scale our global objective with a stake vector S. This binds the concept of value into the network training process -- attaching more stake towards a loss function directly changes the global objective. Then for Si, the stake attached to the ith loss, we have:
 
-  <p align="center"> _Global Objective_ = G = min Σ Si ◦ Li . (2) </p>
+  <p align="center"> global objective = G = min Σ Si ◦ Li . (2) </p>
 
 ### Attribution
 We wish to mint new tokens to components in-proportion to their contribution to optimizing the _Global Objective_. We do this by asking what it would cost, in terms of loss, to prune each node from the network.
