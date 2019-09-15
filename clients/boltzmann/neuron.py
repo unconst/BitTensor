@@ -4,10 +4,13 @@ from concurrent import futures
 import grpc
 from loguru import logger
 import pickle
+import time
+from threading import Lock
 
 class Buffer:
     def __init__(self,  sender_id = None,
                         message_id = None,
+                        create_time = None,
                         lspikes = None,
                         uspikes = None,
                         dspikes = None,
@@ -15,6 +18,7 @@ class Buffer:
 
         self.sender_id = sender_id
         self.message_id = message_id
+        self.create_time = create_time
         self.lspikes = lspikes
         self.uspikes = uspikes
         self.dspikes = dspikes
@@ -22,6 +26,7 @@ class Buffer:
 
     def set(self, sender_id = None,
                   message_id = None,
+                  create_time = None,
                   lspikes = None,
                   uspikes = None,
                   dspikes = None,
@@ -31,6 +36,8 @@ class Buffer:
             self.sender_id = sender_id
         if not self.message_id:
             self.message_id = message_id
+        if not self.create_time:
+            self.create_time = create_time
         if not self.lspikes:
             self.lspikes = lspikes
         if not self.uspikes:
@@ -48,6 +55,7 @@ class Neuron(bittensor.proto.bolt_pb2_grpc.BoltServicer):
         self.dendrite = dendrite
         self.nucleus = nucleus
         self.metagraph = metagraph
+        self.mem_lock = Lock()
         self.memory = {}
 
         # Init server.
@@ -65,8 +73,6 @@ class Neuron(bittensor.proto.bolt_pb2_grpc.BoltServicer):
         logger.debug('Started Serving Neuron at: {}.', self.server_address)
 
     def Spike(self, request, context):
-        logger.info('Spike.')
-
         # Unpack message.
         sender_id = request.sender_identity
         message_id = request.message_identity
@@ -84,11 +90,18 @@ class Neuron(bittensor.proto.bolt_pb2_grpc.BoltServicer):
         lspikes = self.nucleus.spike(uspikes, dspikes)
 
         # Save to buffer.
-        self.memory[message_id] = Buffer(message_id = message_id,
-                                      sender_id = sender_id,
-                                      lspikes = lspikes,
-                                      uspikes = uspikes,
-                                      dspikes = dspikes)
+        self.mem_lock.acquire()
+        try:
+            self.memory[message_id] = Buffer(
+                                          sender_id = sender_id,
+                                          message_id = message_id,
+                                          create_time = time.time(),
+                                          lspikes = lspikes,
+                                          uspikes = uspikes,
+                                          dspikes = dspikes)
+        finally:
+            self.mem_lock.release()
+
 
         # Pack response.
         payload = pickle.dumps(lspikes, protocol=0)
@@ -101,7 +114,6 @@ class Neuron(bittensor.proto.bolt_pb2_grpc.BoltServicer):
 
 
     def Grade(self, request, context):
-        logger.info('Grade.')
         # Unpack request.
         sender_id = request.sender_identity
         message_id = request.message_identity
@@ -133,14 +145,38 @@ class Neuron(bittensor.proto.bolt_pb2_grpc.BoltServicer):
         return bittensor.proto.bolt_pb2.GradeResponse(accept=True)
 
     def Learn (self):
+        # Function clears the message buffer of all outdated memory objects
+        # and applies gradients from memory.
         logger.info('Learn.')
-        batch_size = 1
-        to_delete = []
-        for message_id in self.memory.keys():
-            row = self.memory[message_id]
-            if row.lgrads is not None:
-                to_delete.append(message_id)
-                self.nucleus.learn(row.lgrads)
 
-        for msg_id in to_delete:
-            del self.memory[msg_id]
+        # Requires lock because this thread contains multiple
+        # read and write operations.
+        self.mem_lock.acquire()
+        try:
+            mem_size = len(self.memory)
+            logger.info('Mem size: {}', mem_size)
+
+            # Apply batch and clean memory of lingering objects.
+            to_delete = []
+            time_now = time.time()
+            for message_id in self.memory.keys():
+                row = self.memory[message_id]
+
+                # Check if row has ready gradients.
+                if row.lgrads is not None:
+                    to_delete.append(message_id)
+                    self.nucleus.learn(row.lgrads)
+
+                # Delete lingering objects.
+                elif (time_now - row.create_time) > self.config.time_till_expire:
+                    to_delete.append(message_id)
+
+            # Delete batch and lingering objects.
+            for msg_id in to_delete:
+                del self.memory[msg_id]
+
+        except Exception as e:
+            logger.error('Neuron failed Learn with error: '+ str(e))
+
+        finally:
+            self.mem_lock.release()

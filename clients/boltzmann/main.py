@@ -17,7 +17,7 @@ from timeloop import Timeloop
 
 def set_timed_loops(tl, config, neuron):
 
-    # Test self.
+    #Test self.
     @tl.job(interval=timedelta(seconds=3))
     def test():
         channel = grpc.insecure_channel(config.serve_address + ":" + config.port)

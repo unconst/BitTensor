@@ -11,6 +11,7 @@ class Config():
         self.logdir = str(sys.argv[6])
         self.k = 3
         self.alpha = 0.01
+        self.time_till_expire = 10
 
     def __repr__(self):
         return self.__str__()
@@ -19,7 +20,8 @@ class Config():
         return  "\nconfig = {\n\tidentity: " + self.identity + " \n" +\
                 "\tserve_address: " + self.serve_address + " \n" +\
                 "\tbind_address: " + self.bind_address + " \n" +\
+                "\teosurl: " + self.eosurl ++ " \n" +\
                 "\tport: " + self.port + "  \n" +\
                 "\tk: " + str(self.k) + "  \n" + \
                 "\talpha: " + str(self.alpha) + "  \n" +\
-                "\teosurl: " + self.eosurl + " \n}."
+                "\ttime_till_expire: " + str(self.time_till_expire) + " \n}."
