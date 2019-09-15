@@ -56,9 +56,10 @@ class Neuron(bittensor.proto.bolt_pb2_grpc.BoltServicer):
         self.dendrite = dendrite
         self.nucleus = nucleus
         self.metagraph = metagraph
+
         self.mem_lock = Lock()
         self.memory = {}
-        self.gradients = queue.LifoQueue()
+        self.gradient_queue = queue.LifoQueue(maxsize=-1)
 
         # Init server.
         self.server_address = self.config.bind_address + ":" + self.config.port
@@ -144,7 +145,7 @@ class Neuron(bittensor.proto.bolt_pb2_grpc.BoltServicer):
         del self.memory[message_id]
 
         # Put gradients on LIFO queue.
-        self.gradients.put(lgrads)
+        self.gradient_queue.put(lgrads)
 
         # Send downstream grads.
         self.dendrite.grade(message_id, dgrades)
@@ -160,10 +161,13 @@ class Neuron(bittensor.proto.bolt_pb2_grpc.BoltServicer):
         self.mem_lock.acquire()
         try:
             time_now = time.time()
-            for message_id in self.memory.keys():
-                create_time = self.memory[message_id].create_time
-                if (time_now - create_time) > self.config.time_till_expire:
-                     del self.memory[message_id]
+            to_delete = []
+            for row in self.memory.values():
+                if (time_now - row.create_time) > self.config.time_till_expire:
+                    to_delete.append(row.message_id)
+
+            for message_id in to_delete:
+                del self.memory[message_id]
 
         except Exception as e:
             logger.error('Neuron failed on memory clean with Error: '+ str(e))
@@ -171,16 +175,10 @@ class Neuron(bittensor.proto.bolt_pb2_grpc.BoltServicer):
         finally:
             self.mem_lock.release()
 
-
         # Apply the batch.
-        self.gradient_queue.acquire()
-        try:
+        logger.info('Grad queue size: {}', self.gradient_queue.qsize())
+        while not self.gradient_queue.empty():
             grad = self.gradient_queue.get()
             logger.info('apply grad.')
             self.nucleus.learn(grad)
-
-        except Exception as e:
-            logger.error('Neuron failed on apply batch with Error: '+ str(e))
-
-        finally:
-            self.mem_lock.release()
+        logger.info('Grad queue size: {}', self.gradient_queue.qsize())

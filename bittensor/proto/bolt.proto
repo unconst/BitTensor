@@ -7,19 +7,19 @@ service Bolt {
 
 message SpikeRequest {
   string sender_identity = 1;
-	string message_identity = 2;
+	bytes message_identity = 2;
 	bytes payload = 3;
 }
 
 message SpikeResponse {
   string responder_identity = 1;
-	string message_identity = 2;
+	bytes message_identity = 2;
 	bytes payload = 3;
 }
 
 message GradeRequest {
   string sender_identity = 1;
-	string message_identity = 2;
+	bytes message_identity = 2;
 	bytes payload = 3;
 }
 

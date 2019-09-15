@@ -25,6 +25,17 @@ class Dendrite:
         try:
             # Build Stub and request proto.
             stub = bittensor.proto.bolt_pb2_grpc.BoltStub(channel)
+
+            # Build message hash
+            identity_bytes = self.config.identity.encode()
+            payload_bytes = pickle.dumps(spikes.numpy(),  protocol=0))
+
+            # Create hash.
+            hash = SHA256.new()
+            hash.update(identity_bytes)
+            hash.update(payload_bytes)
+            message_id = hash.digest()
+
             request =  bittensor.proto.bolt_pb2.SpikeRequest(
                         sender_identity = self.config.identity,
                         message_identity = message_id,
@@ -43,6 +54,17 @@ class Dendrite:
         try:
             # Build Stub and request proto.
             stub = bittensor.proto.bolt_pb2_grpc.BoltStub(channel)
+
+            # Build message hash
+            identity_bytes = self.config.identity.encode()
+            payload_bytes = pickle.dumps(spikes.numpy(),  protocol=0))
+
+            # Create hash.
+            hash = SHA256.new()
+            hash.update(identity_bytes)
+            hash.update(payload_bytes)
+            message_id = hash.digest()
+
             request = bittensor.proto.bolt_pb2.GradeRequest(
                         sender_identity = self.config.identity,
                         message_identity = message_id,

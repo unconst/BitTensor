@@ -1,8 +1,10 @@
 import bittensor
 
+from Crypto.Hash import SHA256
 import grpc
 from loguru import logger
 import pickle
+import pycrypto
 import numpy as np
 import random
 import struct
@@ -60,10 +62,21 @@ class Dendrite():
         try:
             # Build Stub and request proto.
             stub = bittensor.proto.bolt_pb2_grpc.BoltStub(channel)
+
+            # Build message hash
+            identity_bytes = self.config.identity.encode()
+            payload_bytes = pickle.dumps(spikes.numpy(),  protocol=0))
+
+            # Create hash.
+            hash = SHA256.new()
+            hash.update(identity_bytes)
+            hash.update(payload_bytes)
+            message_id = hash.digest()
+
             request = bittensor.proto.bolt_pb2.GradeRequest(
                         sender_identity = self.config.identity,
-                        message_identity = str(random.randint(0,1000000000)),
-                        payload = pickle.dumps(spikes.numpy(),  protocol=0))
+                        message_identity = message_id,
+                        payload = payload_bytes)
             stub.Grade(request)
         except Exception as error:
             pass
@@ -76,10 +89,22 @@ class Dendrite():
         try:
             # Build Stub and request proto.
             stub = bittensor.proto.bolt_pb2_grpc.BoltStub(channel)
+
+            # Build message hash
+            identity_bytes = self.config.identity.encode()
+            payload_bytes = pickle.dumps(spikes.numpy(),  protocol=0))
+
+            # Create hash.
+            hash = SHA256.new()
+            hash.update(identity_bytes)
+            hash.update(payload_bytes)
+            message_id = hash.digest()
+
             request = bittensor.proto.bolt_pb2.SpikeRequest(
                         sender_identity = self.config.identity,
-                        message_identity = str(random.randint(0,1000000000)),
-                        payload = pickle.dumps(spikes.numpy(),  protocol=0))
+                        message_identity = message_id,
+                        payload = payload_bytes)
+
             response = stub.Spike(request)
             np_response = pickle.loads(response.payload).reshape(EMBEDDING_SIZE, -1)
             return np_response
