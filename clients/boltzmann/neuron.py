@@ -3,26 +3,27 @@ import bittensor
 from concurrent import futures
 import grpc
 from loguru import logger
+import pickle
 
 class Buffer:
     def __init__(self,  sender_id = None,
                         message_id = None,
                         lspikes = None,
-                        rspikes = None,
+                        uspikes = None,
                         dspikes = None,
                         lgrades = None):
 
         self.sender_id = sender_id
         self.message_id = message_id
         self.lspikes = lspikes
-        self.rspikes = rspikes
+        self.uspikes = uspikes
         self.dspikes = dspikes
         self.lgrades = lgrades
 
     def set(self, sender_id = None,
                   message_id = None,
                   lspikes = None,
-                  rspikes = None,
+                  uspikes = None,
                   dspikes = None,
                   lgrades = None ):
 
@@ -32,8 +33,8 @@ class Buffer:
             self.message_id = message_id
         if not self.lspikes:
             self.lspikes = lspikes
-        if not self.rspikes:
-            self.rspikes = rspikes
+        if not self.uspikes:
+            self.uspikes = uspikes
         if not self.dspikes:
             self.dspikes = dspikes
         if not self.lgrades:
@@ -65,6 +66,8 @@ class Neuron(bittensor.proto.bolt_pb2_grpc.BoltServicer):
 
     def Spike(self, request, context):
 
+        logger.info('Spike')
+
         # Unpack message.
         sender_id = request.sender_identity
         message_id = request.message_identity
@@ -85,7 +88,7 @@ class Neuron(bittensor.proto.bolt_pb2_grpc.BoltServicer):
         self.memory[message_id] = Buffer(message_id = message_id,
                                       sender_id = sender_id,
                                       lspikes = lspikes,
-                                      rspikes = rspikes,
+                                      uspikes = uspikes,
                                       dspikes = dspikes)
 
         # Pack response.
@@ -99,6 +102,7 @@ class Neuron(bittensor.proto.bolt_pb2_grpc.BoltServicer):
 
 
     def Grade(self, request, context):
+        logger.info('Grade')
 
         # Unpack request.
         sender_id = request.sender_identity
@@ -117,7 +121,7 @@ class Neuron(bittensor.proto.bolt_pb2_grpc.BoltServicer):
         dspikes = mem_buffer.dspikes
 
         # Get upstream spikes
-        uspikes = mem_buffer.dspikes
+        uspikes = mem_buffer.uspikes
 
         # Get downstream grads and local grads.
         dgrades, lgrades = self.nucleus.grade(ugrades, uspikes, dspikes)

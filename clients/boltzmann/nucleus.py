@@ -38,8 +38,8 @@ class Nucleus():
 
         # Build Feeds dictionary.
         feeds = { self.text_placeholder: uspikes }
-        for i in self.config.k:
-            feeds['dspikes_placeholder' + str(i)] = dspikes[i]
+        for i in range(self.config.k):
+            feeds[self.dspikes[i]] = dspikes[i]
 
         # Build Fetches dictionary.
         fetches = {'output': self.output}
@@ -56,20 +56,20 @@ class Nucleus():
         feeds = {}
         feeds[self.text_placeholder] = uspikes
         feeds[self.output_grad] = ugrades
-        for i in self.config.k:
-            feeds['dspikes_placeholder' + str(i)] = dspikes[i]
+        for i in range(self.config.k):
+            feeds[self.dspikes[i]] = dspikes[i]
 
 
         fetches = {}
-        fetches['local_gradients'] = self.gradients
-        for i in self.config.k:
+        fetches['lgrads'] = self.gradients
+        for i in range(self.config.k):
             fetches["dgrads" + str(i)] = self.downstream_grads[i]
 
         # Run graph.
         run_output = self.session.run(fetches, feeds)
 
         # Return spikes.
-        return run_output['output']
+        return [ run_output["dgrads" + str(i)] for i in range(self.config.k)], run_output['lgrads']
 
 
     def train(self, gradients):
@@ -98,18 +98,18 @@ class Nucleus():
 
         # Token spikes.
         embedding_matrix = tf.Variable(tf.random.uniform([self.vocabulary_size, self.embedding_size], -1.0, 1.0))
-        token_spikes = tf.nn.embedding_lookup(embedding_matrix, input_tokens)
-        token_spikes = tf.reshape(token_spikes, [-1, self.embedding_size])
+        self.token_spikes = tf.nn.embedding_lookup(embedding_matrix, input_tokens)
+        self.token_spikes = tf.reshape(self.token_spikes, [-1, self.embedding_size])
 
         # Placeholders for downstream spikes.
-        all_dspikes = []
+        self.dspikes = []
         for i in range(self.config.k):
             downstream_spikes = tf.compat.v1.placeholder(tf.float32, shape=[None, self.embedding_size], name="dspikes_placeholder" + str(i))
-            all_dspikes.append(downstream_spikes)
+            self.dspikes.append(downstream_spikes)
 
         # activation_spikes = [None, embedding_size * (self.config.k + 1)]
         self.activation_size = self.embedding_size * (self.config.k + 1)
-        self.activation_spikes = tf.concat([token_spikes] + all_dspikes, axis = 1)
+        self.activation_spikes = tf.concat([self.token_spikes] + self.dspikes, axis = 1)
 
         # Layer 1.
         w1 = tf.Variable(tf.random.uniform([self.activation_size, self.embedding_size], -1.0, 1.0))
@@ -125,8 +125,7 @@ class Nucleus():
         # Build downstream grad tensors.
         self.downstream_grads = []
         for i in range(self.config.k):
-            dspikes = all_dspikes[i]
-            dspikes_grad = tf.gradients(xs=[dspikes], ys=self.output,  grad_ys=self.output_grad, name="dgrads" + str(i))
+            dspikes_grad = tf.gradients(xs=[self.dspikes[i]], ys=self.output,  grad_ys=self.output_grad, name="dgrads" + str(i))
             self.downstream_grads.append(dspikes_grad)
 
         # Build optimizer.

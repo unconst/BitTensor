@@ -49,7 +49,7 @@ remote="false"
 # Digital ocean API token for creating remote instances.
 token="none"
 # Client: The protocol client adhering to the Bittensor protocol.
-client="bittensor1"
+client="feynman"
 
 # Read command line args
 while test 8 -gt 0; do

@@ -63,8 +63,7 @@ class Dendrite():
             request = bittensor.proto.bolt_pb2.GradeRequest(
                         sender_identity = self.config.identity,
                         message_identity = str(random.randint(0,1000000000)),
-                        spike_payload = pickle.dumps(spikes.numpy(),  protocol=0),
-                        grad_payload = pickle.dumps(grad.numpy(),  protocol=0))
+                        payload = pickle.dumps(spikes.numpy(),  protocol=0))
             stub.Grade(request)
         except Exception as error:
             pass

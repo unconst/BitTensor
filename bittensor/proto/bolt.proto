@@ -20,8 +20,7 @@ message SpikeResponse {
 message GradeRequest {
   string sender_identity = 1;
 	string message_identity = 2;
-	bytes spike_payload = 3;
-	bytes grad_payload = 4;
+	bytes payload = 3;
 }
 
 message GradeResponse {

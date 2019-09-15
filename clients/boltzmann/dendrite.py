@@ -1,3 +1,7 @@
+import bittensor
+
+import numpy as np
+
 class Dendrite:
 
     def __init__(self, config):
@@ -12,12 +16,12 @@ class Dendrite:
 
     def grade(self, message_id, dgrades):
         for channel, grad in zip(self.channels, dgrades):
-            self._graderpc(channel, message_id, grad)
+            self._gradrpc(channel, message_id, grad)
         return
 
     def _spikerpc(self, channel, message_id, spikes):
         if channel is None:
-            return np.zeros((len(spikes), EMBEDDING_SIZE))
+            return np.zeros((len(spikes), 128))
         try:
             # Build Stub and request proto.
             stub = bittensor.proto.bolt_pb2_grpc.BoltStub(channel)
@@ -26,12 +30,12 @@ class Dendrite:
                         message_identity = message_id,
                         payload = pickle.dumps(spikes.numpy(),  protocol=0))
             response = stub.Spike(request)
-            np_response = pickle.loads(response.payload).reshape(EMBEDDING_SIZE, -1)
+            np_response = pickle.loads(response.payload).reshape(128, -1)
             return np_response
 
         except Exception as error:
             #logger.info('failed call {}', error)
-            return np.zeros((len(spikes), EMBEDDING_SIZE))
+            return np.zeros((len(spikes), 128))
 
     def _gradrpc(self, channel, message_id, grad):
         if channel is None:
