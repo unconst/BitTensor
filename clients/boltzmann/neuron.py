@@ -84,7 +84,14 @@ class Neuron(bittensor.proto.bolt_pb2_grpc.BoltServicer):
         # Check for repsonse in buffer.
         if message_id in self.memory:
             # Return local spikes.
-            return self.memory[message_id].lspikes
+            lspikes = self.memory[message_id].lspikes
+            payload = pickle.dumps(lspikes, protocol=0)
+            response = bittensor.proto.bolt_pb2.SpikeResponse(
+                            responder_identity = self.config.identity,
+                            message_identity = message_id,
+                            payload = payload)
+            return response
+
 
         # Get downstream spikes.
         dspikes = self.dendrite.spike(message_id, uspikes)
@@ -117,7 +124,6 @@ class Neuron(bittensor.proto.bolt_pb2_grpc.BoltServicer):
 
 
     def Grade(self, request, context):
-        logger.info('grad')
         # Unpack request.
         sender_id = request.sender_identity
         message_id = request.message_identity
@@ -125,7 +131,7 @@ class Neuron(bittensor.proto.bolt_pb2_grpc.BoltServicer):
 
         # Check for lost or badly routed grades.
         if message_id not in self.memory:
-            return
+            return bittensor.proto.bolt_pb2.GradeResponse(accept=True)
 
         # Get local spikes.
         mem_buffer = self.memory[message_id]
@@ -179,6 +185,4 @@ class Neuron(bittensor.proto.bolt_pb2_grpc.BoltServicer):
         logger.info('Grad queue size: {}', self.gradient_queue.qsize())
         while not self.gradient_queue.empty():
             grad = self.gradient_queue.get()
-            logger.info('apply grad.')
             self.nucleus.learn(grad)
-        logger.info('Grad queue size: {}', self.gradient_queue.qsize())

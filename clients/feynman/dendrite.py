@@ -4,7 +4,6 @@ from Crypto.Hash import SHA256
 import grpc
 from loguru import logger
 import pickle
-import pycrypto
 import numpy as np
 import random
 import struct
@@ -59,26 +58,37 @@ class Dendrite():
         return  str_rep
 
     def _gradrpc(self, channel, spikes, grad):
+        if channel is None:
+            return
+
         try:
-            # Build Stub and request proto.
+            # Build Stub.
             stub = bittensor.proto.bolt_pb2_grpc.BoltStub(channel)
 
             # Build message hash
             identity_bytes = self.config.identity.encode()
-            payload_bytes = pickle.dumps(spikes.numpy(),  protocol=0))
+            grad_bytes = pickle.dumps(grad.numpy(),  protocol=0)
+            spike_bytes = pickle.dumps(spikes.numpy(),  protocol=0)
 
-            # Create hash.
+            # Create hash from self.id and spikes.
             hash = SHA256.new()
             hash.update(identity_bytes)
-            hash.update(payload_bytes)
-            message_id = hash.digest()
+            hash.update(spike_bytes)
+            message_hash = hash.digest()
 
+            # Create request proto.
             request = bittensor.proto.bolt_pb2.GradeRequest(
                         sender_identity = self.config.identity,
-                        message_identity = message_id,
-                        payload = payload_bytes)
+                        message_identity = message_hash,
+                        payload = grad_bytes)
+
+            # Send Grade request.
             stub.Grade(request)
+
+            # Pass.
+
         except Exception as error:
+            #logger.info('failed call {}', error)
             pass
 
     def _spikerpc(self, channel, spikes):
@@ -92,22 +102,25 @@ class Dendrite():
 
             # Build message hash
             identity_bytes = self.config.identity.encode()
-            payload_bytes = pickle.dumps(spikes.numpy(),  protocol=0))
+            spike_bytes = pickle.dumps(spikes.numpy(),  protocol=0)
 
-            # Create hash.
+            # Create hash from self.identity and spikes.
             hash = SHA256.new()
             hash.update(identity_bytes)
-            hash.update(payload_bytes)
-            message_id = hash.digest()
+            hash.update(spike_bytes)
+            message_hash = hash.digest()
 
+            # Build request proto.
             request = bittensor.proto.bolt_pb2.SpikeRequest(
                         sender_identity = self.config.identity,
-                        message_identity = message_id,
-                        payload = payload_bytes)
+                        message_identity = message_hash,
+                        payload = spike_bytes)
 
+            # Send spike request.
             response = stub.Spike(request)
-            np_response = pickle.loads(response.payload).reshape(EMBEDDING_SIZE, -1)
-            return np_response
+
+            # Deserialize response as numpy.
+            return pickle.loads(response.payload).reshape(EMBEDDING_SIZE, -1)
 
         except Exception as error:
             #logger.info('failed call {}', error)

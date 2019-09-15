@@ -56,6 +56,7 @@ setup(
         'numpy',
         'pebble',
         'pickle-mixin',
+        'pycrypto',
         'sklearn',
         'tensorflow',
         'timeloop',

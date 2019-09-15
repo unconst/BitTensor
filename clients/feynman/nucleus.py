@@ -137,15 +137,15 @@ class Nucleus():
         remote_inputs = self.dendrite.spike(spike_inputs)
         remote_inputs = [tf.reshape(rmi, [self.batch_size, self.embedding_size]) for rmi in remote_inputs]
 
-        queue_dtypes = [tf.int64] + [tf.int64] + [tf.float32] * self.config.k
-        queue_shapes = [[self.batch_size, 1]] + [[self.batch_size]] + [[self.batch_size, self.embedding_size] for rimp in remote_inputs]
+        queue_dtypes = [tf.string] + [tf.int64] + [tf.int64] + [tf.float32] * self.config.k
+        queue_shapes = [[self.batch_size, 1]] + [[self.batch_size, 1]] + [[self.batch_size]] + [[self.batch_size, self.embedding_size] for rimp in remote_inputs]
         self.dendrite_queue = tf.queue.FIFOQueue(
             capacity=100,
             dtypes=queue_dtypes,
             shapes=queue_shapes)
 
         # Pack the next example:
-        pre_next_example = [label_ids] + [word_ids] + remote_inputs
+        pre_next_example = [spike_inputs] + [label_ids] + [word_ids] + remote_inputs
         self.enqueue_op = self.dendrite_queue.enqueue(pre_next_example)
 
 
@@ -160,7 +160,7 @@ class Nucleus():
         self.inference_batch_words = tf.compat.v1.placeholder(tf.string, shape=[None, 1], name="inference_batch_words")
         inference_batch_words_rs = tf.reshape(self.inference_batch_words, [-1])
         inference_word_ids = vocabulary_table.lookup(inference_batch_words_rs)
-        inference_inputs = [inference_word_ids] + [tf.zeros([1], dtype=tf.int64)] + [tf.zeros([tf.shape(inference_word_ids)[0], 128], dtype=tf.float32) for _ in range(self.config.k)]
+        inference_inputs = [self.inference_batch_words] + [inference_word_ids] + [tf.zeros([1], dtype=tf.int64)] + [tf.zeros([tf.shape(inference_word_ids)[0], 128], dtype=tf.float32) for _ in range(self.config.k)]
 
         # Switch between inference graph and training graph.
         next_inputs = tf.cond(tf.equal(self.is_training, tf.constant(True)),
@@ -168,9 +168,10 @@ class Nucleus():
                     false_fn=lambda: inference_inputs)
 
         # batch_size should not be used passed this point.
-        next_word_ids = tf.reshape(next_inputs[0], [-1, 1])
-        next_label_ids= tf.reshape(next_inputs[1], [-1, 1])
-        next_remote_inputs = [tf.reshape(rmi, [-1, self.embedding_size]) for rmi in next_inputs[2:]]
+        next_words = tf.reshape(next_inputs[0], [-1, 1])
+        next_word_ids = tf.reshape(next_inputs[1], [-1, 1])
+        next_label_ids= tf.reshape(next_inputs[2], [-1, 1])
+        next_remote_inputs = [tf.reshape(rmi, [-1, self.embedding_size]) for rmi in next_inputs[3:]]
 
         ### Done: Graph Inputs Switch.
         #
@@ -223,7 +224,7 @@ class Nucleus():
         xs = self.activations + self.inputs
         self.activation_grads = tf.gradients(xs=xs, ys=self.loss)[0:num_inputs]
 
-        self.grade_op = self.dendrite.grade(spike_inputs, self.activation_grads)
+        self.grade_op = self.dendrite.grade(next_words, self.activation_grads)
 
         # FIM (attribution) calculations
         self.attributions = []

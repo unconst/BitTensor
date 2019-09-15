@@ -35,6 +35,7 @@ RUN pip install --upgrade pip && \
   pip install networkx && \
   pip install pebble && \
   pip install pickle-mixin && \
+  pip install pycrypto && \
   pip install tensorflow && \
   pip install timeloop && \
   pip install zipfile36
