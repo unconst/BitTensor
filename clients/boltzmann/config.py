@@ -11,7 +11,7 @@ class Config():
         self.logdir = str(sys.argv[6])
         self.k = 3
         self.alpha = 0.01
-        self.time_till_expire = 10
+        self.time_till_expire = 5
 
     def __repr__(self):
         return self.__str__()

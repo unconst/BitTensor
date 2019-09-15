@@ -6,6 +6,7 @@ from loguru import logger
 import pickle
 import time
 from threading import Lock
+import queue
 
 class Buffer:
     def __init__(self,  sender_id = None,
@@ -57,6 +58,7 @@ class Neuron(bittensor.proto.bolt_pb2_grpc.BoltServicer):
         self.metagraph = metagraph
         self.mem_lock = Lock()
         self.memory = {}
+        self.gradients = queue.LifoQueue()
 
         # Init server.
         self.server_address = self.config.bind_address + ":" + self.config.port
@@ -114,6 +116,7 @@ class Neuron(bittensor.proto.bolt_pb2_grpc.BoltServicer):
 
 
     def Grade(self, request, context):
+        logger.info('grad')
         # Unpack request.
         sender_id = request.sender_identity
         message_id = request.message_identity
@@ -125,6 +128,7 @@ class Neuron(bittensor.proto.bolt_pb2_grpc.BoltServicer):
 
         # Get local spikes.
         mem_buffer = self.memory[message_id]
+
         lspikes = mem_buffer.lspikes
 
         # Get downstream spikes.
@@ -136,8 +140,11 @@ class Neuron(bittensor.proto.bolt_pb2_grpc.BoltServicer):
         # Get downstream grads and local grads.
         dgrades, lgrads = self.nucleus.grade(ugrades, uspikes, dspikes)
 
-        # Set lgrades in buffer.
-        mem_buffer.lgrads = lgrads
+        # delete memory:
+        del self.memory[message_id]
+
+        # Put gradients on LIFO queue.
+        self.gradients.put(lgrads)
 
         # Send downstream grads.
         self.dendrite.grade(message_id, dgrades)
@@ -149,34 +156,31 @@ class Neuron(bittensor.proto.bolt_pb2_grpc.BoltServicer):
         # and applies gradients from memory.
         logger.info('Learn.')
 
-        # Requires lock because this thread contains multiple
-        # read and write operations.
+        # Clean the memory.
         self.mem_lock.acquire()
         try:
-            mem_size = len(self.memory)
-            logger.info('Mem size: {}', mem_size)
-
-            # Apply batch and clean memory of lingering objects.
-            to_delete = []
             time_now = time.time()
             for message_id in self.memory.keys():
-                row = self.memory[message_id]
-
-                # Check if row has ready gradients.
-                if row.lgrads is not None:
-                    to_delete.append(message_id)
-                    self.nucleus.learn(row.lgrads)
-
-                # Delete lingering objects.
-                elif (time_now - row.create_time) > self.config.time_till_expire:
-                    to_delete.append(message_id)
-
-            # Delete batch and lingering objects.
-            for msg_id in to_delete:
-                del self.memory[msg_id]
+                create_time = self.memory[message_id].create_time
+                if (time_now - create_time) > self.config.time_till_expire:
+                     del self.memory[message_id]
 
         except Exception as e:
-            logger.error('Neuron failed Learn with error: '+ str(e))
+            logger.error('Neuron failed on memory clean with Error: '+ str(e))
+
+        finally:
+            self.mem_lock.release()
+
+
+        # Apply the batch.
+        self.gradient_queue.acquire()
+        try:
+            grad = self.gradient_queue.get()
+            logger.info('apply grad.')
+            self.nucleus.learn(grad)
+
+        except Exception as e:
+            logger.error('Neuron failed on apply batch with Error: '+ str(e))
 
         finally:
             self.mem_lock.release()
