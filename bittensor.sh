@@ -34,7 +34,7 @@ identity=$(LC_CTYPE=C tr -dc 'a-z' < /dev/urandom | head -c 7 | xargs)
 # Bind the grpc server to this address with port
 bind_address="0.0.0.0"
 # Advertise this address on the EOS chain.
-serve_address="127.0.0.1"
+serve_address="host.docker.internal"
 # Bind and advertise this port.
 port=$(( ( RANDOM % 60000 ) + 5000 ))
 # Tensorboard port.
@@ -151,8 +151,6 @@ function start_service () {
   if [ "$remote" == "true" ]; then
     serve_address=$(eval docker-machine ip bittensor-$identity)
     log "serve_address: $serve_address:$port"
-  else
-    serve_address="127.0.0.1"
   fi
 
   # Build start command.
@@ -206,6 +204,8 @@ function main() {
   log "remote: $remote"
   log "eosurl: $eosurl"
   log "port: $port"
+  log "server_address: $serve_address"
+  log "bind_address: $bind_address"
   log "tbport: $tbport"
   log "logdir: $logdir"
   log "client: $client"
