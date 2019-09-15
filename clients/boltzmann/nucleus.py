@@ -72,12 +72,13 @@ class Nucleus():
         return [ run_output["dgrads" + str(i)] for i in range(self.config.k)], run_output['lgrads']
 
 
-    def train(self, gradients):
+    def learn(self, gradients):
 
         # Build Feeds dictionary.
         # Feed batch of gradients.
         feeds = {}
-        feeds[self.gradients] = gradients
+        for i, grad_var in enumerate(gradients):
+            feeds[self.placeholder_gradients[i][0]] = gradients[i][1]
 
         # Fetches. Call apply gradients.
         fetches = {}
@@ -131,7 +132,13 @@ class Nucleus():
         # Build optimizer.
         self.optimizer = tf.train.GradientDescentOptimizer(self.config.alpha)
         self.gradients = self.optimizer.compute_gradients(loss=self.output, grad_loss=self.output_grad)
-        self.step = self.optimizer.apply_gradients(self.gradients)
+
+        self.placeholder_gradients = []
+        for grad_var in self.gradients:
+            grad_placeholder = tf.placeholder('float', shape=grad_var[1].get_shape())
+            self.placeholder_gradients.append((grad_placeholder, grad_var[1]))
+
+        self.step = self.optimizer.apply_gradients(self.placeholder_gradients)
 
         # Init vars.
         self.var_init = tf.compat.v1.global_variables_initializer()

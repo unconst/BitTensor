@@ -37,7 +37,6 @@ def set_timed_loops(tl, config, neuron):
         try:
             response = stub.Spike(request)
             response = pickle.loads(response.payload).reshape(1, 128)
-            logger.info('response: {}', response)
 
         except Exception as e:
             logger.error(str(e))
@@ -60,8 +59,8 @@ def set_timed_loops(tl, config, neuron):
 
     # Apply a gradient step.
     @tl.job(interval=timedelta(seconds=3))
-    def train():
-        neuron.Train()
+    def learn():
+        neuron.Learn()
 
 def main():
 

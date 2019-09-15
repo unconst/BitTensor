@@ -11,21 +11,21 @@ class Buffer:
                         lspikes = None,
                         uspikes = None,
                         dspikes = None,
-                        lgrades = None):
+                        lgrads = None):
 
         self.sender_id = sender_id
         self.message_id = message_id
         self.lspikes = lspikes
         self.uspikes = uspikes
         self.dspikes = dspikes
-        self.lgrades = lgrades
+        self.lgrads = lgrads
 
     def set(self, sender_id = None,
                   message_id = None,
                   lspikes = None,
                   uspikes = None,
                   dspikes = None,
-                  lgrades = None ):
+                  lgrads = None ):
 
         if not self.sender_id:
             self.sender_id = sender_id
@@ -37,8 +37,8 @@ class Buffer:
             self.uspikes = uspikes
         if not self.dspikes:
             self.dspikes = dspikes
-        if not self.lgrades:
-            self.lgrades = lgrades
+        if not self.lgrads:
+            self.lgrads = lgrads
 
 
 class Neuron(bittensor.proto.bolt_pb2_grpc.BoltServicer):
@@ -65,8 +65,7 @@ class Neuron(bittensor.proto.bolt_pb2_grpc.BoltServicer):
         logger.debug('Started Serving Neuron at: {}.', self.server_address)
 
     def Spike(self, request, context):
-
-        logger.info('Spike')
+        logger.info('Spike.')
 
         # Unpack message.
         sender_id = request.sender_identity
@@ -102,8 +101,7 @@ class Neuron(bittensor.proto.bolt_pb2_grpc.BoltServicer):
 
 
     def Grade(self, request, context):
-        logger.info('Grade')
-
+        logger.info('Grade.')
         # Unpack request.
         sender_id = request.sender_identity
         message_id = request.message_identity
@@ -124,21 +122,25 @@ class Neuron(bittensor.proto.bolt_pb2_grpc.BoltServicer):
         uspikes = mem_buffer.uspikes
 
         # Get downstream grads and local grads.
-        dgrades, lgrades = self.nucleus.grade(ugrades, uspikes, dspikes)
+        dgrades, lgrads = self.nucleus.grade(ugrades, uspikes, dspikes)
 
         # Set lgrades in buffer.
-        mem_buffer.lgrades = lgrades
+        mem_buffer.lgrads = lgrads
 
         # Send downstream grads.
         self.dendrite.grade(message_id, dgrades)
 
         return bittensor.proto.bolt_pb2.GradeResponse(accept=True)
 
-    def Train (self):
-        logger.debug('train step.')
-        pass
-        ## Get the next batch of gradients
-        #batch = self.memory.gradient_batch()
+    def Learn (self):
+        logger.info('Learn.')
+        batch_size = 1
+        to_delete = []
+        for message_id in self.memory.keys():
+            row = self.memory[message_id]
+            if row.lgrads is not None:
+                to_delete.append(message_id)
+                self.nucleus.learn(row.lgrads)
 
-        # Apply them to Nucleus
-        #self.nucleus.train(batch)
+        for msg_id in to_delete:
+            del self.memory[msg_id]
