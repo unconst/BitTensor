@@ -7,6 +7,7 @@
 - [Overview](#overview)
 - [To-Run-Locally](#to-run-locally)
 - [To-Run-Testnet](#to-run-testnet)
+- [Neurons](#neurons)
 - [Method](#method)
   - [Representation](#representation)
   - [Incentive](#incentive)
@@ -46,15 +47,15 @@ $ cd BitTensor
 $ ./start_eos.sh
 
 # Run Node 1.
-$ ./bittensor.sh
+$ ./bittensor.sh -c feynman
 
 # Run Node 2.
-$ ./bittensor.sh
+$ ./bittensor.sh -c boltzmann 
 
 ...
 
 # Run Node N.
-$ ./bittensor.sh
+$ ./bittensor.sh -c elmo
 
 ```
 
@@ -80,11 +81,11 @@ $ ./bittensor.sh --port 9091 --eosurl http://142.93.177.245:8888
 
 ## Neurons
 
-(1) Boltzmann: Trainable Feed-forward NN, tokenizes requests on a word level basis responds with 128 dimensional embedding vectors. Applies gradients on 3 second interval without averages.
+1. Boltzmann: Trainable Feed-forward NN, tokenizes requests on a word level basis responds with 128 dimensional embedding vectors. Applies gradients on 3 second interval without averages.
 
-(2) Feynmann: Trains a embedding model over the network using a dummy corpus from text.zip. Serves trained model to network. Does not apply gradients.
+1. Feynmann: Trains a embedding model over the network using a dummy corpus from text.zip. Serves trained model to network. Does not apply gradients.
 
-(3) Elmo: Untrainable Elmo NN.
+1. Elmo: Untrainable Elmo NN.
 
 ## Method
 <img src="assets/brain.png" width="1000" />
