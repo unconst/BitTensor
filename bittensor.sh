@@ -166,7 +166,8 @@ function start_service () {
     -p $port:$port \
     -p $tbport:$tbport \
     --mount type=bind,src="$(pwd)"/scripts,dst=/bittensor/scripts \
-    --mount type=bind,src="$(pwd)"/clients,dst=/bittensor/clients \
+    --mount type=bind,src="$(pwd)"/data/cache,dst=/bittensor/cache \
+    --mount type=bind,src="$(pwd)"/neurons,dst=/bittensor/neurons \
     $DOCKER_IMAGE_NAME:$DOCKER_IMAGE_TAG /bin/bash -c "$COMMAND"
   else
     docker run --rm --name bittensor-$identity -d  -t \
