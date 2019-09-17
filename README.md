@@ -25,7 +25,7 @@ BitTensor allows a new class of Machine Learning model which trains across a pee
 
 The nature of trust-less computing necessitates that these contributions are driven by incentives rather than by direct control from any one computer. We use a digital token to carry that incentive signal through the network. The magnitude of this incentive is derived from a p2p collaborative filtering technique similar to Google's Page Rank algorithm.  
 
-As a network product we focus on learning unsupervised multi-task representations, starting from language and extending the network to image and speech. The result is a sufficiently general product which is useful to a large number of downstream stake holders.
+As a network product we focus on representation learning, starting from language and extending the network to image and speech. The result is a sufficiently general product which is useful to a large number of downstream stake holders.
 
 The lack of centralization allows the structure to grow to an arbitrary size across the internet. Both the cost and control of the system is distributed and the network's informational product is priced into the reward token's value.
 
