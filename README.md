@@ -47,15 +47,15 @@ $ cd BitTensor
 $ ./start_eos.sh
 
 # Run Node 1.
-$ ./bittensor.sh -c feynman
+$ ./bittensor.sh
 
 # Run Node 2.
-$ ./bittensor.sh -c boltzmann 
+$ ./bittensor.sh --neuron boltzmann
 
 ...
 
 # Run Node N.
-$ ./bittensor.sh -c elmo
+$ ./bittensor.sh --neuron elmo
 
 ```
 
