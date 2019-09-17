@@ -94,9 +94,16 @@ For our purposes, we choose unsupervised representation learning [5, 6, 7, 9, 10
 
 We initially focus on Language Representation from text, where components build an understanding of natural language and will respond to queries in pure unicode strings with a vector representation. For the sake of generality, we leave tokenization and parsing to each component and limit outputs across the network to fixed length vectors.
 
-<p align="center"> "raw natural language text"  ---> [ f(x) ]  --->  [fixed length representation] </p>
+<p align="center"> "raw natural language text"  ---> [ f(T) ]  --->  [fixed length representation] </p>
 
-This high-level paradigm is shared between a range of training methods which can be combined and shared across the network. These include:
+The standard scheme for learning a representation is as follows. First, the raw text is tokenized, for instance at the word[], sentence[], or byte level[], to create a sequence of discrete tokens T = (t1, t2, . . . , tn ). The modeling task consists in learning a representation for that sequence f(T) = f(t1, t2, . . . , tn). 
+
+Our representation function can be trained in any number of supervised[][][] or unsupervised[][][] forms. However, commonly this is achieved in an unsupervised manner, where a Neural Network archietecture parameterixzed by θ, trains f(T) to predict other tokens T' in its near context.
+
+<p align="center">  maximize ∏ P (T' | f(T)) </p>
+    
+Intuitively "you shall know a word by the company it keeps" - John Rupert Firth, and this high-level paradigm has been shared and successfully used by a large number of training tasks to build incredibly successful word representations for language. These include:
+
 <ul>
 <li>BERT [5] which uses multi-word masking strategies.</li>
 
@@ -110,8 +117,6 @@ This high-level paradigm is shared between a range of training methods which can
 
 <li>XLNet [9] which implements learning across all mask permutations.</li>
 </ul>
-
-We intend on running network components which use these algorithmic approaches and others. We will also take advantage of differing training sets which range from freely available datasets, translation corpuses, reddit crawls, wikipedia entries and books, as well as tranfer-learning[28]. Thankfully langauge is ubiquitous and cheap so there is no need to worry about protecting datasets. In addition, the domain arguably contains the total of articulated human knowledge, so it is sufficiently deep.
 
 ### Incentives
 
