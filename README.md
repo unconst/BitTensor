@@ -85,6 +85,17 @@ $ ./bittensor.sh --port 9091 --eosurl http://142.93.177.245:8888
 ## Method
 <img src="assets/brain.png" width="1000" />
 
+### Introduction
+
+A Neural Network easily decomposes into smaller sub-components where in the forward direction, each component recieves activations from downstream, operates on them, and passes them forward, then during training recieve gradients in the reverse direction and passes them upstream.  A peer-to-peer version of a Neural Network is merely a composition of these sub-components except that message passing occurs across the Wide Area Network, no computer is privaledged and there are no guarantees on the proper behaviour of the composd network's constituent elements. 
+
+To describe this more formally, each sub-component is function parameterized by θ, the ith of which produces an output yi given an input x as follows: yi = fi(x, d0(x), d1(x), ..., dn(x)), where d0 to dn are downstream components of the ith. And reflexively, the ith function is one compositional component to a set of upstream components, u0, u1, ... uj ... uN. Where inputs x, are of some type, text, image, etc, and outputs yi are tensors of some shape.
+
+Further more, the components are differential and can be trained using the reverse accumulation of error "back-propogation". Here the ith accepts a gradient (x, dy), where dy = dyj/dyi, which is a calculation carried out by some upstream component ui with respect to its output yj. Then, given x and dy, the ith component is capable of updating it's parameters θ, in order to minimize some loss term defined by the upstream jth component.
+
+<p align="center"> <img src="assets/UpDn.png" width="500" /> </p>
+
+The structure flows from a the differential graph archetecture employed by TensorFlow or PyTorch.
 
 ### Representation
 
@@ -224,12 +235,6 @@ def emit():
 
 
 ### Market
-
-Our p2p network is composed of a set of functions, the ith of which produces an output yi given an input x as follows: yi = fi(x, d0(x), d1(x), ..., dn(x)), where d0 to dn are downstream compositions of the ith. Inputs to each function are variable length unicode strings and outputs are fixed length representation vectors. Reflexively, the ith function is one compositional component to a set of upstream components, u0, u1, ... uj ... uN. It may also be the compositional client to its own loss function, L(y, x).
-
-
-<p align="center"> <img src="assets/UpDn.png" width="500" /> </p>
-
 
 A finite quantity of stake, sj is being allocated to each loss term in the network. This is global knowledge which when combined with local ∆Lij calculations and the deterministic emission system described above, produces a stream of newly minted tokens for each component in the network. The magnitude of the stream from upstream jth component to the downstream ith is wji.
 
