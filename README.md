@@ -95,7 +95,7 @@ $ ./bittensor.sh --port 9091 --eosurl http://142.93.177.245:8888
 
 We require a Machine Intelligence problem which is general enough to interest a diverse set of stake holders. The problem should be sufficiently difficult to warrant a collaborative approach and the data used to train it should be ubiquitous and cheap.
 
-For our purposes, we choose unsupervised representation learning [5, 6, 7, 9, 10, 14, 24, 25], where the network trains on large-scale unlabeled corpora to learn a feature basis ('representation') of inputs. These representations are a form of product, which uniquely identifies and disentangles the underlying explanatory factors of an input. This is a widely used product and arguably a fundamental task in the development of an AI which understands the world around it. [26]
+For our purposes, we choose unsupervised representation learning [5, 6, 7, 9, 10, 14, 24, 25], where the network trains on large-scale unlabeled corpora to learn a feature basis ('representation') of inputs. These representations are a form of product, which uniquely identifies and disentangles the underlying explanatory factors of an input (a.k.a an inductive bias). This is a widely used product and arguably a fundamental task in the development of an AI which understands the world around it. [26]
 
 We initially focus on Language Representation from text, where components build an understanding of natural language and will respond to queries in pure unicode strings with a vector representation. For the sake of generality, we leave tokenization and parsing to each component and limit outputs across the network to fixed length vectors.
 
@@ -116,7 +116,7 @@ This high-level paradigm is shared between a range of training methods which can
 <li>XLNet [9] which implements learning across all mask permutations.</li>
 </ul>
 
-We intend on running network components which use these algorithmic approaches and others. We will also take advantage of differing training sets which range from freely available datasets, translation corpuses, reddit crawls, wikipedia entries and books. Thankfully langauge is ubiquitous and cheap so there is no need to worry about protecting datasets. In addition, the domain arguably contains the total of articulated human knowledge, so it is sufficiently deep.
+We intend on running network components which use these algorithmic approaches and others. We will also take advantage of differing training sets which range from freely available datasets, translation corpuses, reddit crawls, wikipedia entries and books, as well as tranfer-learning[28]. Thankfully langauge is ubiquitous and cheap so there is no need to worry about protecting datasets. In addition, the domain arguably contains the total of articulated human knowledge, so it is sufficiently deep.
 
 ### Incentives
 
@@ -239,106 +239,6 @@ and ∆Lj is strictly increasing and continuous in wji. We have by [--] that the
 ----
 
 
-## BitTensor 1.
-
-<img src="assets/brain_engineering_diagram.png" width="1000" />
-
-Above: An Engineering diagram of the brain. For inspiration.
-
-```
-
-                                     [EOS]
-                                       |
-                                  [Metagraph]
-                               /       |       \
-                    ----------------------------------------
-                  |                  Neuron                  |
-                  |                                          |
-                  | [Dendrite] ---> [Nucleus] ---> [Synapse] |
-                  |                                          |
-                  |                                          |
-                    ----------------------------------------
-                               \       |       /
-                                     [Main]
-```
-
-###### Nucleus
-The main Tensorflow graph is defined and trained within the Nucleus object. As is, the class is training a self supervised word-embedding over a dummy corpus of sentences in text8.zip. The result is a mapping which takes word to a 128 dimension vector, representing that word while maintaining its semantic properties.
-
-Although subject to future change, this problem serves as a good starting place because its generality and ubiquity within Artificial intelligence. In future versions of this code, this will be expanded to include sentence and paragraph embeddings, speech, image and video embeddings with the goal of training the network for general multitask.
-
-###### Dendrite
-During training the Nucleus interacts with the rest of the network through its Dendrite. The Dendrite maintains connections to upstream nodes making asynchronous calls using GRPC, and passing serialized Tensor protocol buffers along the wire.
-
-During validation and inference the Dendrite is cut from the model and replaced by submodules which have been trained through distillation to approximate the incoming signals from the rest of the network.
-
-###### Synapse
-This inference graphs being produced in training are served by the Synapse object. The Synapse is responsible for upstream connections. It is responsible for rate limiting, and through this,  negotiating for higher attribution within the Metagraph.
-
-Since the Synapse object is merely serving the inference graph, it is mostly detached from the Nucleus and Dendrite during training, only communicating with these objects by pulling the latest and best inference graph from the storage directory.
-
-###### Metagraph
-The Metagraph object acts as an interface between the EOS blockchain and the rest of the neuron. Through the Metagraph, this node can post updated attributions and call timed token emission (which releases newly mined tokens) The Metagraph object also serves as a de-facto DHT which removes the need for a gossip protocol used by many standard p2p applications Bitcoin and BitTorrent not withstanding.
-
-###### EOS
-The EOS contract is separate from Dendrite. Nucleus, Synapse and Metagraph objects during execution. During testing, this class is run on a local EOS instance, but during production the contract is running in a decentralized manner across the EOS network.  
-
-
-## Control Flow
-```
- Upstream           Downstream           Synapse            Dendrite              Nucleus
-    +                   +                   +                   +                   +
-    |      FSpike       |                   |                   |                   |
-    +-------------------------------------> X                   |                   |
-    |                   |                   |                   |                   |
-    |                   |                   |                   |                   |
-    |                   |      FSpike       |                   |                   |
-    |                   X <-----------------+                   |                   |
-    |                   X - - - - - - - - - +                   |                   |
-    |                   X <-----------------+                   |                   |
-    |                   |                   |                   |                   |
-    |                   |                   |                   |                   |
-    |                   |      RSpike       |                   |                   |
-    |                   +-----------------> o ----------------> X                   |
-    |                   + - - - - - - - - - o - - - - - - - - - X (Concatenation)   |
-    |                   +-----------------> o ----------------> X                   |
-    |                   |                   |                   |                   |
-    |                   |                   |                   |                   |
-    |                   |                   |                   |      Spike        +
-    |                   |                   |                   +-----------------> X
-    |                   |                   |                   |                   |
-    |                   |                   X <-------------------------------------+
-    |      RSpike       |                   |                   |                   |
-    X <-------------------------------------+                   |                   |
-    |                   |                   |                   |                   |
-    |                   |                   |                   |                   |
-    |      FGrade       |                   |                   |                   |
-    +-------------------------------------> X                   |                   |
-    |                   |                   |                   |      Grade        |
-    |                   |                   +-------------------------------------> X
-    |                   |                   |                   |                   |
-    |                   |                   X <-------------------------------------+
-    |                   |                   |                   |                   |
-    |                   |      FGrade       |                   |                   |
-    |                   X <-----------------+                   |                   |
-    |                   X - - - - - - - - - +                   |                   |
-    |                   X <-----------------+                   |                   |
-    |                   |                   |                   |                   |
-    |                   |                   |                   |                   |
-    |                   |      RGrade       |                   |                   |
-    |                   +-------------------o-----------------> X                   |
-    |                   + - - - - - - - - - o - - - - - - - - - X (Summation)       |
-    |                   +-------------------o-----------------> X                   |
-    |                   |                   |                   |                   |
-    |                   |                   |                   |                   |
-    |                   |                   X <-----------------+                   |
-    |      RGrade       |                   |                   |                   |
-    X <-------------------------------------+                   +                   +
-
-```
-
-
-
 ## References
 
 [1] The PageRank Citation Ranking <br/>
@@ -418,6 +318,9 @@ https://arxiv.org/pdf/1206.5538.pdf
 
 [27] Optimal Brain Damage  <br/>
 http://yann.lecun.com/exdb/publis/pdf/lecun-90b.pdf
+
+[28] A Hierarchical Multi-task Approach for Learning Embeddings from Semantic Tasks <br/>
+https://arxiv.org/abs/1811.06031
 
 ## License
 
