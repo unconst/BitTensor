@@ -152,6 +152,8 @@ This approximation becomes exact when P and M are close and Eqn. (6) can be view
 
 This information is available during the backward pass of computing the network’s gradient and the pruning signal can therefore be found at little extra computational cost.
 
+Note, various other forms of pruning signals can be used, for instance [27][29][30]
+
 ### Emission
 
 The totality of ∆Lij scores describe a directed weighted graph G = [V, E] where for each edge eij in E we have a the weight *∆Lij* associated with the connection between component i and j. ∆Lij is a local attribution and we would like to determine the global attribution for a node i, ∆Li. This score should be a sum over every pair-wise path through the graph weighted by stake *Si*.
@@ -163,7 +165,7 @@ We can derive all pair-wise paths by applying the chain rule to (7) to find the 
 <p align="center"> Given ∆Lij and ∆Ljk </p>
 <p align="center"> ∆Lik = ∆Lij x ∆Ljk (8) </p>
 
-Which is intuitive, following immediately from the notion of transitive contribution: If a component i contributes to component j, it should multiplicatively contribute to the components using j since they are compositions of its parent.
+Which is intuitive, following immediately from the notion of transitive contribution: If a component i contributes to component j, it should multiplicatively contribute to the components using j since they are compositions of its parent. This transitive quality is also exploited in [29] for computing neural importance weights.
 
 As a corollary of (8) global attribution scores for component _i_ can be calculated with a Power Iteration over the adjacency matrix described by G.
 
@@ -321,6 +323,12 @@ http://yann.lecun.com/exdb/publis/pdf/lecun-90b.pdf
 
 [28] A Hierarchical Multi-task Approach for Learning Embeddings from Semantic Tasks <br/>
 https://arxiv.org/abs/1811.06031
+
+[29] NISP: Pruning Networks using Neuron Importance Score Propagation
+https://arxiv.org/pdf/1711.05908.pdf
+
+[30] Overcoming catastrophic forgetting in neural networks
+https://arxiv.org/abs/1612.00796
 
 ## License
 
