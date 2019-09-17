@@ -14,11 +14,6 @@
   - [Attribution](#attribution)
   - [Emission](#emission)
   - [Market](#market)
-- [BitTensor1](#bitTensor1)
-  - [Nucleus](#nucleus)
-  - [Dendrite](#dendrite)
-  - [Synapse](#synapse)
-  - [Metagraph](#metagraph)
 - [References](#references)
 - [License](#license)
 
