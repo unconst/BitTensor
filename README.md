@@ -102,7 +102,7 @@ Our representation function can be trained in any number of supervised or unsupe
 
 <p align="center">  maximize ∏ P (T' | f(T)) </p>
     
-Intuitively "you shall know a word by the company it keeps" - John Rupert Firth, and this high-level paradigm has been shared and successfully applied by a large number of models to build incredibly powerful representations for language. These include:
+This high-level paradigm has been shared and successfully applied by a large number of models to build incredibly powerful representations for language. These include:
 
 <ul>
 <li> ELMO [31] representations from bidirectional recurrent neural networks.
@@ -115,11 +115,13 @@ Intuitively "you shall know a word by the company it keeps" - John Rupert Firth,
 
 <li>XLM representations from cross-lingual tasks.</li>
 
-<li>ERNIE [10] representations entity/phrase level masking </li>
+<li>ERNIE [10] representations entity/phrase level masking. </li>
 
 <li>XLNet [9] representations across all mask permutations.</li>
 
 </ul>
+
+As an aside, the idea of learning represenations in context, by attempting to predict the future or the past, was nicely described by John Rupert Firth in 1957 with the following quip: "you shall know a word by the company it keeps". It could be argued that the human mind is contantly attempting to do the same, namely, constructing a representation of the world which allows us to predict the future from the present -- a useful task for any organism.
 
 ### Incentives
 
