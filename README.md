@@ -96,26 +96,29 @@ We initially focus on Language Representation from text, where components build 
 
 <p align="center"> "raw natural language text"  ---> [ f(T) ]  --->  [fixed length representation] </p>
 
-The standard scheme for learning a representation is as follows. First, the raw text is tokenized, for instance at the word[], sentence[], or byte level[], to create a sequence of discrete tokens T = (t1, t2, . . . , tn ). The modeling task consists in learning a representation for that sequence f(T) = f(t1, t2, . . . , tn). 
+The standard scheme for learning a representation is as follows. First, the raw text is tokenized, for instance at the word[32], sentence[31], or byte level[7], to create a sequence of discrete tokens T = (t1, t2, . . . , tn ). The modeling task consists in learning a representation for that sequence f(T) = f(t1, t2, . . . , tn). 
 
-Our representation function can be trained in any number of supervised[][][] or unsupervised[][][] forms. However, commonly this is achieved in an unsupervised manner, where a Neural Network archietecture parameterixzed by θ, trains f(T) to predict other tokens T' in its near context.
+Our representation function can be trained in any number of supervised or unsupervised forms. However, commonly this is achieved in an unsupervised manner, where a Neural Network archietecture parameterixzed by θ, trains f(T) to predict other tokens T' in its near context.
 
 <p align="center">  maximize ∏ P (T' | f(T)) </p>
     
-Intuitively "you shall know a word by the company it keeps" - John Rupert Firth, and this high-level paradigm has been shared and successfully used by a large number of training tasks to build incredibly successful word representations for language. These include:
+Intuitively "you shall know a word by the company it keeps" - John Rupert Firth, and this high-level paradigm has been shared and successfully applied by a large number of models to build incredibly powerful representations for language. These include:
 
 <ul>
-<li>BERT [5] which uses multi-word masking strategies.</li>
+<li> ELMO [31] representations from bidirectional recurrent neural networks.
 
-<li>MT-DNN [14] which combines pre-training with multi-task knowledge transfer.</li>
+<li>BERT [5] representations from multi-word masking strategies.</li>
 
-<li>GPT-2 [7] which adds task information from an independently sourced question-answering dataset.</li>
+<li>MT-DNN [14] representationsfrom multi-task knowledge transfer.</li>
 
-<li>XLM which uses language embeddings to improve performance for cross-lingual tasks.</li>
+<li>GPT-2 [7] representations from a question-answering dataset.</li>
 
-<li>ERNIE [10] which adds entity/phrase level masking and</li>
+<li>XLM representations from cross-lingual tasks.</li>
 
-<li>XLNet [9] which implements learning across all mask permutations.</li>
+<li>ERNIE [10] representations entity/phrase level masking </li>
+
+<li>XLNet [9] representations across all mask permutations.</li>
+
 </ul>
 
 ### Incentives
@@ -329,6 +332,12 @@ https://arxiv.org/pdf/1711.05908.pdf
 
 [30] Overcoming catastrophic forgetting in neural networks
 https://arxiv.org/abs/1612.00796
+
+[31] Deep contextualized word representations
+https://arxiv.org/pdf/1802.05365.pdf
+
+[32] Efficient Estimation of Word Representations in Vector Space
+https://arxiv.org/abs/1301.3781
 
 ## License
 
