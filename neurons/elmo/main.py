@@ -5,11 +5,15 @@ from config import Config
 from concurrent import futures
 import grpc
 from loguru import logger
+import numpy
 import pickle
 
 import time
 import tensorflow as tf
 import tensorflow_hub as hub
+
+
+EMBEDDING_SIZE=128
 
 class Neuron(bittensor.proto.bolt_pb2_grpc.BoltServicer):
 
@@ -44,9 +48,8 @@ class Neuron(bittensor.proto.bolt_pb2_grpc.BoltServicer):
         message_id = request.message_identity
         inputs = pickle.loads(request.payload)
 
-        logger.info(inputs.flatten())
-        embeddings = self.embed(inputs.flatten())
-        logger.info(embeddings)
+        # Inference through EMLO.
+        embeddings = numpy.array(self.embed(inputs.flatten())).reshape(EMBEDDING_SIZE, -1)
 
         # Pack response.
         response_payload = pickle.dumps(embeddings, protocol=0)
