@@ -1,3 +1,54 @@
+
+Major Needs:
+
+  [1] The proto buffs needs to be switched out for bittensor.proto.
+    [1.1] This will require rewriting the servers to accommodate the change.
+    [1.1] Need to create the signature proof from the private keys.
+
+  [1] Need to use actual EOS addresses at the nodes.
+
+  [1] Rate limiting and ip blocking unless the channel is set in the metagraph.
+
+  [1] Apply SGD steps with weighted averages in the boltzmann nodes.
+
+  [1] We need XLM, ELMO, ERNIE, TransformerXL, Roberta, etc as Nuerons.
+  Some should be easy because they follow the standard text --> tenso representations
+
+  [1] Trainable versions of the above.
+
+  [1] Why can't I use Kubernetes to throw up lots of nodes.
+
+  [1] The Docker image it too large. Should be running off of Alpine linux.
+
+  [1] Right now the token is not live, instead the stake vector is stored in a map.
+  Look at the EOS contract. We need to connect the EOS token contract with the stake vector.
+  You can send etc.
+
+    [1.1] We need work with the token emission scheme to see if people can easily
+    cheat, and if emission for nothing is a serious issue.
+
+  [1] The README.md needs a description of the Boltzmann Node.
+
+  [1] The README.md needs a better proportional allocation game description.
+
+  [1] We need a client tf and pytorch operation
+
+    [1.1] spikes = bittensor.spike(my_address, my_text)
+    -- op should return errors if the address is not subscribed.
+    -- op should have permissions to make k connections.
+    -- people need to be able to get EOS somehow and easily connect it to this operation.
+    This op needs to be differentiable. I actually already did this in BitTensorSupervised.
+
+    [1.1] When a client connects to the graph they should query the top k attributing nodes.
+    This will give the system structure.
+
+    [1.1] There is no distillation occurring here. There needs to be. Make tools
+      and examples for using distillation to pull knowledge from the network.
+
+
+
+
+
 ./Emission testing.ipynb:119:    "        # TODO(const): It is not yet obvious if tokens that are held out of the metagraph should be attaining emission.\n",
 ./Emission testing.ipynb:191:    "        # TODO(const): I am uncertain of the EOS token requirements this function requires, or what happens when a \n",
 ./Emission testing.ipynb:381:    "        # TODO(const): It is not yet obvious if tokens that are held out of the metagraph should be attaining emission.\n",

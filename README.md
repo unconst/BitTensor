@@ -87,7 +87,7 @@ $ ./bittensor.sh --port 9091 --eosurl http://142.93.177.245:8888
 
 ### Introduction
 
-A Neural Network easily decomposes into smaller sub-components where in the forward direction, each component recieves activations from downstream, operates on them, and passes them forward. Then during training recieves gradients from upstream and passes them backward.  A peer-to-peer version of a Neural Network is merely a composition of these sub-components except that message passing occurs across the Wide Area Network, no computer is privaledged and there are no guarantees on the proper behaviour of the composd network's constituent elements. 
+A Neural Network easily decomposes into smaller sub-components where in the forward direction, each component recieves activations from downstream, operates on them, and passes them forward. Then during training recieves gradients from upstream and passes them backward.  A peer-to-peer version of a Neural Network is merely a composition of these sub-components except that message passing occurs across the Wide Area Network, no computer is privaledged and there are no guarantees on the proper behaviour of the composd network's constituent elements.
 
 To describe this more formally, each sub-component across the network serves a function f(x) which is parameterized by θ, acts on inputs x, (of some type, text, image, etc) and produces outputs y = f(x) as tensors with some shape. Further more, the ith function may be a composition of downstream components, such that yi = fi(x, d0(x), d1(x), ..., dn(x)) and reflexively, the ith function can be one compositional component to a set of upstream components, u0, u1, ... uj ... uN = fj(x, ..., fi(x), ...)
 
@@ -107,12 +107,12 @@ We initially focus on Language Representation from text, where components build 
 
 <p align="center"> "raw natural language text"  ---> [ f(T) ]  --->  [fixed length representation] </p>
 
-The standard scheme for learning a representation is as follows. First, the raw text is tokenized, for instance at the word[32], sentence[31], or byte level[7], to create a sequence of discrete tokens T = (t1, t2, . . . , tn ). The modeling task consists in learning a representation for that sequence f(T) = f(t1, t2, . . . , tn). 
+The standard scheme for learning a representation is as follows. First, the raw text is tokenized, for instance at the word[32], sentence[31], or byte level[7], to create a sequence of discrete tokens T = (t1, t2, . . . , tn ). The modeling task consists in learning a representation for that sequence f(T) = f(t1, t2, . . . , tn).
 
 Our representation function can be trained in any number of supervised or unsupervised forms. However, commonly this is achieved in an unsupervised manner, where a Neural Network archietecture parameterixzed by θ, and trains f(T) to help predict other tokens T' in its near context.
 
 <p align="center">  maximize ∏ P (T' | f(T)) </p>
-    
+
 This high-level paradigm has been shared and successfully applied by a large number of models to build incredibly powerful representations for language. These include:
 
 <ul>
@@ -334,16 +334,16 @@ http://yann.lecun.com/exdb/publis/pdf/lecun-90b.pdf
 [28] A Hierarchical Multi-task Approach for Learning Embeddings from Semantic Tasks <br/>
 https://arxiv.org/abs/1811.06031
 
-[29] NISP: Pruning Networks using Neuron Importance Score Propagation
+[29] NISP: Pruning Networks using Neuron Importance Score Propagation <br/>
 https://arxiv.org/pdf/1711.05908.pdf
 
-[30] Overcoming catastrophic forgetting in neural networks
+[30] Overcoming catastrophic forgetting in neural networks <br/>
 https://arxiv.org/abs/1612.00796
 
-[31] Deep contextualized word representations
+[31] Deep contextualized word representations <br/>
 https://arxiv.org/pdf/1802.05365.pdf
 
-[32] Efficient Estimation of Word Representations in Vector Space
+[32] Efficient Estimation of Word Representations in Vector Space <br/>
 https://arxiv.org/abs/1301.3781
 
 ## License
