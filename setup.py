@@ -59,6 +59,7 @@ setup(
         'pycrypto',
         'sklearn',
         'tensorflow',
+        'tensorflow_hub==0.4.0',
         'timeloop',
         'zipfile36'
         ],  # Optional

@@ -37,6 +37,7 @@ RUN pip install --upgrade pip && \
   pip install pickle-mixin && \
   pip install pycrypto && \
   pip install tensorflow && \
+  pip install tensorflow_hub==0.4.0 && \
   pip install timeloop && \
   pip install zipfile36
 
