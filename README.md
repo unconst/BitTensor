@@ -87,19 +87,19 @@ $ ./bittensor.sh --port 9091 --eosurl http://142.93.177.245:8888
 
 ### Introduction
 
-A Neural Network easily decomposes into smaller sub-components where in the forward direction, each component recieves activations from downstream, operates on them, and passes them forward, then during training recieve gradients in the reverse direction and passes them upstream.  A peer-to-peer version of a Neural Network is merely a composition of these sub-components except that message passing occurs across the Wide Area Network, no computer is privaledged and there are no guarantees on the proper behaviour of the composd network's constituent elements. 
+A Neural Network easily decomposes into smaller sub-components where in the forward direction, each component recieves activations from downstream, operates on them, and passes them forward. Then during training recieves gradients from upstream and passes them backward.  A peer-to-peer version of a Neural Network is merely a composition of these sub-components except that message passing occurs across the Wide Area Network, no computer is privaledged and there are no guarantees on the proper behaviour of the composd network's constituent elements. 
 
-To describe this more formally, each sub-component is function parameterized by θ, the ith of which produces an output yi given an input x as follows: yi = fi(x, d0(x), d1(x), ..., dn(x)), where d0 to dn are downstream components of the ith. And reflexively, the ith function is one compositional component to a set of upstream components, u0, u1, ... uj ... uN. Where inputs x, are of some type, text, image, etc, and outputs yi are tensors of some shape.
+To describe this more formally, each sub-component across the network serves a function f(x) which is parameterized by θ, acts on inputs x, (of some type, text, image, etc) and produces outputs y = f(x) as tensors with some shape. Further more, the ith function may be a composition of downstream components, such that yi = fi(x, d0(x), d1(x), ..., dn(x)) and reflexively, the ith function can be one compositional component to a set of upstream components, u0, u1, ... uj ... uN = fj(x, ..., fi(x), ...)
 
-Further more, the components are differential and can be trained using the reverse accumulation of error "back-propogation". Here the ith accepts a gradient (x, dy), where dy = dyj/dyi, which is a calculation carried out by some upstream component ui with respect to its output yj. Then, given x and dy, the ith component is capable of updating it's parameters θ, in order to minimize some loss term defined by the upstream jth component.
+We assuem f(x) is differential and can be trained using the reverse accumulation of error "back-propogation". Here, the ith component accepts a gradient (x, dy), where dy = dyj/dyi, for the output yj of some upstream component ui, and produces gradients ddj = df(x)/ddj for each downstream neighbor dj.
 
 <p align="center"> <img src="assets/UpDn.png" width="500" /> </p>
 
-The structure flows from a the differential graph archetecture employed by TensorFlow or PyTorch.
+The tuple (x, dy), advises the ith component on how to update its parameters θ in order to minimize some loss term defined by an upstream peer. This is no different than the gradient calculations for individual components in any differential graph archetecture built with TensorFlow or PyTorch. We use google's protocol buffers to carry messages across the web and grpc to serve each function at the end points. Calls on this server are of two types Spike: forward queries or Grade: gradient queries. Each call is atomic and can be scalled laterally to run in parallel.
 
 ### Representation
 
-We require a Machine Intelligence problem which is general enough to interest a diverse set of stake holders. The problem should be sufficiently difficult to warrant a collaborative approach and the data used to train it should be ubiquitous and cheap.
+For a p2p Neural Network architecture, we require a Machine Intelligence problem which is general enough to interest a diverse set of stake holders. The problem should be sufficiently difficult to warrant a collaborative approach and the data used to train it should be ubiquitous and cheap.
 
 For our purposes, we choose unsupervised representation learning [5, 6, 7, 9, 10, 14, 24, 25], where the network trains on large-scale unlabeled corpora to learn a feature basis ('representation') of inputs. These representations are a form of product, which uniquely identifies and disentangles the underlying explanatory factors of an input (a.k.a an inductive bias). This is a widely used product and arguably a fundamental task in the development of an AI which understands the world around it. [26]
 
@@ -109,7 +109,7 @@ We initially focus on Language Representation from text, where components build 
 
 The standard scheme for learning a representation is as follows. First, the raw text is tokenized, for instance at the word[32], sentence[31], or byte level[7], to create a sequence of discrete tokens T = (t1, t2, . . . , tn ). The modeling task consists in learning a representation for that sequence f(T) = f(t1, t2, . . . , tn). 
 
-Our representation function can be trained in any number of supervised or unsupervised forms. However, commonly this is achieved in an unsupervised manner, where a Neural Network archietecture parameterixzed by θ, trains f(T) to predict other tokens T' in its near context.
+Our representation function can be trained in any number of supervised or unsupervised forms. However, commonly this is achieved in an unsupervised manner, where a Neural Network archietecture parameterixzed by θ, and trains f(T) to help predict other tokens T' in its near context.
 
 <p align="center">  maximize ∏ P (T' | f(T)) </p>
     
