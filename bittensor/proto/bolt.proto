@@ -1,5 +1,8 @@
 syntax = "proto3";
 
+
+// TODO(const): Switch to Bittensor protocol.
+
 service Bolt {
 	rpc Spike(SpikeRequest) returns (SpikeResponse) {}
 	rpc Grade(GradeRequest) returns (GradeResponse) {}
