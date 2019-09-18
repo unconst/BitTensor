@@ -125,10 +125,10 @@ function init_image () {
   log "=== building bittensor image. ==="
   if [[ "$(docker images -q $DOCKER_IMAGE_NAME:$DOCKER_IMAGE_TAG 2> /dev/null)" == "" ]]; then
     log "Building $DOCKER_IMAGE_NAME:$DOCKER_IMAGE_TAG"
-    docker build -t $DOCKER_IMAGE_NAME:$DOCKER_IMAGE_TAG .
+    docker build -t $DOCKER_IMAGE_NAME:$DOCKER_IMAGE_TAG -f ./neurons/$neuron/Dockerfile .
   else
     # Build anyway
-    docker build -t $DOCKER_IMAGE_NAME:$DOCKER_IMAGE_TAG .
+    docker build -t $DOCKER_IMAGE_NAME:$DOCKER_IMAGE_TAG -f ./neurons/$neuron/Dockerfile .
   fi
 }
 
