@@ -87,19 +87,19 @@ $ ./bittensor.sh --port 9091 --eosurl http://142.93.177.245:8888
 
 ### Introduction
 
-A Neural Network easily decomposes into smaller sub-components where in the forward direction, each component recieves activations from downstream, operates on them, and passes them forward. Then during training recieves gradients from upstream and passes them backward.  A peer-to-peer version of a Neural Network is merely a composition of these sub-components except that message passing occurs across the Wide Area Network, no computer is privaledged and there are no guarantees on the proper behaviour of the composd network's constituent elements.
+A Neural Network easily decomposes into smaller sub-components where in the forward direction, each component receives activations from downstream, operates on them, and passes them forward. Then during training receives gradients from upstream and passes them backward.  A peer-to-peer version of a Neural Network is merely a composition of these sub-components except that message passing occurs across the Wide Area Network, no computer is privileged and there are no guarantees on the proper behavior of the composed network's constituent elements.
 
 To describe this more formally, each sub-component across the network serves a function f(x) which is parameterized by θ, acts on inputs x, (of some type, text, image, etc) and produces outputs y = f(x) as tensors with some shape. Further more, the ith function may be a composition of downstream components, such that yi = fi(x, d0(x), d1(x), ..., dn(x)) and reflexively, the ith function can be one compositional component to a set of upstream components, u0, u1, ... uj ... uN = fj(x, ..., fi(x), ...)
 
-We assuem f(x) is differential and can be trained using the reverse accumulation of error "back-propogation". Here, the ith component accepts a gradient (x, dy), where dy = dyj/dyi, for the output yj of some upstream component ui, and produces gradients ddj = df(x)/ddj for each downstream neighbor dj.
+We assume f(x) is differential and can be trained using the reverse accumulation of error "back-propagation". Here, the ith component accepts a gradient (x, dy), where dy = dyj/dyi, for the output yj of some upstream component ui, and produces gradients ddj = df(x)/ddj for each downstream neighbor dj.
 
 <p align="center"> <img src="assets/UpDn.png" width="500" /> </p>
 
-The tuple (x, dy), advises the ith component on how to update its parameters θ in order to minimize some loss term defined by an upstream peer. This is no different than the gradient calculations for individual components in any differential graph archetecture built with TensorFlow or PyTorch. We use google's protocol buffers to carry messages across the web and grpc to serve each function at the end points. Calls on this server are of two types Spike: forward queries or Grade: gradient queries. Each call is atomic and can be scalled laterally to run in parallel.
+The tuple (x, dy), advises the ith component on how to update its parameters θ in order to minimize some loss term defined by an upstream peer. This is no different than the gradient calculations for individual components in any differential graph architecture built with TensorFlow or PyTorch. We use google's protocol buffers to carry messages across the web and GRPC to serve each function at the end points. Calls on this server are of two types Spike: forward queries or Grade: gradient queries. Each call is atomic and can be scaled laterally to run in parallel.
 
 ### Representation
 
-For a p2p Neural Network architecture, we require a Machine Intelligence problem which is general enough to interest a diverse set of stake holders. The problem should be sufficiently difficult to warrant a collaborative approach and the data used to train it should be ubiquitous and cheap.
+For our p2p Neural Network architecture we require a Machine Intelligence problem which is general enough to interest a diverse set of stake holders. The problem should be sufficiently difficult to warrant a collaborative approach and the data used to train it should be ubiquitous and cheap.
 
 For our purposes, we choose unsupervised representation learning [5, 6, 7, 9, 10, 14, 24, 25], where the network trains on large-scale unlabeled corpora to learn a feature basis ('representation') of inputs. These representations are a form of product, which uniquely identifies and disentangles the underlying explanatory factors of an input (a.k.a an inductive bias). This is a widely used product and arguably a fundamental task in the development of an AI which understands the world around it. [26]
 
@@ -109,7 +109,7 @@ We initially focus on Language Representation from text, where components build 
 
 The standard scheme for learning a representation is as follows. First, the raw text is tokenized, for instance at the word[32], sentence[31], or byte level[7], to create a sequence of discrete tokens T = (t1, t2, . . . , tn ). The modeling task consists in learning a representation for that sequence f(T) = f(t1, t2, . . . , tn).
 
-Our representation function can be trained in any number of supervised or unsupervised forms. However, commonly this is achieved in an unsupervised manner, where a Neural Network archietecture parameterixzed by θ, and trains f(T) to help predict other tokens T' in its near context.
+Our representation function can be trained in any number of supervised or unsupervised forms. However, commonly this is achieved in an unsupervised manner, where a Neural Network architecture parameterized by θ, and trains f(T) to help predict other tokens T' in its near context.
 
 <p align="center">  maximize ∏ P (T' | f(T)) </p>
 
@@ -120,7 +120,7 @@ This high-level paradigm has been shared and successfully applied by a large num
 
 <li>BERT [5] representations from multi-word masking strategies.</li>
 
-<li>MT-DNN [14] representationsfrom multi-task knowledge transfer.</li>
+<li>MT-DNN [14] representations from multi-task knowledge transfer.</li>
 
 <li>GPT-2 [7] representations from a question-answering dataset.</li>
 
@@ -132,7 +132,7 @@ This high-level paradigm has been shared and successfully applied by a large num
 
 </ul>
 
-As an aside, the idea of learning represenations in context, by attempting to predict the future or the past, was nicely described by John Rupert Firth in 1957 with the following quip: "you shall know a word by the company it keeps". It could be argued that the human mind is contantly attempting to do the same, namely, constructing a representation of the world which allows us to predict the future from the present -- a useful task for any organism.
+As an aside, the idea of learning representations in context, by attempting to predict the future or the past, was nicely described by John Rupert Firth in 1957 with the following quip: "you shall know a word by the company it keeps". It could be argued that the human mind is constantly attempting to do the same, namely, constructing a representation of the world which allows us to predict the future from the present -- a useful task for any organism.
 
 ### Incentives
 
