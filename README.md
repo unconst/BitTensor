@@ -82,6 +82,9 @@ $ ./bittensor.sh --port 9091 --eosurl http://142.93.177.245:8888
 
 1. Elmo: Untrainable Elmo NN.
 
+1. GoogleUSE: Google's universal sentence encoder. Non-trainable. Trained on question and answer text.
+
+
 ## Method
 <img src="assets/brain.png" width="1000" />
 
