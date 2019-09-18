@@ -16,11 +16,11 @@ service Bittensor {
 message SpikeRequest {
 	// Source identifier. Where the message originated. Format is an EOS account
 	// address.
-	string source_id = 1;
+	// string source_id = 1;
 
 	// Source proof. A signature linking the message id to the source identity.
 	// RSA( Message_hash, Source_Private_Key.)
-	bytes source_proof = 2;
+	// bytes source_proof = 2;
 
 	// Parent identifier. The last hop this message took. Format is an EOS account
 	// address.
@@ -28,10 +28,10 @@ message SpikeRequest {
 
 	// Parent proof. A signature linking the message id to the parent identity.
 	// RSA( Message_hash, Parent_Private_Key.)
-	bytes parent_proof = 4;
+	// bytes parent_proof = 4;
 
 	// Message Nounce. A random or incrementing digit.
-	bytes nounce = 5;
+	// bytes nounce = 5;
 
 	// Message identifier. A hash of the message payload, nounce, and source id.
 	// Uniquely identifies this message with the triple(contents, nounce, source).
@@ -48,11 +48,11 @@ message SpikeRequest {
 message SpikeResponse {
 	// Source identifier. Where the message originated. Format is an EOS account
 	// address.
-	string source_id = 1;
+	// string source_id = 1;
 
 	// Source proof. A signature linking the message id to the source identity.
 	// RSA( Message_hash, Source_Private_Key.)
-	bytes source_proof = 2;
+	// bytes source_proof = 2;
 
 	// Child identifier. The last hop this message took. Format is an EOS account
 	// address.
@@ -60,10 +60,10 @@ message SpikeResponse {
 
 	// Child proof. A signature linking the message id to the child identity.
 	// RSA( Message_hash, Child_Private_Key.)
-	bytes child_proof = 4;
+	// bytes child_proof = 4;
 
 	// Message Nounce. A random or incrementing digit.
-	bytes nounce = 5;
+	// bytes nounce = 5;
 
 	// Message identifier. A hash of the message payload, nounce, and source id.
 	// Uniquely identifies this message with the triple(contents, nounce, source).
@@ -79,11 +79,11 @@ message SpikeResponse {
 message GradeRequest {
 	// Source identifier. Where the message originated. Format is an EOS account
 	// address.
-	string source_id = 1;
+	// string source_id = 1;
 
 	// Source proof. A signature linking the message id to the source identity.
 	// RSA( Message_hash, Source_Private_Key.)
-	bytes source_proof = 2;
+	// bytes source_proof = 2;
 
 	// Parent identifier. The last hop this message took. Format is an EOS account
 	// address.
@@ -91,10 +91,10 @@ message GradeRequest {
 
 	// Parent proof. A signature linking the message id to the parent identity.
 	// RSA( Message_hash, Parent_Private_Key.)
-	bytes parent_proof = 4;
+	// bytes parent_proof = 4;
 
 	// Message Nounce. A random or incrementing digit.
-	bytes nounce = 5;
+	// bytes nounce = 5;
 
 	// Message identifier. A hash of the message payload, nounce, and source id.
 	// Uniquely identifies this message with the triple(contents, nounce, source).
@@ -106,7 +106,7 @@ message GradeRequest {
 	repeated bytes payload = 7;
 }
 
-// Reverse gradient call. 
+// Reverse gradient call.
 message GradeResponse {
 	// Boolean, Gradient accepted message.
   bool accept = 1;

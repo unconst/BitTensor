@@ -9,7 +9,7 @@ from threading import Lock
 import queue
 
 class Buffer:
-    def __init__(self,  sender_id = None,
+    def __init__(self,  parent_id = None,
                         message_id = None,
                         create_time = None,
                         lspikes = None,
@@ -17,7 +17,7 @@ class Buffer:
                         dspikes = None,
                         lgrads = None):
 
-        self.sender_id = sender_id
+        self.parent_id = parent_id
         self.message_id = message_id
         self.create_time = create_time
         self.lspikes = lspikes
@@ -25,7 +25,7 @@ class Buffer:
         self.dspikes = dspikes
         self.lgrads = lgrads
 
-    def set(self, sender_id = None,
+    def set(self, parent_id = None,
                   message_id = None,
                   create_time = None,
                   lspikes = None,
@@ -33,8 +33,8 @@ class Buffer:
                   dspikes = None,
                   lgrads = None ):
 
-        if not self.sender_id:
-            self.sender_id = sender_id
+        if not self.parent_id:
+            self.parent_id = parent_id
         if not self.message_id:
             self.message_id = message_id
         if not self.create_time:
@@ -49,7 +49,7 @@ class Buffer:
             self.lgrads = lgrads
 
 
-class Neuron(bittensor.proto.bolt_pb2_grpc.BoltServicer):
+class Neuron(bittensor.proto.bittensor_pb2_grpc.BittensorServicer):
 
     def __init__(self, config, dendrite, nucleus, metagraph):
         self.config = config
@@ -77,8 +77,8 @@ class Neuron(bittensor.proto.bolt_pb2_grpc.BoltServicer):
 
     def Spike(self, request, context):
         # Unpack message.
-        sender_id = request.sender_identity
-        message_id = request.message_identity
+        parent_id = request.parent_id
+        message_id = request.message_id
         uspikes = pickle.loads(request.payload)
 
         # Check for repsonse in buffer.
@@ -86,9 +86,9 @@ class Neuron(bittensor.proto.bolt_pb2_grpc.BoltServicer):
             # Return local spikes.
             lspikes = self.memory[message_id].lspikes
             payload = pickle.dumps(lspikes, protocol=0)
-            response = bittensor.proto.bolt_pb2.SpikeResponse(
-                            responder_identity = self.config.identity,
-                            message_identity = message_id,
+            response = bittensor.proto.bittensor_pb2.SpikeResponse(
+                            child_id = self.config.identity,
+                            message_id = message_id,
                             payload = payload)
             return response
 
@@ -103,7 +103,7 @@ class Neuron(bittensor.proto.bolt_pb2_grpc.BoltServicer):
         self.mem_lock.acquire()
         try:
             self.memory[message_id] = Buffer(
-                                          sender_id = sender_id,
+                                          parent_id = parent_id,
                                           message_id = message_id,
                                           create_time = time.time(),
                                           lspikes = lspikes,
@@ -115,9 +115,9 @@ class Neuron(bittensor.proto.bolt_pb2_grpc.BoltServicer):
 
         # Pack response.
         payload = pickle.dumps(lspikes, protocol=0)
-        response = bittensor.proto.bolt_pb2.SpikeResponse(
-                        responder_identity = self.config.identity,
-                        message_identity = message_id,
+        response = bittensor.proto.bittensor_pb2.SpikeResponse(
+                        child_id = self.config.identity,
+                        message_id = message_id,
                         payload = payload)
 
         return response
@@ -125,13 +125,13 @@ class Neuron(bittensor.proto.bolt_pb2_grpc.BoltServicer):
 
     def Grade(self, request, context):
         # Unpack request.
-        sender_id = request.sender_identity
-        message_id = request.message_identity
+        parent_id = request.parent_id
+        message_id = request.message_id
         ugrades = pickle.loads(request.payload)
 
         # Check for lost or badly routed grades.
         if message_id not in self.memory:
-            return bittensor.proto.bolt_pb2.GradeResponse(accept=True)
+            return bittensor.proto.bittensor_pb2.GradeResponse(accept=True)
 
         # Get local spikes.
         mem_buffer = self.memory[message_id]
@@ -156,7 +156,7 @@ class Neuron(bittensor.proto.bolt_pb2_grpc.BoltServicer):
         # Send downstream grads.
         self.dendrite.grade(message_id, dgrades)
 
-        return bittensor.proto.bolt_pb2.GradeResponse(accept=True)
+        return bittensor.proto.bittensor_pb2.GradeResponse(accept=True)
 
     def Learn (self):
         # Function clears the message buffer of all outdated memory objects

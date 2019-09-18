@@ -16,11 +16,10 @@ import tf_sentencepiece
 
 EMBEDDING_SIZE=128
 
-class Neuron(bittensor.proto.bolt_pb2_grpc.BoltServicer):
+class Neuron(bittensor.proto.bittensor_pb2_grpc.BittensorServicer):
 
     def __init__(self, config):
         self.config = config
-
 
         self.graph = tf.Graph()
         with self.graph.as_default():
@@ -62,8 +61,8 @@ class Neuron(bittensor.proto.bolt_pb2_grpc.BoltServicer):
 
     def Spike(self, request, context):
         # Unpack message.
-        sender_id = request.sender_identity
-        message_id = request.message_identity
+        parent_id = request.sender_id
+        message_id = request.message_id
         inputs = pickle.loads(request.payload)
 
         # Inference through Google USE.
@@ -73,9 +72,9 @@ class Neuron(bittensor.proto.bolt_pb2_grpc.BoltServicer):
 
         # Pack response.
         response_payload = pickle.dumps(represenations, protocol=0)
-        response = bittensor.proto.bolt_pb2.SpikeResponse(
-                        responder_identity = self.config.identity,
-                        message_identity = message_id,
+        response = bittensor.proto.bittensor_pb2.SpikeResponse(
+                        child_id = self.config.identity,
+                        message_id = message_id,
                         payload = response_payload)
 
         return response
@@ -83,7 +82,7 @@ class Neuron(bittensor.proto.bolt_pb2_grpc.BoltServicer):
 
     def Grade(self, request, context):
         # Pass.
-        return bittensor.proto.bolt_pb2.GradeResponse(accept=False)
+        return bittensor.proto.bittensor_pb2.GradeResponse(accept=False)
 
 def main():
     config = Config()

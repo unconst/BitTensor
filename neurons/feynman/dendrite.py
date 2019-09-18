@@ -63,7 +63,7 @@ class Dendrite():
 
         try:
             # Build Stub.
-            stub = bittensor.proto.bolt_pb2_grpc.BoltStub(channel)
+            stub = bittensor.proto.bittensor_pb2_grpc.BittensorStub(channel)
 
             # Build message hash
             identity_bytes = self.config.identity.encode()
@@ -77,9 +77,9 @@ class Dendrite():
             message_hash = hash.digest()
 
             # Create request proto.
-            request = bittensor.proto.bolt_pb2.GradeRequest(
-                        sender_identity = self.config.identity,
-                        message_identity = message_hash,
+            request = bittensor.proto.bittensor_pb2.GradeRequest(
+                        parent_id = self.config.identity,
+                        message_id = message_hash,
                         payload = grad_bytes)
 
             # Send Grade request.
@@ -98,7 +98,7 @@ class Dendrite():
 
         try:
             # Build Stub and request proto.
-            stub = bittensor.proto.bolt_pb2_grpc.BoltStub(channel)
+            stub = bittensor.proto.bittensor_pb2_grpc.BittensorStub(channel)
 
             # Build message hash
             identity_bytes = self.config.identity.encode()
@@ -111,9 +111,9 @@ class Dendrite():
             message_hash = hash.digest()
 
             # Build request proto.
-            request = bittensor.proto.bolt_pb2.SpikeRequest(
-                        sender_identity = self.config.identity,
-                        message_identity = message_hash,
+            request = bittensor.proto.bittensor_pb2.SpikeRequest(
+                        parent_id = self.config.identity,
+                        message_id = message_hash,
                         payload = spike_bytes)
 
             # Send spike request.

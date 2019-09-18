@@ -27,7 +27,7 @@ class Dendrite:
 
         try:
             # Build Stub and request proto.
-            stub = bittensor.proto.bolt_pb2_grpc.BoltStub(channel)
+            stub = bittensor.proto.bittensor_pb2_grpc.BittensorStub(channel)
 
             # Build payload.
             # TODO(const) This is a waste, deserialize to serialize again.
@@ -35,8 +35,8 @@ class Dendrite:
 
             # Create spike request proto.
             request =  bittensor.proto.bolt_pb2.SpikeRequest(
-                        sender_identity = self.config.identity,
-                        message_identity = message_id,
+                        parent_id = self.config.identity,
+                        message_id = message_id,
                         payload = spikes_bytes)
 
             # Send TCP spike request.
@@ -57,12 +57,12 @@ class Dendrite:
 
         try:
             # Build Stub and request proto.
-            stub = bittensor.proto.bolt_pb2_grpc.BoltStub(channel)
+            stub = bittensor.proto.bittensor_pb2_grpc.BittensorStub(channel)
 
             # Build Grade Request proto.
-            request = bittensor.proto.bolt_pb2.GradeRequest(
-                        sender_identity = self.config.identity,
-                        message_identity = message_id,
+            request = bittensor.proto.bittensor_pb2.GradeRequest(
+                        parent_id = self.config.identity,
+                        message_id = message_id,
                         grad_payload = pickle.dumps(grad,  protocol=0))
 
             # Send grade request.

@@ -1,3 +1,3 @@
 # Build protos.
 cd "$(dirname "$0")"/..
-python -m grpc.tools.protoc bittensor/proto/bolt.proto  -I. --python_out=. --grpc_python_out=.
+python -m grpc.tools.protoc bittensor/proto/bittensor.proto  -I. --python_out=. --grpc_python_out=.

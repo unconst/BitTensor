@@ -15,7 +15,7 @@ import tensorflow_hub as hub
 
 EMBEDDING_SIZE=128
 
-class Neuron(bittensor.proto.bolt_pb2_grpc.BoltServicer):
+class Neuron(bittensor.proto.bittensor_pb2_grpc.BittensorServicer):
 
     def __init__(self, config):
         self.config = config
@@ -44,8 +44,8 @@ class Neuron(bittensor.proto.bolt_pb2_grpc.BoltServicer):
 
     def Spike(self, request, context):
         # Unpack message.
-        sender_id = request.sender_identity
-        message_id = request.message_identity
+        parent_id = request.parent_id
+        message_id = request.message_id
         inputs = pickle.loads(request.payload)
 
         # Inference through EMLO.
@@ -54,8 +54,8 @@ class Neuron(bittensor.proto.bolt_pb2_grpc.BoltServicer):
         # Pack response.
         response_payload = pickle.dumps(embeddings, protocol=0)
         response = bittensor.proto.bolt_pb2.SpikeResponse(
-                        responder_identity = self.config.identity,
-                        message_identity = message_id,
+                        child_id = self.config.identity,
+                        message_id = message_id,
                         payload = response_payload)
 
         return response
@@ -63,7 +63,7 @@ class Neuron(bittensor.proto.bolt_pb2_grpc.BoltServicer):
 
     def Grade(self, request, context):
         # Pass.
-        return bittensor.proto.bolt_pb2.GradeResponse(accept=True)
+        return bittensor.proto.bittensor_pb2.GradeResponse(accept=True)
 
 def main():
     config = Config()
