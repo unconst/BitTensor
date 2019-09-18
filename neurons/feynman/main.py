@@ -71,7 +71,7 @@ def serve():
     # Serve the synapse on a grpc server.
     server_address = config.bind_address + ":" + config.port
     grpc_server = grpc.server(futures.ThreadPoolExecutor(max_workers=10))
-    bittensor.proto.bolt_pb2_grpc.add_BoltServicer_to_server(synapse, grpc_server)
+    bittensor.proto.bittensor_pb2_grpc.add_BittensorServicer_to_server(synapse, grpc_server)
     grpc_server.add_insecure_port(server_address)
     logger.debug('Served synapse on: {}.', server_address)
     grpc_server.start()

@@ -64,7 +64,7 @@ class Neuron(bittensor.proto.bittensor_pb2_grpc.BittensorServicer):
         # Init server.
         self.server_address = self.config.bind_address + ":" + self.config.port
         self.server = grpc.server(futures.ThreadPoolExecutor(max_workers=10))
-        bittensor.proto.bolt_pb2_grpc.add_BoltServicer_to_server(self, self.server)
+        bittensor.proto.bittensor_pb2_grpc.add_BittensorServicer_to_server(self, self.server)
         self.server.add_insecure_port(self.server_address)
 
     def __del__(self):

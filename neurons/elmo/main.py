@@ -31,7 +31,7 @@ class Neuron(bittensor.proto.bittensor_pb2_grpc.BittensorServicer):
         # Init server.
         self.server_address = self.config.bind_address + ":" + self.config.port
         self.server = grpc.server(futures.ThreadPoolExecutor(max_workers=10))
-        bittensor.proto.bolt_pb2_grpc.add_BoltServicer_to_server(self, self.server)
+        bittensor.proto.bittensor_pb2_grpc.add_BittensorServicer_to_server(self, self.server)
         self.server.add_insecure_port(self.server_address)
 
     def __del__(self):
@@ -53,7 +53,7 @@ class Neuron(bittensor.proto.bittensor_pb2_grpc.BittensorServicer):
 
         # Pack response.
         response_payload = pickle.dumps(embeddings, protocol=0)
-        response = bittensor.proto.bolt_pb2.SpikeResponse(
+        response = bittensor.proto.bittensor_pb2.SpikeResponse(
                         child_id = self.config.identity,
                         message_id = message_id,
                         payload = response_payload)

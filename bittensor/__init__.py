@@ -1,3 +1,3 @@
 name = "bittensor"
-from bittensor.proto import bolt_pb2
-from bittensor.proto import bolt_pb2_grpc
+from bittensor.proto import bittensor_pb2
+from bittensor.proto import bittensor_pb2_grpc
