@@ -28,13 +28,13 @@ class Neuron(bittensor.proto.bolt_pb2_grpc.BoltServicer):
             module_url = "https://tfhub.dev/google/universal-sentence-encoder-multilingual-qa/1"
             module = hub.Module(module_url,  trainable=False)
 
-            text_placeholder = tf.compat.v1.placeholder(tf.string, shape=[None], name="text_placeholder")
-            question_embeddings = module(dict(input=text_placeholder), text_placeholder, signature="question_encoder", as_dict=True)
+            self.text_placeholder = tf.compat.v1.placeholder(tf.string, shape=[None], name="text_placeholder")
+            question_embeddings = module(dict(input=self.text_placeholder), signature="question_encoder", as_dict=True)
 
             # Projection onto EMBEDDING_SIZE
             w1 = tf.Variable(tf.random.uniform([512, EMBEDDING_SIZE], -1.0, 1.0))
             b1 = tf.Variable(tf.zeros([EMBEDDING_SIZE]))
-            output = tf.sigmoid(tf.matmul(question_embeddings["outputs"], w1) + b1)
+            self.output = tf.sigmoid(tf.matmul(question_embeddings["outputs"], w1) + b1)
 
             init_op = tf.group([tf.global_variables_initializer(), tf.tables_initializer()])
         self.graph.finalize()
@@ -68,8 +68,8 @@ class Neuron(bittensor.proto.bolt_pb2_grpc.BoltServicer):
 
         # Inference through Google USE.
         numpy_inputs = inputs.flatten() # [batch_size, var length]
-        represenations = self.session.run(output, {text_placeholder: numpy_inputs})
-        represenations = represenations.reshape(EMBEDDING_SIZE)
+        represenations = self.session.run(self.output , {self.text_placeholder: numpy_inputs})
+        represenations = represenations.reshape(EMBEDDING_SIZE, -1)
 
         # Pack response.
         response_payload = pickle.dumps(represenations, protocol=0)
