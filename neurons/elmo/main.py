@@ -47,6 +47,7 @@ class Neuron(bittensor.proto.bittensor_pb2_grpc.BittensorServicer):
         parent_id = request.parent_id
         message_id = request.message_id
         inputs = pickle.loads(request.payload)
+        logger.info('. {}', parent_id)
 
         # Inference through EMLO.
         embeddings = numpy.array(self.embed(inputs.flatten())).reshape(EMBEDDING_SIZE, -1)

@@ -1,7 +1,10 @@
 import bittensor
 
 from config import Config
+from dendrite import Dendrite
+from metagraph import Metagraph
 
+from itertools import cycle
 from loguru import logger
 import os
 import time
@@ -24,13 +27,6 @@ def download_and_extract_cola():
     os.remove(data_file)
     logger.info("\tCompleted!")
 
-class Dendrite():
-    def __init__(self):
-        pass
-
-    def spike(self, inputs):
-        return tf.Variable(tf.random_uniform([1,EMBEDDING_SIZE]))
-
 EMBEDDING_SIZE = 128
 
 class Neuron():
@@ -39,7 +35,10 @@ class Neuron():
         self._config = config
         self._dendrite = dendrite
         self._cola = cola.Cola()
-        self._cola_generator = self._cola.example_generator('neurons/CoLA/data/CoLA/dev.tsv')
+        self._cola_generator = cycle(self._cola.example_generator('neurons/CoLA/data/CoLA/train.tsv'))
+
+        # batch_size
+        self._batch_size = self._config.batch_size
 
         # Master thread.
         self._master_thread = threading.Thread(target=self._main)
@@ -50,25 +49,31 @@ class Neuron():
         self._graph = tf.Graph()
         self._session = tf.Session(graph=self._graph)
         with self._graph.as_default():
-            self._build_preprocess_graph(self._graph)
-            self._build_training_graph(self._graph)
+            self._build_preprocess_graph()
+            self._build_training_graph()
             self._init = tf.compat.v1.global_variables_initializer()
 
-    def _build_preprocess_graph(self, graph):
-        self._inputs = tf.compat.v1.placeholder(tf.string, shape=[1, 1], name="inputs")
-        embeddings = self._dendrite.spike(self._inputs)
-        self._queue = tf.queue.FIFOQueue(capacity=100, dtypes=[tf.float32], shapes=[1, EMBEDDING_SIZE])
-        self._enqueue_op = self._queue.enqueue(embeddings)
-
-    def _build_training_graph(self, graph):
-        # Inputs.
+    def _build_preprocess_graph(self):
         self._global_step = tf.compat.v1.train.create_global_step()
-        next_embeddings = self._queue.dequeue()
+        self._batch_text = tf.compat.v1.placeholder(tf.string, shape=[self._batch_size, 1])
+        self._batch_labels = tf.compat.v1.placeholder(tf.float32, shape=[self._batch_size, 1])
+
+        self._embeddings = self._dendrite.spike(self._batch_text)
+
+        dtypes = [tf.int64, tf.float32, tf.float32]
+        shapes = [[], [self._config.k, self._batch_size, EMBEDDING_SIZE], [self._batch_size, 1]]
+        self._queue = tf.queue.FIFOQueue(capacity=100, dtypes=dtypes, shapes=shapes)
+        self._enqueue = self._queue.enqueue([self._global_step, self._embeddings, self._batch_labels])
+
+    def _build_training_graph(self):
+        # Inputs.
+        global_step, embeddings, labels = self._queue.dequeue()
 
         # Layer 1
-        w1 = tf.Variable(tf.random.uniform([EMBEDDING_SIZE, EMBEDDING_SIZE], -1.0, 1.0))
+        embeddings = tf.reshape(embeddings, [self._batch_size, EMBEDDING_SIZE * self._config.k])
+        w1 = tf.Variable(tf.random.uniform([EMBEDDING_SIZE * self._config.k, EMBEDDING_SIZE], -1.0, 1.0))
         b1 = tf.Variable(tf.zeros([EMBEDDING_SIZE]))
-        h1 = tf.sigmoid(tf.matmul(next_embeddings, w1) + b1)
+        h1 = tf.sigmoid(tf.matmul(embeddings, w1) + b1)
 
         # Layer 2.
         w2 = tf.Variable(tf.random.uniform([EMBEDDING_SIZE, 1], -1.0, 1.0))
@@ -76,10 +81,10 @@ class Neuron():
         y = tf.sigmoid(tf.matmul(h1, w2) + b2)
 
         # Loss calculation.
-        self._label = tf.compat.v1.placeholder(tf.float32, shape=[1, 1], name="label")
-        self._loss = tf.losses.log_loss(self._label, y)
-        self._step = tf.compat.v1.train.AdagradOptimizer(1.0).minimize(self._loss, global_step=self._global_step)
+        self._loss = tf.losses.log_loss(labels, y)
 
+        # Gradient step.
+        self._step = tf.compat.v1.train.AdagradOptimizer(self._config.alpha).minimize(self._loss)
 
     def start(self):
         self._running = True
@@ -114,9 +119,9 @@ class Neuron():
 
             except Exception as e:
                 # Stop on exception.
+                logger.error(e)
                 self._coord.request_stop(e)
                 self._coord.join([preproccess_thread, training_thread])
-                logger.error(e)
 
             finally:
                 # Stop on all other exits.
@@ -128,24 +133,34 @@ class Neuron():
         try:
             with self._coord.stop_on_exception():
                 while not self._coord.should_stop() and self._running:
-                    next_example = next(self._cola_generator)
-                    run_output = self._session.run(  fetches=[self._enqueue_op],
-                                                    feed_dict={self._inputs: next_example['inputs'],
-                                                               self._label: next_example['label']})
+                    batch_text = []
+                    batch_labels = []
+                    for _ in range(self._batch_size):
+                        sample = next(self._cola_generator)
+                        batch_text.append([sample['inputs']])
+                        batch_labels.append([sample['label']])
+                    fetches = [self._enqueue]
+                    feeds = {self._batch_text: batch_text,
+                             self._batch_labels: batch_labels}
+                    self._session.run(fetches, feeds)
+
+
+
         except Exception as e:
+            logger.error(e)
             self._coord.request_stop(e)
 
     def _training_loop(self):
         try:
             with self._coord.stop_on_exception():
                 while not self._coord.should_stop() and self._running:
-                    run_output = self._session.run(  fetches={self._step},
-                                                    feed_dict={})
+                    fetches=[self._loss, self._step]
+                    run_output = self._session.run(fetches)
+                    logger.info('loss {}', run_output[0])
         except Exception as e:
+            logger.error(e)
             self._coord.request_stop(e)
         logger.info('Stopped training thread.')
-
-
 
 
 def main():
@@ -153,9 +168,11 @@ def main():
     # Download the data.
     download_and_extract_cola()
 
-    config = None
+    config = Config()
 
-    dendrite = Dendrite()
+    metagraph = Metagraph(config)
+
+    dendrite = Dendrite(config, metagraph)
 
     neuron = Neuron(config, dendrite)
 

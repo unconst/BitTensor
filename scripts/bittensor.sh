@@ -122,8 +122,15 @@ function start_neuron() {
   # Start our Neuron object training, server graph, open dendrite etc.
   log ""
   log "=== start Neuron ==="
-  log "python neurons/$NEURON/main.py $IDENTITY $SERVE_ADDRESS $BIND_ADDRESS $PORT $EOSURL $LOGDIR"
-  python "neurons/$NEURON/main.py" $IDENTITY $SERVE_ADDRESS $BIND_ADDRESS $PORT $EOSURL $LOGDIR &
+  COMMAND="python neurons/$NEURON/main.py \
+      --identity $IDENTITY \
+      --serve_address $SERVE_ADDRESS \
+      --bind_address $BIND_ADDRESS \
+      --port $PORT \
+      --eosurl $EOSURL \
+      --logdir $LOGDIR"
+  log $COMMAND
+  eval $COMMAND &
   NueronPID=$!
 }
 

@@ -61,9 +61,10 @@ class Neuron(bittensor.proto.bittensor_pb2_grpc.BittensorServicer):
 
     def Spike(self, request, context):
         # Unpack message.
-        parent_id = request.sender_id
+        parent_id = request.parent_id
         message_id = request.message_id
         inputs = pickle.loads(request.payload)
+        logger.info('. {}', parent_id)
 
         # Inference through Google USE.
         numpy_inputs = inputs.flatten() # [batch_size, var length]
