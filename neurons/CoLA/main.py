@@ -3,6 +3,9 @@ import bittensor
 from config import Config
 
 from loguru import logger
+import os
+import time
+import tensor2tensor.data_generators.cola  as cola
 import urllib.request
 import zipfile
 
@@ -16,17 +19,25 @@ class Dendrite():
 
 class Neuron():
 
-    def __init__(self):
-        pass
+    def __init__(self, config, dendrite):
+        self.config = config
+        self.dendrite = dendrite
+        self.cola = cola.Cola()
+        self.cola_generator = self.cola.example_generator('neurons/CoLA/data/CoLA/dev.tsv')
+
+    def train(self):
+        for _ in range(100):
+            logger.info(next(self.cola_generator))
+
 
 def download_and_extract_cola():
     logger.info("Downloading and extracting CoLA into neurons/CoLA/data")
-    data_file = "neurons/CoLA/data.zip"
+    data_file = "CoLA.zip"
     urllib.request.urlretrieve(CoLA_URL, data_file)
     with zipfile.ZipFile(data_file) as zip_ref:
-        zip_ref.extractall(data_dir)
+        zip_ref.extractall("neurons/CoLA/data")
     os.remove(data_file)
-    print("\tCompleted!")
+    logger.info("\tCompleted!")
 
 def main():
 
@@ -35,13 +46,16 @@ def main():
 
     config = Config()
 
-    neuron = Neuron(config)
+    dendrite = Dendrite()
 
-    neuron.serve()
+    neuron = Neuron(config, dendrite)
 
-    def tear_down(_config, _neuron):
+    neuron.train()
+
+    def tear_down(_config, _dendrite, _neuron):
         logger.debug('tear down.')
         del _neuron
+        del _dendrite
         del _config
 
     try:
