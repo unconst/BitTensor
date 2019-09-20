@@ -74,6 +74,14 @@ $ ./bittensor.sh --port 9091 --eosurl http://142.93.177.245:8888
 
 ```
 
+## Pull Requests
+
+We use [Yapf](https://github.com/google/yapf) for code format. Please run the following.
+```
+$ pip install yapf
+$ yapf --style google -r -vv -i <filename>
+```
+
 ## Neurons
 
 1. Boltzmann: Trainable Feed-forward NN, tokenizes requests on a word level basis responds with 128 dimensional embedding vectors. Applies gradients on 3 second interval without averages.
