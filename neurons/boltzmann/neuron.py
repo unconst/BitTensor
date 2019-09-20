@@ -81,6 +81,8 @@ class Neuron(bittensor.proto.bittensor_pb2_grpc.BittensorServicer):
         message_id = request.message_id
         uspikes = pickle.loads(request.payload)
 
+        logger.info('s {}', parent_id)
+
         # Check for repsonse in buffer.
         if message_id in self.memory:
             # Return local spikes.
@@ -128,6 +130,8 @@ class Neuron(bittensor.proto.bittensor_pb2_grpc.BittensorServicer):
         parent_id = request.parent_id
         message_id = request.message_id
         ugrades = pickle.loads(request.payload)
+
+        logger.info('g {}', parent_id)
 
         # Check for lost or badly routed grades.
         if message_id not in self.memory:

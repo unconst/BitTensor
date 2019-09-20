@@ -15,6 +15,7 @@ flags.DEFINE_string("eosurl", "http://0.0.0.0:8888", "EOS Url.")
 flags.DEFINE_string("logdir", "/tmp/", "logginf directory.")
 flags.DEFINE_integer("k", 3, "Out edge degree.")
 flags.DEFINE_float("alpha", 0.01, "Learning rate.")
+flags.DEFINE_integer("time_till_expire", 5, "time till query expire")
 
 
 class Config():
@@ -27,6 +28,7 @@ class Config():
         self.logdir = FLAGS.logdir
         self.k = FLAGS.k
         self.alpha = FLAGS.alpha
+        self.time_till_expire = FLAGS.time_till_expire
 
     def __repr__(self):
         return self.__str__()

@@ -8,7 +8,7 @@ class Nucleus():
         self.config = config
 
         # Dataset zip file.
-        self.filename = 'text8.zip'
+        self.filename = 'neurons/boltzmann/data/text8.zip'
         # Size of vocab embedding.
         self.vocabulary_size = 50000
         # Size of training batch.
