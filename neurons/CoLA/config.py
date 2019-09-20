@@ -19,6 +19,7 @@ flags.DEFINE_integer("batch_size", 10, "batch_size")
 
 
 class Config():
+
     def __init__(self):
         self.identity = FLAGS.identity
         self.serve_address = FLAGS.serve_address
@@ -29,7 +30,6 @@ class Config():
         self.k = FLAGS.k
         self.alpha = FLAGS.alpha
         self.batch_size = FLAGS.batch_size
-
 
     def __repr__(self):
         return self.__str__()

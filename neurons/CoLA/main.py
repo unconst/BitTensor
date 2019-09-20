@@ -9,13 +9,14 @@ from loguru import logger
 import os
 import time
 import tensorflow as tf
-import tensor2tensor.data_generators.cola  as cola
+import tensor2tensor.data_generators.cola as cola
 import threading
 import urllib.request
 import zipfile
 
 # URL for downloading COLA data.
-CoLA_URL ="https://firebasestorage.googleapis.com/v0/b/mtl-sentence-representations.appspot.com/o/data%2FCoLA.zip?alt=media&token=46d5e637-3411-4188-bc44-5809b5bfb5f4"
+CoLA_URL = "https://firebasestorage.googleapis.com/v0/b/mtl-sentence-representations.appspot.com/o/data%2FCoLA.zip?alt=media&token=46d5e637-3411-4188-bc44-5809b5bfb5f4"
+
 
 # Downloads the CoLA dataset.
 def download_and_extract_cola():
@@ -27,7 +28,9 @@ def download_and_extract_cola():
     os.remove(data_file)
     logger.info("\tCompleted!")
 
+
 EMBEDDING_SIZE = 128
+
 
 class Neuron():
 
@@ -35,7 +38,8 @@ class Neuron():
         self._config = config
         self._dendrite = dendrite
         self._cola = cola.Cola()
-        self._cola_generator = cycle(self._cola.example_generator('neurons/CoLA/data/CoLA/train.tsv'))
+        self._cola_generator = cycle(
+            self._cola.example_generator('neurons/CoLA/data/CoLA/train.tsv'))
 
         # batch_size
         self._batch_size = self._config.batch_size
@@ -55,23 +59,32 @@ class Neuron():
 
     def _build_preprocess_graph(self):
         self._global_step = tf.compat.v1.train.create_global_step()
-        self._batch_text = tf.compat.v1.placeholder(tf.string, shape=[self._batch_size, 1])
-        self._batch_labels = tf.compat.v1.placeholder(tf.float32, shape=[self._batch_size, 1])
+        self._batch_text = tf.compat.v1.placeholder(tf.string,
+                                                    shape=[self._batch_size, 1])
+        self._batch_labels = tf.compat.v1.placeholder(
+            tf.float32, shape=[self._batch_size, 1])
 
         self._embeddings = self._dendrite.spike(self._batch_text)
 
         dtypes = [tf.int64, tf.float32, tf.float32]
-        shapes = [[], [self._config.k, self._batch_size, EMBEDDING_SIZE], [self._batch_size, 1]]
-        self._queue = tf.queue.FIFOQueue(capacity=100, dtypes=dtypes, shapes=shapes)
-        self._enqueue = self._queue.enqueue([self._global_step, self._embeddings, self._batch_labels])
+        shapes = [[], [self._config.k, self._batch_size, EMBEDDING_SIZE],
+                  [self._batch_size, 1]]
+        self._queue = tf.queue.FIFOQueue(capacity=100,
+                                         dtypes=dtypes,
+                                         shapes=shapes)
+        self._enqueue = self._queue.enqueue(
+            [self._global_step, self._embeddings, self._batch_labels])
 
     def _build_training_graph(self):
         # Inputs.
         global_step, embeddings, labels = self._queue.dequeue()
 
         # Layer 1
-        embeddings = tf.reshape(embeddings, [self._batch_size, EMBEDDING_SIZE * self._config.k])
-        w1 = tf.Variable(tf.random.uniform([EMBEDDING_SIZE * self._config.k, EMBEDDING_SIZE], -1.0, 1.0))
+        embeddings = tf.reshape(
+            embeddings, [self._batch_size, EMBEDDING_SIZE * self._config.k])
+        w1 = tf.Variable(
+            tf.random.uniform([EMBEDDING_SIZE * self._config.k, EMBEDDING_SIZE],
+                              -1.0, 1.0))
         b1 = tf.Variable(tf.zeros([EMBEDDING_SIZE]))
         h1 = tf.sigmoid(tf.matmul(embeddings, w1) + b1)
 
@@ -84,7 +97,8 @@ class Neuron():
         self._loss = tf.losses.log_loss(labels, y)
 
         # Gradient step.
-        self._step = tf.compat.v1.train.AdagradOptimizer(self._config.alpha).minimize(self._loss)
+        self._step = tf.compat.v1.train.AdagradOptimizer(
+            self._config.alpha).minimize(self._loss)
 
     def start(self):
         self._running = True
@@ -107,7 +121,8 @@ class Neuron():
                 self._session.run(self._init)
 
                 # Create and start the training and preprocessing threads.
-                preproccess_thread = threading.Thread(target=self._preprocessing_loop)
+                preproccess_thread = threading.Thread(
+                    target=self._preprocessing_loop)
                 training_thread = threading.Thread(target=self._training_loop)
                 preproccess_thread.setDaemon(True)
                 training_thread.setDaemon(True)
@@ -140,11 +155,11 @@ class Neuron():
                         batch_text.append([sample['inputs']])
                         batch_labels.append([sample['label']])
                     fetches = [self._enqueue]
-                    feeds = {self._batch_text: batch_text,
-                             self._batch_labels: batch_labels}
+                    feeds = {
+                        self._batch_text: batch_text,
+                        self._batch_labels: batch_labels
+                    }
                     self._session.run(fetches, feeds)
-
-
 
         except Exception as e:
             logger.error(e)
@@ -154,7 +169,7 @@ class Neuron():
         try:
             with self._coord.stop_on_exception():
                 while not self._coord.should_stop() and self._running:
-                    fetches=[self._loss, self._step]
+                    fetches = [self._loss, self._step]
                     run_output = self._session.run(fetches)
                     logger.info('loss {}', run_output[0])
         except Exception as e:
@@ -196,8 +211,9 @@ def main():
         tear_down(config, dendrite, neuron)
 
     except Exception as e:
-        logger.error('Neuron stopped with interrupt on error: '+ str(e))
+        logger.error('Neuron stopped with interrupt on error: ' + str(e))
         tear_down(config, dendrite, neuron)
+
 
 if __name__ == '__main__':
     logger.debug("started neuron.")

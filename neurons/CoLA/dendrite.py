@@ -7,7 +7,8 @@ import numpy as np
 import pickle
 import tensorflow as tf
 
-EMBEDDING_SIZE=128
+EMBEDDING_SIZE = 128
+
 
 class Dendrite():
 
@@ -35,8 +36,7 @@ class Dendrite():
                 self.channels[i] = grpc.insecure_channel(address)
                 self.channel_nodes[i] = selected_node
 
-
-    def spike (self, text_tensor):
+    def spike(self, text_tensor):
         rtypes = [tf.float32 for _ in range(self.config.k)]
         inputs = [text_tensor]
         return tf.py_function(self._spike, inputs, rtypes)
@@ -46,7 +46,9 @@ class Dendrite():
         for i in range(self.config.k):
             res = self._spikerpc(self.channels[i], spikes)
             if res is None:
-                result.append(np.zeros( (self.config.batch_size, EMBEDDING_SIZE), dtype=np.float32))
+                result.append(
+                    np.zeros((self.config.batch_size, EMBEDDING_SIZE),
+                             dtype=np.float32))
             else:
                 result.append(res)
         return result
@@ -61,7 +63,7 @@ class Dendrite():
 
             # Build message hash
             identity_bytes = self.config.identity.encode()
-            spike_bytes = pickle.dumps(spikes.numpy(),  protocol=0)
+            spike_bytes = pickle.dumps(spikes.numpy(), protocol=0)
 
             # Create hash from self.identity and spikes.
             hash = SHA256.new()
@@ -71,9 +73,9 @@ class Dendrite():
 
             # Build request proto.
             request = bittensor.proto.bittensor_pb2.SpikeRequest(
-                        parent_id = self.config.identity,
-                        message_id = message_hash,
-                        payload = spike_bytes)
+                parent_id=self.config.identity,
+                message_id=message_hash,
+                payload=spike_bytes)
 
             # Send spike request.
             response = stub.Spike(request)
@@ -85,7 +87,7 @@ class Dendrite():
             logger.info('failed call {}', error)
             return None
 
-    def grade (self, spikes, grads):
+    def grade(self, spikes, grads):
         inputs = [spikes] + grads
         return tf.py_function(self._grad, inputs, [])
 
@@ -106,8 +108,8 @@ class Dendrite():
 
             # Build message hash
             identity_bytes = self.config.identity.encode()
-            grad_bytes = pickle.dumps(grad.numpy(),  protocol=0)
-            spike_bytes = pickle.dumps(spikes.numpy(),  protocol=0)
+            grad_bytes = pickle.dumps(grad.numpy(), protocol=0)
+            spike_bytes = pickle.dumps(spikes.numpy(), protocol=0)
 
             # Create hash from self.id and spikes.
             hash = SHA256.new()
@@ -117,9 +119,9 @@ class Dendrite():
 
             # Create request proto.
             request = bittensor.proto.bittensor_pb2.GradeRequest(
-                        parent_id = self.config.identity,
-                        message_id = message_hash,
-                        payload = grad_bytes)
+                parent_id=self.config.identity,
+                message_id=message_hash,
+                payload=grad_bytes)
 
             # Send Grade request.
             stub.Grade(request)

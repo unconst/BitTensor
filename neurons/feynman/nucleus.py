@@ -11,6 +11,7 @@ import zipfile
 
 import visualization
 
+
 def FIM(activations, activation_grads):
     """ Calculates the fishers information attribution between the input
     activations and the loss.
@@ -30,8 +31,8 @@ def FIM(activations, activation_grads):
     return full_attributions
 
 
-
 class Nucleus():
+
     def __init__(self, config, metagraph, dendrite):
         """ The main Tensorflow graph is defined and trained within the Nucleus object.
         As is, training a self-supervised word-embedding over
@@ -84,8 +85,8 @@ class Nucleus():
 
         # Save the initial graph.
         self.saver.save(self.session, self.model_checkpoint_dir)
-        logger.info('Saved initial inference graph to {}.', self.model_checkpoint_dir)
-
+        logger.info('Saved initial inference graph to {}.',
+                    self.model_checkpoint_dir)
 
     def build_vocabulary(self):
         """ Parses the dummy corpus into a single sequential array.
@@ -99,7 +100,9 @@ class Nucleus():
         f.close()
 
         counts = [('UNK', -1)]
-        counts.extend(collections.Counter(self.words).most_common(self.vocabulary_size - 2))
+        counts.extend(
+            collections.Counter(self.words).most_common(self.vocabulary_size -
+                                                        2))
         self.string_map = [c[0] for c in counts]
 
         logger.debug('Built Nucleus vocabulary.')
@@ -116,7 +119,9 @@ class Nucleus():
         # Boolean flag which determines whether or not we spike our downstream
         # nodes through the dendrite.
         # TODO(const) Add distillation networks for each dendrite.
-        self.is_training = tf.compat.v1.placeholder(tf.bool, shape=[], name='is_training')
+        self.is_training = tf.compat.v1.placeholder(tf.bool,
+                                                    shape=[],
+                                                    name='is_training')
 
         #
         # ----
@@ -124,30 +129,42 @@ class Nucleus():
         ### Below: Train Preproccessing
 
         # Input words.
-        self.train_batch_words = tf.compat.v1.placeholder(tf.string, shape=[self.batch_size, 1], name="training_batch_words")
-        self.train_batch_labels = tf.compat.v1.placeholder(tf.string, shape=[self.batch_size, 1], name="training_batch_labels")
-        train_batch_words_rs = tf.reshape(self.train_batch_words, [self.batch_size])
+        self.train_batch_words = tf.compat.v1.placeholder(
+            tf.string, shape=[self.batch_size, 1], name="training_batch_words")
+        self.train_batch_labels = tf.compat.v1.placeholder(
+            tf.string, shape=[self.batch_size, 1], name="training_batch_labels")
+        train_batch_words_rs = tf.reshape(self.train_batch_words,
+                                          [self.batch_size])
 
-        vocabulary_table = tf.contrib.lookup.index_table_from_tensor(mapping=tf.constant(self.string_map), num_oov_buckets=1, default_value=0)
+        vocabulary_table = tf.contrib.lookup.index_table_from_tensor(
+            mapping=tf.constant(self.string_map),
+            num_oov_buckets=1,
+            default_value=0)
         word_ids = vocabulary_table.lookup(train_batch_words_rs)
         label_ids = vocabulary_table.lookup(self.train_batch_labels)
 
         # Get remote inputs. Blocking RPC which multicast queries upstream nodes.
         spike_inputs = tf.reshape(self.train_batch_words, [self.batch_size, 1])
         remote_inputs = self.dendrite.spike(spike_inputs)
-        remote_inputs = [tf.reshape(rmi, [self.batch_size, self.embedding_size]) for rmi in remote_inputs]
+        remote_inputs = [
+            tf.reshape(rmi, [self.batch_size, self.embedding_size])
+            for rmi in remote_inputs
+        ]
 
-        queue_dtypes = [tf.string] + [tf.int64] + [tf.int64] + [tf.float32] * self.config.k
-        queue_shapes = [[self.batch_size, 1]] + [[self.batch_size, 1]] + [[self.batch_size]] + [[self.batch_size, self.embedding_size] for rimp in remote_inputs]
-        self.dendrite_queue = tf.queue.FIFOQueue(
-            capacity=100,
-            dtypes=queue_dtypes,
-            shapes=queue_shapes)
+        queue_dtypes = [tf.string] + [tf.int64] + [
+            tf.int64
+        ] + [tf.float32] * self.config.k
+        queue_shapes = [[self.batch_size, 1]] + [[self.batch_size, 1]] + [[
+            self.batch_size
+        ]] + [[self.batch_size, self.embedding_size] for rimp in remote_inputs]
+        self.dendrite_queue = tf.queue.FIFOQueue(capacity=100,
+                                                 dtypes=queue_dtypes,
+                                                 shapes=queue_shapes)
 
         # Pack the next example:
-        pre_next_example = [spike_inputs] + [label_ids] + [word_ids] + remote_inputs
+        pre_next_example = [spike_inputs] + [label_ids] + [word_ids
+                                                          ] + remote_inputs
         self.enqueue_op = self.dendrite_queue.enqueue(pre_next_example)
-
 
         ### Done: Train Preprocssing.
         #
@@ -157,21 +174,30 @@ class Nucleus():
 
         # Inference Inputs:
         # TODO(const) implement distillation pipeline here. During inference this should be run through the distilled network.
-        self.inference_batch_words = tf.compat.v1.placeholder(tf.string, shape=[None, 1], name="inference_batch_words")
+        self.inference_batch_words = tf.compat.v1.placeholder(
+            tf.string, shape=[None, 1], name="inference_batch_words")
         inference_batch_words_rs = tf.reshape(self.inference_batch_words, [-1])
         inference_word_ids = vocabulary_table.lookup(inference_batch_words_rs)
-        inference_inputs = [self.inference_batch_words] + [inference_word_ids] + [tf.zeros([1], dtype=tf.int64)] + [tf.zeros([tf.shape(inference_word_ids)[0], 128], dtype=tf.float32) for _ in range(self.config.k)]
+        inference_inputs = [self.inference_batch_words] + [
+            inference_word_ids
+        ] + [tf.zeros([1], dtype=tf.int64)] + [
+            tf.zeros([tf.shape(inference_word_ids)[0], 128], dtype=tf.float32)
+            for _ in range(self.config.k)
+        ]
 
         # Switch between inference graph and training graph.
         next_inputs = tf.cond(tf.equal(self.is_training, tf.constant(True)),
-                    true_fn=lambda: self.dendrite_queue.dequeue(),
-                    false_fn=lambda: inference_inputs)
+                              true_fn=lambda: self.dendrite_queue.dequeue(),
+                              false_fn=lambda: inference_inputs)
 
         # batch_size should not be used passed this point.
         next_words = tf.reshape(next_inputs[0], [-1, 1])
         next_word_ids = tf.reshape(next_inputs[1], [-1, 1])
-        next_label_ids= tf.reshape(next_inputs[2], [-1, 1])
-        next_remote_inputs = [tf.reshape(rmi, [-1, self.embedding_size]) for rmi in next_inputs[3:]]
+        next_label_ids = tf.reshape(next_inputs[2], [-1, 1])
+        next_remote_inputs = [
+            tf.reshape(rmi, [-1, self.embedding_size])
+            for rmi in next_inputs[3:]
+        ]
 
         ### Done: Graph Inputs Switch.
         #
@@ -180,18 +206,25 @@ class Nucleus():
         ### Below: Main Graph.
 
         # Embeddings Lookup.
-        embeddings = tf.Variable(tf.random.uniform([self.vocabulary_size, self.embedding_size], -1.0, 1.0))
+        embeddings = tf.Variable(
+            tf.random.uniform([self.vocabulary_size, self.embedding_size], -1.0,
+                              1.0))
         word_embeddings = tf.nn.embedding_lookup(embeddings, next_word_ids)
         word_embeddings = tf.reshape(word_embeddings, [-1, self.embedding_size])
 
         # Full input layer.
         num_inputs = (self.config.k + 1)
         self.inputs = [word_embeddings] + next_remote_inputs
-        self.activations = tf.split(tf.concat(self.inputs, axis=1), num_inputs, axis=1)
+        self.activations = tf.split(tf.concat(self.inputs, axis=1),
+                                    num_inputs,
+                                    axis=1)
 
         # Layer 1.
         l1 = tf.concat(self.activations, axis=1)
-        w1 = tf.Variable(tf.random.uniform([self.embedding_size * num_inputs, self.embedding_size], -1.0, 1.0))
+        w1 = tf.Variable(
+            tf.random.uniform(
+                [self.embedding_size * num_inputs, self.embedding_size], -1.0,
+                1.0))
         b1 = tf.Variable(tf.zeros([self.embedding_size]))
         final_layer = tf.sigmoid(tf.matmul(l1, w1) + b1)
 
@@ -199,7 +232,10 @@ class Nucleus():
         self.output = tf.identity(final_layer, name="embedding_output")
 
         # Representation Weights & Sampled Softmax Loss.
-        softmax_weights = tf.Variable(tf.random.truncated_normal([self.vocabulary_size, self.embedding_size], stddev=1.0 / math.sqrt(self.embedding_size)))
+        softmax_weights = tf.Variable(
+            tf.random.truncated_normal(
+                [self.vocabulary_size, self.embedding_size],
+                stddev=1.0 / math.sqrt(self.embedding_size)))
         softmax_biases = tf.Variable(tf.zeros([self.vocabulary_size]))
         self.batch_loss = tf.nn.sampled_softmax_loss(
             weights=softmax_weights,
@@ -239,19 +275,25 @@ class Nucleus():
         self.merged_summaries = tf.compat.v1.summary.merge_all()
 
         # Convert PNG buffer to TF image
-        self.metagraph_image_placeholder = tf.compat.v1.placeholder(dtype=tf.string)
-        self.metagraph_image_buffer = tf.image.decode_png(self.metagraph_image_placeholder, channels=4)
-        self.metagraph_summary = tf.compat.v1.summary.image("Metagraph State", tf.expand_dims(self.metagraph_image_buffer, 0))
+        self.metagraph_image_placeholder = tf.compat.v1.placeholder(
+            dtype=tf.string)
+        self.metagraph_image_buffer = tf.image.decode_png(
+            self.metagraph_image_placeholder, channels=4)
+        self.metagraph_summary = tf.compat.v1.summary.image(
+            "Metagraph State", tf.expand_dims(self.metagraph_image_buffer, 0))
 
         # Summary writer for tensorboard.
-        self.summary_writer = tf.compat.v1.summary.FileWriter(self.config.logdir, self.graph)
+        self.summary_writer = tf.compat.v1.summary.FileWriter(
+            self.config.logdir, self.graph)
 
         # Optimizer.
-        self.optimizer = tf.compat.v1.train.AdagradOptimizer(1.0).minimize(self.loss, global_step=self.global_step)
+        self.optimizer = tf.compat.v1.train.AdagradOptimizer(1.0).minimize(
+            self.loss, global_step=self.global_step)
 
         # Init vars.
         self.var_init = tf.compat.v1.global_variables_initializer()
-        self.table_init = tf.compat.v1.tables_initializer(name='init_all_tables')
+        self.table_init = tf.compat.v1.tables_initializer(
+            name='init_all_tables')
 
         # Model Saver.
         self.saver = tf.compat.v1.train.Saver(max_to_keep=2)
@@ -273,7 +315,8 @@ class Nucleus():
         feeds = {
             self.train_batch_words: batch_words,
             self.train_batch_labels: batch_labels,
-            self.inference_batch_words: [['UNK']], # Dummy input for placeholder.
+            self.inference_batch_words: [['UNK']
+                                        ],  # Dummy input for placeholder.
             self.is_training: True
         }
         return feeds
@@ -292,7 +335,6 @@ class Nucleus():
         }
         return fetches
 
-
     def _preprocess_loop(self):
         """ The _preprocess_loop is pulling batches from the vocabulary and
         passing them into the graph. This process is making the dendrite RPC
@@ -303,12 +345,11 @@ class Nucleus():
         try:
             with self.coord.stop_on_exception():
                 while not self.coord.should_stop() and self.running:
-                    run_output = self.session.run(  fetches=[self.enqueue_op],
-                                                    feed_dict=self.get_feeds())
+                    run_output = self.session.run(fetches=[self.enqueue_op],
+                                                  feed_dict=self.get_feeds())
         except Exception as e:
             self.coord.request_stop(e)
         logger.info('Stopped _preprocess_loop thread.')
-
 
     def _train_loop(self):
         """ The _train_loop is pulling batches from the dendrite queue (preproccessing)
@@ -326,8 +367,8 @@ class Nucleus():
                 # Train loop.
                 best_loss = math.inf
                 while not self.coord.should_stop() and self.running:
-                    run_output = self.session.run(  fetches=self.get_fetches(),
-                                                    feed_dict=self.get_feeds())
+                    run_output = self.session.run(fetches=self.get_fetches(),
+                                                  feed_dict=self.get_feeds())
 
                     # Unpack run_output.
                     self.train_step = run_output['global_step']
@@ -335,30 +376,45 @@ class Nucleus():
 
                     # Set the attributions in the metagraph.
                     # TODO(const) Problematic! This is not thead safe.
-                    self.metagraph.attributions = self.normalize_attributions(run_output['attributions'])
+                    self.metagraph.attributions = self.normalize_attributions(
+                        run_output['attributions'])
 
                     # Step iteration check. Only update vars every 200 steps.
                     if self.train_step % 200 == 0:
-                        logger.debug('Step {}, Loss best:{}, Current:{}, Attrs {}',
-                                    self.train_step,
-                                    ("%.4f" % best_loss),
-                                    ("%.4f" % self.current_loss),
-                                    [(attr[0], "%.4f" % float(attr[1])) for attr in self.metagraph.attributions])
+                        logger.debug(
+                            'Step {}, Loss best:{}, Current:{}, Attrs {}',
+                            self.train_step, ("%.4f" % best_loss),
+                            ("%.4f" % self.current_loss),
+                            [(attr[0], "%.4f" % float(attr[1]))
+                             for attr in self.metagraph.attributions])
 
                         # Add Attribution summaries to tensorboard.
-                        self.summary_writer.add_summary(run_output['summaries'], self.train_step)
+                        self.summary_writer.add_summary(run_output['summaries'],
+                                                        self.train_step)
 
                         # Add stake summaries to Tensorboard.
                         my_stake = self.metagraph.get_my_stake()
                         total_stake = self.metagraph.get_total_stake()
                         stake_fraction = float(my_stake) / float(total_stake)
-                        my_stake_summary = tf.compat.v1.Summary(value=[tf.compat.v1.Summary.Value(tag="My Stake", simple_value=my_stake)])
-                        total_stake_summary = tf.compat.v1.Summary(value=[tf.compat.v1.Summary.Value(tag="Total Stake", simple_value=total_stake)])
-                        stake_fraction_summary = tf.compat.v1.Summary(value=[tf.compat.v1.Summary.Value(tag="Stake Fraction", simple_value=stake_fraction)])
-                        self.summary_writer.add_summary(my_stake_summary, self.train_step)
-                        self.summary_writer.add_summary(total_stake_summary, self.train_step)
-                        self.summary_writer.add_summary(stake_fraction_summary, self.train_step)
-
+                        my_stake_summary = tf.compat.v1.Summary(value=[
+                            tf.compat.v1.Summary.Value(tag="My Stake",
+                                                       simple_value=my_stake)
+                        ])
+                        total_stake_summary = tf.compat.v1.Summary(value=[
+                            tf.compat.v1.Summary.Value(tag="Total Stake",
+                                                       simple_value=total_stake)
+                        ])
+                        stake_fraction_summary = tf.compat.v1.Summary(value=[
+                            tf.compat.v1.Summary.Value(
+                                tag="Stake Fraction",
+                                simple_value=stake_fraction)
+                        ])
+                        self.summary_writer.add_summary(my_stake_summary,
+                                                        self.train_step)
+                        self.summary_writer.add_summary(total_stake_summary,
+                                                        self.train_step)
+                        self.summary_writer.add_summary(stake_fraction_summary,
+                                                        self.train_step)
 
                     # Log and save new inference graph if best.
                     if self.train_step % 500 == 0:
@@ -369,13 +425,12 @@ class Nucleus():
                             self.saver.save(self.session,
                                             model_checkpoint_dir,
                                             write_meta_graph=True)
-                            logger.info('Saved new inference graph to {}.', self.model_checkpoint_dir)
-
+                            logger.info('Saved new inference graph to {}.',
+                                        self.model_checkpoint_dir)
 
         except Exception as e:
             self.coord.request_stop(e)
         logger.info('Stopped training thread.')
-
 
     def start(self):
         """ Begins the Nucleus main thread. This thread contains the coordinator
@@ -407,7 +462,8 @@ class Nucleus():
                 # TODO(const) Need to implement the validation loop here.
 
                 # Create and start the training and preprocessing threads.
-                preproccess_thread = threading.Thread(target=self._preprocess_loop)
+                preproccess_thread = threading.Thread(
+                    target=self._preprocess_loop)
                 training_thread = threading.Thread(target=self._train_loop)
                 preproccess_thread.setDaemon(True)
                 training_thread.setDaemon(True)
@@ -429,8 +485,6 @@ class Nucleus():
                 self.coord.join([preproccess_thread, training_thread])
                 logger.debug('Stopped Nucleus training.')
 
-
-
     # (Bellow) Functions pretaining to the creation of a metagraph summary image.
 
     def update_metagraph_summary(self, metagraph_buffer):
@@ -439,7 +493,11 @@ class Nucleus():
         visualization.generate_edge_weight_buffer(metagraph.nodes) in the
         main thread.
         """
-        metagraph_summary = self.session.run(self.metagraph_summary, feed_dict={self.metagraph_image_placeholder: metagraph_buffer.getvalue()})
+        metagraph_summary = self.session.run(
+            self.metagraph_summary,
+            feed_dict={
+                self.metagraph_image_placeholder: metagraph_buffer.getvalue()
+            })
         self.summary_writer.add_summary(metagraph_summary, self.train_step)
 
     def normalize_attributions(self, attributions):
@@ -450,14 +508,14 @@ class Nucleus():
         for i in range(len(self.dendrite.channels)):
             node_i = self.dendrite.channels[i]
             if node_i:
-                attr_sum += attributions[i+1]
+                attr_sum += attributions[i + 1]
 
         # Normalize attributions across non null edges.
         edges = [self.config.identity]
-        norm_attributions = [attributions[0]/attr_sum]
+        norm_attributions = [attributions[0] / attr_sum]
         for i in range(len(self.dendrite.channel_nodes)):
             node_i = self.dendrite.channel_nodes[i]
-            attr_i = attributions[i+1]/attr_sum
+            attr_i = attributions[i + 1] / attr_sum
             if node_i:
                 edges.append(node_i.identity)
                 norm_attributions.append(attr_i)

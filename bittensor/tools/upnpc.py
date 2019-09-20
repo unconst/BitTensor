@@ -6,6 +6,7 @@ parser = argparse.ArgumentParser(description='UPnP Tool.')
 parser.add_argument('--port')
 args = parser.parse_args()
 
+
 # A Tool for punching a hole in UPNPC enabled routers.
 def main(args):
     try:
@@ -34,14 +35,18 @@ def main(args):
         if rc != None:
             logger.error('Exception in UPnP : ' + str(rc))
 
-        logger.info('trying to redirect %s port %u TCP => %s port %u TCP' % (external_ip, external_port, local_ip, local_port))
-        b = u.addportmapping(external_port, 'TCP', local_ip, local_port, 'UPnP IGD Tester port %u' % external_port, '')
+        logger.info('trying to redirect %s port %u TCP => %s port %u TCP' %
+                    (external_ip, external_port, local_ip, local_port))
+        b = u.addportmapping(external_port, 'TCP', local_ip, local_port,
+                             'UPnP IGD Tester port %u' % external_port, '')
 
     except Exception as e:
         logger.error('Exception in UPnP :', e)
         exit(1)
 
-    print ('--external_ip=' + str(external_ip) + ' --external_port=' + str(external_port) +' --local_ip=' + str(local_ip) + ' --local_port=' + str(local_port))
+    print('--external_ip=' + str(external_ip) + ' --external_port=' +
+          str(external_port) + ' --local_ip=' + str(local_ip) +
+          ' --local_port=' + str(local_port))
 
 
 if __name__ == '__main__':

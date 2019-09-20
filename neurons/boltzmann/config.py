@@ -19,6 +19,7 @@ flags.DEFINE_integer("time_till_expire", 5, "time till query expire")
 
 
 class Config():
+
     def __init__(self):
         self.identity = FLAGS.identity
         self.serve_address = FLAGS.serve_address

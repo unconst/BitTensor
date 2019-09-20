@@ -15,6 +15,7 @@ import time
 from timeloop import Timeloop
 from datetime import timedelta
 
+
 def set_timed_loops(tl, metagraph, nucleus, synapse, dendrite):
 
     # Pull the updated graph state (Vertices, Edges, Weights)
@@ -38,6 +39,7 @@ def set_timed_loops(tl, metagraph, nucleus, synapse, dendrite):
     @tl.job(interval=timedelta(seconds=13))
     def reselect_channels():
         dendrite.reselect_channels()
+
 
 def serve():
 
@@ -71,7 +73,8 @@ def serve():
     # Serve the synapse on a grpc server.
     server_address = config.bind_address + ":" + config.port
     grpc_server = grpc.server(futures.ThreadPoolExecutor(max_workers=10))
-    bittensor.proto.bittensor_pb2_grpc.add_BittensorServicer_to_server(synapse, grpc_server)
+    bittensor.proto.bittensor_pb2_grpc.add_BittensorServicer_to_server(
+        synapse, grpc_server)
     grpc_server.add_insecure_port(server_address)
     logger.debug('Served synapse on: {}.', server_address)
     grpc_server.start()
@@ -89,7 +92,8 @@ def serve():
         while True:
 
             # NOTE(const): Matplotib must run in the main thread.
-            image_buffer = visualization.generate_edge_weight_buffer(metagraph.nodes)
+            image_buffer = visualization.generate_edge_weight_buffer(
+                metagraph.nodes)
             nucleus.update_metagraph_summary(image_buffer)
             logger.info('Updated metagraph image.')
             time.sleep(30)

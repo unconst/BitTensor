@@ -2,6 +2,7 @@ import bittensor
 
 import numpy as np
 
+
 class Dendrite:
 
     def __init__(self, config):
@@ -31,13 +32,13 @@ class Dendrite:
 
             # Build payload.
             # TODO(const) This is a waste, deserialize to serialize again.
-            spikes_bytes = pickle.dumps(spikes,  protocol=0)
+            spikes_bytes = pickle.dumps(spikes, protocol=0)
 
             # Create spike request proto.
-            request =  bittensor.proto.bolt_pb2.SpikeRequest(
-                        parent_id = self.config.identity,
-                        message_id = message_id,
-                        payload = spikes_bytes)
+            request = bittensor.proto.bolt_pb2.SpikeRequest(
+                parent_id=self.config.identity,
+                message_id=message_id,
+                payload=spikes_bytes)
 
             # Send TCP spike request.
             response = stub.Spike(request)
@@ -61,9 +62,9 @@ class Dendrite:
 
             # Build Grade Request proto.
             request = bittensor.proto.bittensor_pb2.GradeRequest(
-                        parent_id = self.config.identity,
-                        message_id = message_id,
-                        grad_payload = pickle.dumps(grad,  protocol=0))
+                parent_id=self.config.identity,
+                message_id=message_id,
+                grad_payload=pickle.dumps(grad, protocol=0))
 
             # Send grade request.
             stub.Grade(request)

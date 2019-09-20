@@ -6,7 +6,6 @@ from dendrite import Dendrite
 from nucleus import Nucleus
 from neuron import Neuron
 
-
 from Crypto.Hash import SHA256
 from datetime import timedelta
 import grpc
@@ -16,6 +15,7 @@ import numpy as np
 import random
 import time
 from timeloop import Timeloop
+
 
 def set_timed_loops(tl, config, neuron):
 
@@ -72,11 +72,11 @@ def set_timed_loops(tl, config, neuron):
     #     except Exception as e:
     #         logger.error(str(e))
 
-
     # Apply a gradient step.
     @tl.job(interval=timedelta(seconds=3))
     def learn():
         neuron.Learn()
+
 
 def main():
 
@@ -117,8 +117,9 @@ def main():
         tear_down(config, neuron, dendrite, nucleus, metagraph)
 
     except Exception as e:
-        logger.error('Neuron stopped with interrupt on error: '+ str(e))
+        logger.error('Neuron stopped with interrupt on error: ' + str(e))
         tear_down(config, neuron, dendrite, nucleus, metagraph)
+
 
 if __name__ == '__main__':
     logger.debug("started neuron.")

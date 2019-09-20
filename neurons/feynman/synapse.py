@@ -7,8 +7,10 @@ import sys
 import time
 import tensorflow as tf
 
+
 # TODO (const): Rate limit and block ip.
 class BoltServicer(bittensor.proto.bittensor_pb2_grpc.BittensorServicer):
+
     def __init__(self, config, metagraph):
         """ Serves the inference graph for use by the network.
         Graphs being produced in trainging are served by the Synapse object.
@@ -42,16 +44,22 @@ class BoltServicer(bittensor.proto.bittensor_pb2_grpc.BittensorServicer):
         try:
             graph = tf.Graph()
             with graph.as_default(), tf.device('/cpu:0'):
-                saver = tf.compat.v1.train.import_meta_graph('data/' + self.identity + '/model.meta')
+                saver = tf.compat.v1.train.import_meta_graph('data/' +
+                                                             self.identity +
+                                                             '/model.meta')
                 next_session = tf.compat.v1.Session()
-                saver.restore(next_session, tf.compat.v1.train.latest_checkpoint('data/' + self.identity))
+                saver.restore(
+                    next_session,
+                    tf.compat.v1.train.latest_checkpoint('data/' +
+                                                         self.identity))
                 next_session.run('init_all_tables')
                 next_session.run(tf.compat.v1.local_variables_initializer())
-                next_session.run("embedding_output:0",
-                        feed_dict={
-                                "inference_batch_words:0": [['UNK']], # Inference.
-                                'is_training:0': False
-                                })
+                next_session.run(
+                    "embedding_output:0",
+                    feed_dict={
+                        "inference_batch_words:0": [['UNK']],  # Inference.
+                        'is_training:0': False
+                    })
         except Exception as e:
             logger.error('Failed to server new graph. Exception {}', e)
             raise Exception(e)
@@ -74,18 +82,18 @@ class BoltServicer(bittensor.proto.bittensor_pb2_grpc.BittensorServicer):
         # TODO (const) The synapse should be competitively selecting which nodes
         # are allowed to query us based on the Metagraph information.
         batch_words = pickle.loads(request.payload)
-        embeddings = self.session.run("embedding_output:0",
-                            feed_dict={
-                                    "inference_batch_words:0": batch_words.tolist(), # Inference.
-                                    'is_training:0': False
-                                })
+        embeddings = self.session.run(
+            "embedding_output:0",
+            feed_dict={
+                "inference_batch_words:0": batch_words.tolist(),  # Inference.
+                'is_training:0': False
+            })
         payload = pickle.dumps(embeddings, protocol=0)
         response = bittensor.proto.bolt_pb2.SpikeResponse(
-                        child_id = self.config.identity,
-                        message_id = request.message_id,
-                        payload = payload)
+            child_id=self.config.identity,
+            message_id=request.message_id,
+            payload=payload)
         return response
-
 
     def Grade(self, request, context):
         """ GRPC request handler for message Grade; Accepts a gradient message.

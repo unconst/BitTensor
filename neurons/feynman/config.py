@@ -18,6 +18,7 @@ flags.DEFINE_float("alpha", 0.01, "Learning rate.")
 
 
 class Config():
+
     def __init__(self):
         self.identity = FLAGS.identity
         self.serve_address = FLAGS.serve_address

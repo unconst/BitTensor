@@ -3,7 +3,9 @@ from loguru import logger
 import tensorflow as tf
 import zipfile
 
+
 class Nucleus():
+
     def __init__(self, config):
         self.config = config
 
@@ -33,11 +35,10 @@ class Nucleus():
 
         self.session.run(self.table_init)
 
-
     def spike(self, uspikes, dspikes):
 
         # Build Feeds dictionary.
-        feeds = { self.text_placeholder: uspikes }
+        feeds = {self.text_placeholder: uspikes}
         for i in range(self.config.k):
             feeds[self.dspikes[i]] = dspikes[i]
 
@@ -59,7 +60,6 @@ class Nucleus():
         for i in range(self.config.k):
             feeds[self.dspikes[i]] = dspikes[i]
 
-
         fetches = {}
         fetches['lgrads'] = self.gradient_values
         for i in range(self.config.k):
@@ -69,8 +69,8 @@ class Nucleus():
         run_output = self.session.run(fetches, feeds)
 
         # Return spikes.
-        return [ run_output["dgrads" + str(i)] for i in range(self.config.k)], run_output['lgrads']
-
+        return [run_output["dgrads" + str(i)] for i in range(self.config.k)
+               ], run_output['lgrads']
 
     def learn(self, gradients):
 
@@ -87,33 +87,47 @@ class Nucleus():
         # Run graph. No output.
         self.session.run(fetches, feeds)
 
-    def build_graph (self):
+    def build_graph(self):
 
         # Text input placeholder.
-        self.text_placeholder = tf.compat.v1.placeholder(tf.string, shape=[None, 1], name="text_placeholder")
+        self.text_placeholder = tf.compat.v1.placeholder(
+            tf.string, shape=[None, 1], name="text_placeholder")
         input_text = tf.reshape(self.text_placeholder, [-1])
 
         # Tokenization.
-        vocabulary_table = tf.contrib.lookup.index_table_from_tensor(mapping=tf.constant(self.string_map), num_oov_buckets=1, default_value=0)
+        vocabulary_table = tf.contrib.lookup.index_table_from_tensor(
+            mapping=tf.constant(self.string_map),
+            num_oov_buckets=1,
+            default_value=0)
         input_tokens = vocabulary_table.lookup(input_text)
 
         # Token spikes.
-        embedding_matrix = tf.Variable(tf.random.uniform([self.vocabulary_size, self.embedding_size], -1.0, 1.0))
-        self.token_spikes = tf.nn.embedding_lookup(embedding_matrix, input_tokens)
-        self.token_spikes = tf.reshape(self.token_spikes, [-1, self.embedding_size])
+        embedding_matrix = tf.Variable(
+            tf.random.uniform([self.vocabulary_size, self.embedding_size], -1.0,
+                              1.0))
+        self.token_spikes = tf.nn.embedding_lookup(embedding_matrix,
+                                                   input_tokens)
+        self.token_spikes = tf.reshape(self.token_spikes,
+                                       [-1, self.embedding_size])
 
         # Placeholders for downstream spikes.
         self.dspikes = []
         for i in range(self.config.k):
-            downstream_spikes = tf.compat.v1.placeholder(tf.float32, shape=[None, self.embedding_size], name="dspikes_placeholder" + str(i))
+            downstream_spikes = tf.compat.v1.placeholder(
+                tf.float32,
+                shape=[None, self.embedding_size],
+                name="dspikes_placeholder" + str(i))
             self.dspikes.append(downstream_spikes)
 
         # activation_spikes = [None, embedding_size * (self.config.k + 1)]
         self.activation_size = self.embedding_size * (self.config.k + 1)
-        self.activation_spikes = tf.concat([self.token_spikes] + self.dspikes, axis = 1)
+        self.activation_spikes = tf.concat([self.token_spikes] + self.dspikes,
+                                           axis=1)
 
         # Layer 1.
-        w1 = tf.Variable(tf.random.uniform([self.activation_size, self.embedding_size], -1.0, 1.0))
+        w1 = tf.Variable(
+            tf.random.uniform([self.activation_size, self.embedding_size], -1.0,
+                              1.0))
         b1 = tf.Variable(tf.zeros([self.embedding_size]))
         local_spikes = tf.sigmoid(tf.matmul(self.activation_spikes, w1) + b1)
 
@@ -121,34 +135,41 @@ class Nucleus():
         self.output = tf.identity(local_spikes, name="output")
 
         # Upstream gradient placeholder.
-        self.output_grad = tf.placeholder(tf.float32, [None, self.embedding_size])
+        self.output_grad = tf.placeholder(tf.float32,
+                                          [None, self.embedding_size])
 
         # Build downstream grad tensors.
         self.downstream_grads = []
         for i in range(self.config.k):
-            dspikes_grad = tf.gradients(xs=[self.dspikes[i]], ys=self.output,  grad_ys=self.output_grad, name="dgrads" + str(i))
+            dspikes_grad = tf.gradients(xs=[self.dspikes[i]],
+                                        ys=self.output,
+                                        grad_ys=self.output_grad,
+                                        name="dgrads" + str(i))
             self.downstream_grads.append(dspikes_grad)
 
         # Build optimizer.
         self.optimizer = tf.train.GradientDescentOptimizer(self.config.alpha)
-        gradients = self.optimizer.compute_gradients(loss=self.output, grad_loss=self.output_grad)
+        gradients = self.optimizer.compute_gradients(loss=self.output,
+                                                     grad_loss=self.output_grad)
 
         # Build gradient placeholders for the Learn step.
         self.gradient_values = []
         self.placeholder_gradients = []
         for gradient_variable in gradients:
-            grad_placeholder = tf.placeholder('float', shape=gradient_variable[1].get_shape())
+            grad_placeholder = tf.placeholder(
+                'float', shape=gradient_variable[1].get_shape())
             self.gradient_values.append(gradient_variable[1])
-            self.placeholder_gradients.append((grad_placeholder, gradient_variable[1]))
+            self.placeholder_gradients.append(
+                (grad_placeholder, gradient_variable[1]))
 
         self.step = self.optimizer.apply_gradients(self.placeholder_gradients)
 
         # Init vars.
         self.var_init = tf.compat.v1.global_variables_initializer()
-        self.table_init = tf.compat.v1.tables_initializer(name='init_all_tables')
+        self.table_init = tf.compat.v1.tables_initializer(
+            name='init_all_tables')
 
         logger.debug('Built Nucleus graph.')
-
 
     def build_vocabulary(self):
         """ Parses the dummy corpus into a single sequential array.
@@ -163,7 +184,9 @@ class Nucleus():
         f.close()
 
         counts = [('UNK', -1)]
-        counts.extend(collections.Counter(self.words).most_common(self.vocabulary_size - 2))
+        counts.extend(
+            collections.Counter(self.words).most_common(self.vocabulary_size -
+                                                        2))
         self.string_map = [c[0] for c in counts]
 
         logger.debug('Built Nucleus vocabulary.')

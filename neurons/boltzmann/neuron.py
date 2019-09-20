@@ -8,14 +8,17 @@ import time
 from threading import Lock
 import queue
 
+
 class Buffer:
-    def __init__(self,  parent_id = None,
-                        message_id = None,
-                        create_time = None,
-                        lspikes = None,
-                        uspikes = None,
-                        dspikes = None,
-                        lgrads = None):
+
+    def __init__(self,
+                 parent_id=None,
+                 message_id=None,
+                 create_time=None,
+                 lspikes=None,
+                 uspikes=None,
+                 dspikes=None,
+                 lgrads=None):
 
         self.parent_id = parent_id
         self.message_id = message_id
@@ -25,13 +28,14 @@ class Buffer:
         self.dspikes = dspikes
         self.lgrads = lgrads
 
-    def set(self, parent_id = None,
-                  message_id = None,
-                  create_time = None,
-                  lspikes = None,
-                  uspikes = None,
-                  dspikes = None,
-                  lgrads = None ):
+    def set(self,
+            parent_id=None,
+            message_id=None,
+            create_time=None,
+            lspikes=None,
+            uspikes=None,
+            dspikes=None,
+            lgrads=None):
 
         if not self.parent_id:
             self.parent_id = parent_id
@@ -64,7 +68,8 @@ class Neuron(bittensor.proto.bittensor_pb2_grpc.BittensorServicer):
         # Init server.
         self.server_address = self.config.bind_address + ":" + self.config.port
         self.server = grpc.server(futures.ThreadPoolExecutor(max_workers=10))
-        bittensor.proto.bittensor_pb2_grpc.add_BittensorServicer_to_server(self, self.server)
+        bittensor.proto.bittensor_pb2_grpc.add_BittensorServicer_to_server(
+            self, self.server)
         self.server.add_insecure_port(self.server_address)
 
     def __del__(self):
@@ -89,11 +94,10 @@ class Neuron(bittensor.proto.bittensor_pb2_grpc.BittensorServicer):
             lspikes = self.memory[message_id].lspikes
             payload = pickle.dumps(lspikes, protocol=0)
             response = bittensor.proto.bittensor_pb2.SpikeResponse(
-                            child_id = self.config.identity,
-                            message_id = message_id,
-                            payload = payload)
+                child_id=self.config.identity,
+                message_id=message_id,
+                payload=payload)
             return response
-
 
         # Get downstream spikes.
         dspikes = self.dendrite.spike(message_id, uspikes)
@@ -104,26 +108,23 @@ class Neuron(bittensor.proto.bittensor_pb2_grpc.BittensorServicer):
         # Save to buffer.
         self.mem_lock.acquire()
         try:
-            self.memory[message_id] = Buffer(
-                                          parent_id = parent_id,
-                                          message_id = message_id,
-                                          create_time = time.time(),
-                                          lspikes = lspikes,
-                                          uspikes = uspikes,
-                                          dspikes = dspikes)
+            self.memory[message_id] = Buffer(parent_id=parent_id,
+                                             message_id=message_id,
+                                             create_time=time.time(),
+                                             lspikes=lspikes,
+                                             uspikes=uspikes,
+                                             dspikes=dspikes)
         finally:
             self.mem_lock.release()
-
 
         # Pack response.
         payload = pickle.dumps(lspikes, protocol=0)
         response = bittensor.proto.bittensor_pb2.SpikeResponse(
-                        child_id = self.config.identity,
-                        message_id = message_id,
-                        payload = payload)
+            child_id=self.config.identity,
+            message_id=message_id,
+            payload=payload)
 
         return response
-
 
     def Grade(self, request, context):
         # Unpack request.
@@ -162,7 +163,7 @@ class Neuron(bittensor.proto.bittensor_pb2_grpc.BittensorServicer):
 
         return bittensor.proto.bittensor_pb2.GradeResponse(accept=True)
 
-    def Learn (self):
+    def Learn(self):
         # Function clears the message buffer of all outdated memory objects
         # and applies gradients from memory.
         logger.info('Learn.')
@@ -180,7 +181,7 @@ class Neuron(bittensor.proto.bittensor_pb2_grpc.BittensorServicer):
                 del self.memory[message_id]
 
         except Exception as e:
-            logger.error('Neuron failed on memory clean with Error: '+ str(e))
+            logger.error('Neuron failed on memory clean with Error: ' + str(e))
 
         finally:
             self.mem_lock.release()
