@@ -3,6 +3,7 @@
 # TODO(const) This folder should be set with a var.
 **/data/*
 !data/.gitkeep
+!**/data/text8.zip
 
 **/__pycache__/
 **/.ipynb_checkpoints/
