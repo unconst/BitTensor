@@ -92,6 +92,11 @@ $ yapf --style google -r -vv -i <filename>
 
 1. GoogleUSE: Google's universal sentence encoder. Non-trainable. Trained on question and answer text.
 
+## Further Reading
+
+The system description can be found in docs/Bittensor_Biological_Scale_NeuralNetworks
+
+
 ## License
 
 MIT
