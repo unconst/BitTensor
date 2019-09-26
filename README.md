@@ -8,13 +8,6 @@
 - [To-Run-Locally](#to-run-locally)
 - [To-Run-Testnet](#to-run-testnet)
 - [Neurons](#neurons)
-- [Method](#method)
-  - [Representation](#representation)
-  - [Incentive](#incentive)
-  - [Attribution](#attribution)
-  - [Emission](#emission)
-  - [Market](#market)
-- [References](#references)
 - [License](#license)
 
 ---
