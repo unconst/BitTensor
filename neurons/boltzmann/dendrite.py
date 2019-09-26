@@ -5,9 +5,29 @@ import numpy as np
 
 class Dendrite:
 
-    def __init__(self, config):
+    def __init__(self, config, metagraph):
         self.config = config
+        self.metagraph = metagraph
         self.channels = [None for _ in range(self.config.k)]
+        self.channel_ids = [None for _ in range(self.config.k)]
+        self.connect()
+
+    def connect(self):
+        for i in range(self.config.k):
+            if self.channels[i] == None:
+                self._set_channel(i)
+
+    def _set_channel(self, i):
+        for node in self.metagraph.nodes.values():
+            if node.identity in self.channel_ids:
+                continue
+            if node.identity == self.config.identity:
+                continue
+            else:
+                address = node.address + ':' + node.port
+                self.channels[i] = grpc.insecure_channel(address)
+                self.channel_ids[i] = node.identity
+                break
 
     def spike(self, message_id, spikes):
         dspikes = []
