@@ -8,13 +8,6 @@
 - [To-Run-Locally](#to-run-locally)
 - [To-Run-Testnet](#to-run-testnet)
 - [Neurons](#neurons)
-- [Method](#method)
-  - [Representation](#representation)
-  - [Incentive](#incentive)
-  - [Attribution](#attribution)
-  - [Emission](#emission)
-  - [Market](#market)
-- [References](#references)
 - [License](#license)
 
 ---
@@ -91,6 +84,11 @@ $ yapf --style google -r -vv -i <filename>
 1. Elmo: Untrainable Elmo NN.
 
 1. GoogleUSE: Google's universal sentence encoder. Non-trainable. Trained on question and answer text.
+
+## Further Reading
+
+The system description can be found in docs/Bittensor_Biological_Scale_NeuralNetworks
+
 
 ## License
 
