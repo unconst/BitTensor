@@ -84,7 +84,7 @@ class Dendrite():
             return pickle.loads(response.payload).reshape(-1, EMBEDDING_SIZE)
 
         except Exception as error:
-            logger.info('failed call {}', error)
+            #logger.info('failed call {}', error)
             return None
 
     def grade(self, spikes, grads):
