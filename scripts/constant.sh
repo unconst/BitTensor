@@ -3,7 +3,6 @@
 DOCKER_IMAGE_NAME="bittensor"
 DOCKER_IMAGE_TAG="latest"
 
-
 function trace() {
     python -c "from loguru import logger; logger.add(\"data/$IDENTITY/bittensor_logs.out\"); logger.debug(\"$1\")" > /dev/null 2>&1
 }
