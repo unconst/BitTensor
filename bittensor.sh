@@ -123,7 +123,7 @@ function init_host() {
 function init_image () {
   # Init image if non-existent.
   log "=== building bittensor image. ==="
-  docker pull unconst/bittensor:latest
+  #docker pull unconst/bittensor:latest
   if [[ "$(docker images -q $DOCKER_IMAGE_NAME:$DOCKER_IMAGE_TAG 2> /dev/null)" == "" ]]; then
     log "Building $DOCKER_IMAGE_NAME:$DOCKER_IMAGE_TAG"
     docker build -t $DOCKER_IMAGE_NAME:$DOCKER_IMAGE_TAG -f ./neurons/$neuron/Dockerfile .

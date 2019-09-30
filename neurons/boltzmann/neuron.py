@@ -102,66 +102,26 @@ class Neuron(bittensor.proto.bittensor_pb2_grpc.BittensorServicer):
         self.server.start()
         logger.debug('Started Serving Neuron at: {}.', self.server_address)
 
-    def Spike(self, request, context):
-        # Unpack message.
-        parent_id = request.parent_id
-        message_id = request.message_id
-        logger.info('spike {}{}', parent_id, message_id)
 
-        # Check for message in buffer.
-        if message_id in self.memory:
-            # Return null repsonse.
-            response = bittensor.proto.bittensor_pb2.SpikeResponse(
-                child_id=self.config.identity,
-                message_id=message_id,
-                payload=None)
-            return response
-
-        # Lock multiple threads.
-        self.lock.acquire()
+    def _spike_future(self, channel, request):
+        if channel == None:
+            return None
         try:
-            # Create message buffer.
-            msg_buffer = Buffer(parent_id=parent_id,
-                                message_id=message_id,
-                                create_time=time.time())
+            # Build Stub and request proto.
+            stub = bittensor.proto.bittensor_pb2_grpc.BittensorStub(channel)
 
-            # Save to buffer.
-            self.memory[message_id] = msg_buffer
+            # Create spike request proto.
+            request = bittensor.proto.bittensor_pb2.SpikeRequest(
+                parent_id=self.config.identity,
+                message_id=request.message_id,
+                payload=request.payload)
 
-        finally:
-            self.lock.release()
+            # Send TCP spike request with futures callback.
+            return stub.Spike.future(request)
+        except:
+            return None
 
-
-        # Make calls to downstream.
-        futures = [None for _ in range(self.config.k)]
-        for i in range(len(self.channels)):
-            identity = self.channel_ids[i]
-            channel = self.channels[i]
-            # If channel is empty. Return.
-            if channel != None:
-                try:
-                    # Build Stub and request proto.
-                    stub = bittensor.proto.bittensor_pb2_grpc.BittensorStub(channel)
-
-                    # Create spike request proto.
-                    request = bittensor.proto.bittensor_pb2.SpikeRequest(
-                         parent_id=self.config.identity,
-                         message_id=message_id,
-                         payload=request.payload)
-
-                    # Send TCP spike request with futures callback.
-                    spike_future = stub.Spike.future(request)
-
-                    # Set futures.
-                    futures[i] = spike_future
-
-                except:
-                    pass
-
-        # Get downstream spikes.
-        # Deserialize the payload.
-        uspikes = pickle.loads(request.payload)
-        dspikes = [np.zeros((len(uspikes), 128)) for _ in range(self.config.k)]
+    def _fill_dspikes(self, dspikes, futures):
         while True:
             remaining_futures = self.config.k
             for i in range(self.config.k):
@@ -178,12 +138,55 @@ class Neuron(bittensor.proto.bittensor_pb2_grpc.BittensorServicer):
                     remaining_futures -= 1
             if remaining_futures == 0:
                 break
+        return dspikes
+
+    def Spike(self, request, context):
+        # Unpack message.
+        parent_id = request.parent_id
+        message_id = request.message_id
+        logger.info('spike {}{}', parent_id, message_id)
+
+        # 1. Check and build message buffer. On recursion with loops we respond
+        # with a null message if the message_id has been seen already.
+        self.lock.acquire()
+        try:
+            # Check for duplicates.
+            if message_id in self.memory:
+                # Return null repsonse.
+                response = bittensor.proto.bittensor_pb2.SpikeResponse(
+                    child_id=self.config.identity,
+                    message_id=message_id,
+                    payload=str.encode('sss'))
+                return response
+
+            # Build new message buffer.
+            msg_buffer = Buffer(parent_id=parent_id,
+                                message_id=message_id,
+                                create_time=time.time())
+
+            self.memory[message_id] = msg_buffer
 
 
-        # Query Neuron.
+        finally:
+            self.lock.release()
+
+        # 2. Make recursive calls to downstream neighbors.
+        # futures is a list of callbacks from each downstream call.
+        futures = []
+        for channel in self.channels:
+            futures.append(self._spike_future(channel, request))
+
+        # 3. Deserialize upstream spikes.
+        uspikes = pickle.loads(request.payload)
+
+        # 4. Fill downstream spikes.
+        dspikes = [np.zeros((len(uspikes), 128)) for _ in range(self.config.k)]
+        dspikes = self._fill_dspikes(dspikes, futures)
+
+        # 5. Inference local neuron.
         lspikes = self.nucleus.spike(uspikes, dspikes)
 
-        # Lock thread for memory access.
+        # 6. Sink output to memory.
         self.lock.acquire()
         try:
             self.memory[message_id].set(uspikes=uspikes,
@@ -192,13 +195,14 @@ class Neuron(bittensor.proto.bittensor_pb2_grpc.BittensorServicer):
         finally:
             self.lock.release()
 
-        # Make response.
+        # 7. Build response.
         payload = pickle.dumps(lspikes, protocol=0)
         response = bittensor.proto.bittensor_pb2.SpikeResponse(
             child_id=self.config.identity,
             message_id=message_id,
             payload=payload)
 
+        # Return.
         return response
 
 
@@ -216,6 +220,7 @@ class Neuron(bittensor.proto.bittensor_pb2_grpc.BittensorServicer):
         # Get local spikes.
         mem_buffer = self.memory[message_id]
 
+        # Get local spikes.
         lspikes = mem_buffer.lspikes
 
         # Get downstream spikes.
@@ -234,9 +239,7 @@ class Neuron(bittensor.proto.bittensor_pb2_grpc.BittensorServicer):
         self.gradient_queue.put(lgrads)
 
         # Send downstream grads.
-        for i in range(len(self.channels)):
-            identity = self.channel_ids[i]
-            channel = self.channels[i]
+        for channel in self.channels:
             if channel is None:
                 continue
             try:
@@ -249,8 +252,8 @@ class Neuron(bittensor.proto.bittensor_pb2_grpc.BittensorServicer):
                     message_id=message_id,
                     payload=pickle.dumps(dgrades, protocol=0))
 
-                # Send grade request.
-                stub.Grade(request)
+                # Send async grade request.
+                stub.Grade.future(request)
 
             except Exception as error:
                 pass
