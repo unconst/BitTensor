@@ -48,7 +48,7 @@ class Neuron(bittensor.proto.bittensor_pb2_grpc.BittensorServicer):
         parent_id = request.parent_id
         message_id = request.message_id
         inputs = pickle.loads(request.payload)
-        logger.info('. {}', parent_id)
+        logger.info('s {}', parent_id)
 
         # Inference through EMLO.
         embeddings = numpy.array(self.embed(inputs.flatten())).reshape(
@@ -64,6 +64,8 @@ class Neuron(bittensor.proto.bittensor_pb2_grpc.BittensorServicer):
         return response
 
     def Grade(self, request, context):
+        parent_id = request.parent_id
+        logger.info('g {}', parent_id)
         # Pass.
         return bittensor.proto.bittensor_pb2.GradeResponse(accept=True)
 

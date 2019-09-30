@@ -72,16 +72,19 @@ class Neuron():
         self._queue = tf.queue.FIFOQueue(capacity=100,
                                          dtypes=dtypes,
                                          shapes=shapes)
-        self._enqueue = self._queue.enqueue(
+        enqueue_op = self._queue.enqueue(
             [self._global_step, self._embeddings, self._batch_labels])
+
+        self._enqueue_step = tf.group(enqueue_op, tf.assign_add(self._global_step, 1))
 
     def _build_training_graph(self):
         # Inputs.
-        global_step, embeddings, labels = self._queue.dequeue()
+        self.train_global_step, embeddings, labels = self._queue.dequeue()
+        self.input_embeddings = tf.split(embeddings, self._config.k, 0)
 
         # Layer 1
         embeddings = tf.reshape(
-            embeddings, [self._batch_size, EMBEDDING_SIZE * self._config.k])
+            self.input_embeddings, [self._batch_size, EMBEDDING_SIZE * self._config.k])
         w1 = tf.Variable(
             tf.random.uniform([EMBEDDING_SIZE * self._config.k, EMBEDDING_SIZE],
                               -1.0, 1.0))
@@ -96,9 +99,10 @@ class Neuron():
         # Loss calculation.
         self._loss = tf.losses.log_loss(labels, y)
 
-        # Gradient step.
-        self._step = tf.compat.v1.train.AdagradOptimizer(
-            self._config.alpha).minimize(self._loss)
+        # Optimizer and downstream gradients.
+        optimizer = tf.compat.v1.train.AdagradOptimizer(self._config.alpha)
+        self.embedding_grads = optimizer.compute_gradients(self._loss, var_list=self.input_embeddings)
+        self._step = optimizer.minimize(self._loss)
 
     def start(self):
         self._running = True
@@ -154,7 +158,7 @@ class Neuron():
                         sample = next(self._cola_generator)
                         batch_text.append([sample['inputs']])
                         batch_labels.append([sample['label']])
-                    fetches = [self._enqueue]
+                    fetches = [self._enqueue_step]
                     feeds = {
                         self._batch_text: batch_text,
                         self._batch_labels: batch_labels
@@ -169,9 +173,22 @@ class Neuron():
         try:
             with self._coord.stop_on_exception():
                 while not self._coord.should_stop() and self._running:
-                    fetches = [self._loss, self._step]
+
+                    # Run graph.
+                    fetches = {'loss': self._loss,
+                               'step': self._step,
+                               'grads': self.embedding_grads,
+                               'inputs': self.input_embeddings,
+                               'gs': self.train_global_step
+                               }
                     run_output = self._session.run(fetches)
-                    logger.info('loss {}', run_output[0])
+                    logger.info('step: {} loss: {}', run_output['gs'], run_output['loss'])
+
+                    # Make downstream gradient call.
+                    self._dendrite.grad(run_output['inputs'],
+                                        run_output['grads'])
+
+
         except Exception as e:
             logger.error(e)
             self._coord.request_stop(e)

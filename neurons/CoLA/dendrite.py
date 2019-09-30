@@ -84,14 +84,14 @@ class Dendrite():
             return pickle.loads(response.payload).reshape(-1, EMBEDDING_SIZE)
 
         except Exception as error:
-            #logger.info('failed call {}', error)
+            # logger.info('failed call {}', error)
             return None
 
     def grade(self, spikes, grads):
         inputs = [spikes] + grads
         return tf.py_function(self._grad, inputs, [])
 
-    def _grad(self, spikes, *grads):
+    def grad(self, spikes, grads):
         for i in range(self.config.k):
             channel = self.channels[i]
             grad_i = grads[i]
@@ -108,8 +108,8 @@ class Dendrite():
 
             # Build message hash
             identity_bytes = self.config.identity.encode()
-            grad_bytes = pickle.dumps(grad.numpy(), protocol=0)
-            spike_bytes = pickle.dumps(spikes.numpy(), protocol=0)
+            grad_bytes = pickle.dumps(grad, protocol=0)
+            spike_bytes = pickle.dumps(spikes, protocol=0)
 
             # Create hash from self.id and spikes.
             hash = SHA256.new()
@@ -129,5 +129,5 @@ class Dendrite():
             # Pass.
 
         except Exception as error:
-            #logger.info('failed call {}', error)
+            # logger.info('failed call {}', error)
             pass
