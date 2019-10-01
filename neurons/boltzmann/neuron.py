@@ -215,6 +215,8 @@ class Neuron(bittensor.proto.bittensor_pb2_grpc.BittensorServicer):
 
         # Check for lost or badly routed grades.
         if message_id not in self.memory:
+            logger.info('not in mem')
+
             return bittensor.proto.bittensor_pb2.GradeResponse(accept=True)
 
         # Get local spikes.
@@ -230,13 +232,17 @@ class Neuron(bittensor.proto.bittensor_pb2_grpc.BittensorServicer):
         uspikes = mem_buffer.uspikes
 
         # Get downstream grads and local grads.
+        logger.info('apply grad')
+
         dgrades, lgrads = self.nucleus.grade(ugrades, uspikes, dspikes)
 
         # delete memory:
         del self.memory[message_id]
+        logger.info('del {}', message_id)
 
         # Put gradients on LIFO queue.
         self.gradient_queue.put(lgrads)
+        logger.info('put grad')
 
         # Send downstream grads.
         for channel in self.channels:
@@ -254,10 +260,12 @@ class Neuron(bittensor.proto.bittensor_pb2_grpc.BittensorServicer):
 
                 # Send async grade request.
                 stub.Grade.future(request)
+                logger.info('future')
 
             except Exception as error:
                 pass
 
+        logger.info('ret')
         return bittensor.proto.bittensor_pb2.GradeResponse(accept=True)
 
     def Learn(self):
