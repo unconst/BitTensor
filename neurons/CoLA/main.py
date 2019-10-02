@@ -8,6 +8,7 @@ from itertools import cycle
 from loguru import logger
 import numpy as np
 import os
+import queue
 import time
 import tensorflow as tf
 import tensor2tensor.data_generators.cola as cola
@@ -50,39 +51,15 @@ class Neuron():
         self._master_thread.setDaemon(True)
         self._running = False
 
+        # preprocessing queue.
+        self._queue = queue.Queue(maxsize=100)
+
         # Build graph.
         self._graph = tf.Graph()
         self._session = tf.Session(graph=self._graph)
         with self._graph.as_default():
-            self._build_preprocess_graph()
             self._build_training_graph()
             self._init = tf.compat.v1.global_variables_initializer()
-
-    def _build_preprocess_graph(self):
-        # Inputs
-        self._batch_nounce = tf.compat.v1.placeholder(tf.string, shape=[])
-        self._batch_embeddings = tf.compat.v1.placeholder(tf.float32, shape=[self._config.k, self._batch_size, EMBEDDING_SIZE])
-        self._batch_text = tf.compat.v1.placeholder(tf.string, shape=[self._batch_size, 1])
-        self._batch_labels = tf.compat.v1.placeholder(tf.float32, shape=[self._batch_size, 1])
-
-        # Build Queue..
-        dtypes = [tf.string,
-                  tf.float32,
-                  tf.string,
-                  tf.float32]
-        shapes = [  [],
-                    [self._config.k, self._batch_size, EMBEDDING_SIZE],
-                    [self._batch_size, 1],
-                    [self._batch_size, 1]]
-        self._queue = tf.queue.FIFOQueue(capacity=100,
-                                         dtypes=dtypes,
-                                         shapes=shapes)
-
-        # Enqueue.
-        self._enqueue_step = self._queue.enqueue([self._batch_nounce,
-                                                 self._batch_embeddings,
-                                                 self._batch_text,
-                                                 self._batch_labels])
 
     def _preprocessing_loop(self):
         nounce = 0
@@ -100,40 +77,49 @@ class Neuron():
                     batch_labels = np.array(batch_labels)
 
                     # Query Bittensor Network
-                    logger.info('preprocess nounce: {}', str(nounce).encode())
-                    embeddings = self._dendrite.spike(str(nounce).encode(), batch_text)
+                    embeddings = self._dendrite.spike(str(nounce), batch_text)
 
-                    # Build Feeds and fetches
-                    feeds = {
-                        self._batch_nounce: str(nounce),
-                        self._batch_embeddings: embeddings,
-                        self._batch_text: batch_text,
-                        self._batch_labels: batch_labels
-                    }
-                    fetches = [self._enqueue_step]
+                    # Put item into the queue. If optional args block is true and
+                    # timeout is None (the default), block if necessary until a
+                    # free slot is available. If timeout is a positive number,
+                    # it blocks at most timeout seconds and raises the Full exception
+                    # if no free slot was available within that time. Otherwise
+                    # (block is false), put an item on the queue if a free slot
+                    # is immediately available, else raise the Full exception
+                    # (timeout is ignored in that case).
+                    self._queue.put( {
+                                    'nounce': str(nounce),
+                                    'text': batch_text,
+                                    'labels': batch_labels,
+                                    'embeddings': embeddings
+                                },
+                                timeout=5,
+                                block=True)
 
-                    # Run preprocessing
-                    self._session.run(fetches, feeds)
                     nounce += 1
 
         except Exception as e:
             logger.error(e)
             self._coord.request_stop(e)
 
-
     def _build_training_graph(self):
         # Inputs.
-        self.nounce, self.embeddings, self.text, labels = self._queue.dequeue()
-        self.embeddings = tf.split(self.embeddings, self._config.k, 0)
+        self._nounce = tf.compat.v1.placeholder(tf.string, shape=[])
+        self._text = tf.compat.v1.placeholder(tf.string, shape=[self._batch_size, 1])
+        self._labels = tf.compat.v1.placeholder(tf.float32, shape=[self._batch_size, 1])
+        self._inputs = []
+        for i in range(self._config.k):
+            input_i = tf.compat.v1.placeholder(
+                            tf.float32,
+                            shape=[self._batch_size, EMBEDDING_SIZE])
+            self._inputs.append(input_i)
 
         # Layer 1
-        embeddings = tf.reshape(
-            self.embeddings, [self._batch_size, EMBEDDING_SIZE * self._config.k])
-        w1 = tf.Variable(
-            tf.random.uniform([EMBEDDING_SIZE * self._config.k, EMBEDDING_SIZE],
-                              -1.0, 1.0))
+        input_layer = tf.concat(self._inputs, axis=1)
+        w1_shape = [EMBEDDING_SIZE * self._config.k, EMBEDDING_SIZE]
+        w1 = tf.Variable(tf.random.uniform(w1_shape, -1.0, 1.0))
         b1 = tf.Variable(tf.zeros([EMBEDDING_SIZE]))
-        h1 = tf.sigmoid(tf.matmul(embeddings, w1) + b1)
+        h1 = tf.sigmoid(tf.matmul(input_layer, w1) + b1)
 
         # Layer 2.
         w2 = tf.Variable(tf.random.uniform([EMBEDDING_SIZE, 1], -1.0, 1.0))
@@ -141,11 +127,12 @@ class Neuron():
         y = tf.sigmoid(tf.matmul(h1, w2) + b2)
 
         # Loss calculation.
-        self._loss = tf.losses.log_loss(labels, y)
+        self._loss = tf.losses.log_loss(self._labels, y)
 
         # Optimizer and downstream gradients.
         optimizer = tf.compat.v1.train.AdagradOptimizer(self._config.alpha)
-        self.embedding_grads = optimizer.compute_gradients(self._loss, var_list=self.embeddings)
+        grads_and_vars = optimizer.compute_gradients(self._loss, var_list=self._inputs)
+        self._gradients = [grad for (grad, var) in grads_and_vars]
         self._step = optimizer.minimize(self._loss)
 
 
@@ -153,28 +140,53 @@ class Neuron():
         try:
             with self._coord.stop_on_exception():
                 while not self._coord.should_stop() and self._running:
-                    # Build graph fetches.
-                    fetches = {'loss': self._loss,
-                               'step': self._step,
-                               'grads': self.embedding_grads,
-                               'text': self.text,
-                               'embeddings': self.embeddings,
-                               'nounce': self.nounce
-                               }
 
-                    # Run training graph.
-                    run_output = self._session.run(fetches)
-                    logger.info('train nounce: {} loss: {}', run_output['nounce'], run_output['loss'])
+                    # Pull next sample from preprocessing queue.
+                    sample = self._queue.get(block=True, timeout=5)
 
-                    # Train Bittensor network.
-                    self._dendrite.grad(run_output['nounce'],
-                                        run_output['text'],
-                                        run_output['grads'])
+                    # Unpack.
+                    nounce = sample['nounce']
+                    text = sample['text']
+                    labels = sample['labels']
+                    embeddings = sample['embeddings']
+
+                    # Build feeds.
+                    feeds = {
+                        self._nounce: sample['nounce'],
+                        self._text: sample['text'],
+                        self._labels: sample['labels']
+                    }
+
+                    # feeds for each embedding channel.
+                    for i, channel in enumerate(self._inputs):
+                        feeds[channel] = sample['embeddings'][i]
+
+                    # Build fetches.
+                    fetches = {
+                        'loss': self._loss,
+                        'step': self._step,
+                        'gradients': self._gradients
+                    }
+
+                    # # Run Training graph.
+                    _output = self._session.run(fetches=fetches, feed_dict=feeds)
+
+                    # Unpack.
+                    loss = _output['loss']
+                    step = _output['step']
+                    gradients = _output['gradients']
+
+                    logger.info('step: {} loss: {}', nounce, loss)
+
+                    # Train network.
+                    self._dendrite.grad(nounce, text, gradients)
 
         except Exception as e:
             logger.error(e)
             self._coord.request_stop(e)
+
         logger.info('Stopped training thread.')
+
 
     def _main(self):
         logger.debug('Started Nucleus training.')

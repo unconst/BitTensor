@@ -41,7 +41,7 @@ message SpikeRequest {
 	// Interpretable as UTF-8 encoded strings. After deserialization these are
 	// variable length unicode strings.
 	// Message length must be checked at components.
-	repeated bytes payload = 7;
+	bytes payload = 7;
 }
 
 // Reverse response from a peer, carries vectors and expects no response.
@@ -103,7 +103,7 @@ message GradeRequest {
 	// Message Payload. Zero or more fixed length bytes strings.
 	// Interpretable as 1028 dimensional vector representations of tf.float32s.
 	// These are gradient values.
-	repeated bytes payload = 7;
+	bytes payload = 7;
 }
 
 // Reverse gradient call.

@@ -36,106 +36,35 @@ class Dendrite():
                 self.channels[i] = grpc.insecure_channel(address)
                 self.channel_nodes[i] = selected_node
 
-    def spike(self, nounce_string, text_list):
-
-        # To be filled a list of 128 dimensional vectors.
-        result = []
+    def grad(self, nounce, spikes, grads):
+        # Type checks.
+        assert(type(nounce) == str)
+        assert(type(spikes) == type(np.array([])))
+        assert(type(grads) == list)
+        assert(type(grads[0]) == type(np.array([])))
 
         # Encode nounce and source.
-        nounce_bytes = bytes(nounce_string, 'utf-8')
-        source_bytes = bytes(self._config.identity, 'utf-8')
-
-        # Encode text.
-        payload_byte_string = b''
-        payload_bytes = []
-        for string_element in text_list:
-            as_bytes = bytes(string_element, 'utf-8')
-            payload_bytes.append(as_bytes)
-            payload_byte_string += as_bytes
+        nounce_bytes = bytes(nounce, 'utf-8')
+        source_bytes = bytes(self.config.identity, 'utf-8')
+        spikes_bytes = pickle.dumps(spikes, protocol=0)
 
         # Create message hash.
         hash = SHA256.new()
         hash.update(nounce_bytes)
         hash.update(source_bytes)
-        hash.update(payload_byte_string)
-        message_id = hash.digest()
+        hash.update(spikes_bytes)
+        message_hash = hash.digest()
 
-        # Build request proto.
-        request = bittensor.proto.bittensor_pb2.SpikeRequest(
-            parent_id=self.config.identity,
-            message_id=message_hash,
-            payload=payload_bytes)
-
+        logger.info('grad: nounce {} spikes {} grads {} hash {}', nounce, spikes, grads, message_hash)
 
         # Query downstream.
-        for channel in self.channels[i]:
-            # Build channel
-            # TODO(const): having prebuilt stubs would be better.
-            stub = bittensor.proto.bittensor_pb2_grpc.BittensorStub(channel)
+        for (i, channel) in enumerate(self.channels):
+            # Check channel exists.
+            if not channel:
+                continue
 
-            # Send spike request.
-            response = stub.Spike(request)
-
-            response = self._spikerpc(channel, request)
-            result.append()
-
-
-        for i in range(self.config.k):
-            res = self._spikerpc(self.channels[i], nounce_bytes, source_bytes, spikes_bytes)
-            if res is None:
-                result.append(
-                    np.zeros((self.config.batch_size, EMBEDDING_SIZE),
-                             dtype=np.float32))
-            else:
-                result.append(res)
-        return result
-
-
-    def _spikerpc(self, channel, request):
-
-        try:
-            # Build Stub and request proto.
-            stub = bittensor.proto.bittensor_pb2_grpc.BittensorStub(channel)
-
-            # Send spike request.
-            response = stub.Spike(request)
-
-             response as numpy.
-            return response
-
-        except Exception as error:
-            logger.info('failed call {}', error)
-            return None
-
-    def grad(self, nounce, spikes, grads):
-        for i in range(self.config.k):
-            channel = self.channels[i]
-            grad_i = grads[i]
-            if channel:
-                self._gradrpc(channel, nounce, spikes, grad_i)
-
-    def _gradrpc(self, channel, nounce, spikes, grad):
-        if channel is None:
-            return
-
-        try:
-            # Build Stub.
-            stub = bittensor.proto.bittensor_pb2_grpc.BittensorStub(channel)
-
-            # Build message hash
-            nounce_bytes = pickle.dumps(nounce, protocol=0)
-            identity_bytes = self.config.identity.encode()
-            grad_bytes = pickle.dumps(grad, protocol=0)
-            spike_bytes = pickle.dumps(spikes, protocol=0)
-
-            # Create hash from self.id and spikes.
-            hash = SHA256.new()
-            hash.update(nounce_bytes)
-            hash.update(identity_bytes)
-            hash.update(spike_bytes)
-            message_hash = hash.digest()
-
-            logger.info('nounce {} {} spikes {} {} hash {}', nounce, nounce_bytes, spikes, spike_bytes, message_hash)
+            # Encode gradient for this channel.
+            grad_bytes = pickle.dumps(grads[i], protocol=0)
 
             # Create request proto.
             request = bittensor.proto.bittensor_pb2.GradeRequest(
@@ -143,11 +72,75 @@ class Dendrite():
                 message_id=message_hash,
                 payload=grad_bytes)
 
-            # Send Grade request.
-            stub.Grade(request)
+            # Build stub.
+            stub = bittensor.proto.bittensor_pb2_grpc.BittensorStub(channel)
 
-            # Pass.
+            # Send non-waiting Grade request.
+            stub.Grade.future(request)
 
-        except Exception as error:
-            logger.info('failed call {}', error)
-            pass
+        return
+
+    def spike(self, nounce, spikes):
+        # Type checks.
+        assert(type(nounce) == str)
+        assert(type(spikes) == type(np.array([])))
+
+        # Encode nounce and source.
+        nounce_bytes = bytes(nounce, 'utf-8')
+        source_bytes = bytes(self.config.identity, 'utf-8')
+        payload_bytes = pickle.dumps(spikes, protocol=0)
+
+        # Create message hash.
+        hash = SHA256.new()
+        hash.update(nounce_bytes)
+        hash.update(source_bytes)
+        hash.update(payload_bytes)
+        message_hash = hash.digest()
+
+        logger.info('spike: nounce {} spikes {} hash {}', nounce, spikes, message_hash)
+
+        # Build request proto.
+        request = bittensor.proto.bittensor_pb2.SpikeRequest(
+            parent_id=self.config.identity,
+            message_id=message_hash,
+            payload=payload_bytes)
+
+        # Query downstream.
+        futures = []
+        for channel in self.channels:
+            # Check channel exists.
+            if channel == None:
+                futures.append(None)
+                continue
+
+            # Build channel
+            # TODO(const): having prebuilt stubs would be better.
+            stub = bittensor.proto.bittensor_pb2_grpc.BittensorStub(channel)
+
+            # Send non-waiting spike request.
+            futures.append(stub.Spike.future(request))
+
+        # Build result buffer.
+        result = []
+        for _ in self.channels:
+            zeros = np.zeros((spikes.shape[0], EMBEDDING_SIZE))
+            result.append(zeros)
+
+        # Fill futures or ttl.
+        while True:
+            remaining = len(futures)
+            for i, future in enumerate(futures):
+                if future == None:
+                    remaining -= 1
+                elif futures.done():
+                    remaining -= 1
+                    try:
+                        response = future.result()
+                        dspikes = pickle.loads(response.payload)
+                        result[i] = dspikes.reshape(-1, EMBEDDING_SIZE)
+                    except Exception as e:
+                        logger.error(e)
+            if remaining == 0:
+                break
+
+        return result

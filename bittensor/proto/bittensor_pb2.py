@@ -20,7 +20,7 @@ DESCRIPTOR = _descriptor.FileDescriptor(
   package='',
   syntax='proto3',
   serialized_options=None,
-  serialized_pb=_b('\n\x1f\x62ittensor/proto/bittensor.proto\"F\n\x0cSpikeRequest\x12\x11\n\tparent_id\x18\x03 \x01(\t\x12\x12\n\nmessage_id\x18\x06 \x01(\x0c\x12\x0f\n\x07payload\x18\x07 \x03(\x0c\"F\n\rSpikeResponse\x12\x10\n\x08\x63hild_id\x18\x03 \x01(\t\x12\x12\n\nmessage_id\x18\x06 \x01(\x0c\x12\x0f\n\x07payload\x18\x07 \x01(\x0c\"F\n\x0cGradeRequest\x12\x11\n\tparent_id\x18\x03 \x01(\t\x12\x12\n\nmessage_id\x18\x06 \x01(\x0c\x12\x0f\n\x07payload\x18\x07 \x03(\x0c\"\x1f\n\rGradeResponse\x12\x0e\n\x06\x61\x63\x63\x65pt\x18\x01 \x01(\x08\x32_\n\tBittensor\x12(\n\x05Spike\x12\r.SpikeRequest\x1a\x0e.SpikeResponse\"\x00\x12(\n\x05Grade\x12\r.GradeRequest\x1a\x0e.GradeResponse\"\x00\x62\x06proto3')
+  serialized_pb=_b('\n\x1f\x62ittensor/proto/bittensor.proto\"F\n\x0cSpikeRequest\x12\x11\n\tparent_id\x18\x03 \x01(\t\x12\x12\n\nmessage_id\x18\x06 \x01(\x0c\x12\x0f\n\x07payload\x18\x07 \x01(\x0c\"F\n\rSpikeResponse\x12\x10\n\x08\x63hild_id\x18\x03 \x01(\t\x12\x12\n\nmessage_id\x18\x06 \x01(\x0c\x12\x0f\n\x07payload\x18\x07 \x01(\x0c\"F\n\x0cGradeRequest\x12\x11\n\tparent_id\x18\x03 \x01(\t\x12\x12\n\nmessage_id\x18\x06 \x01(\x0c\x12\x0f\n\x07payload\x18\x07 \x01(\x0c\"\x1f\n\rGradeResponse\x12\x0e\n\x06\x61\x63\x63\x65pt\x18\x01 \x01(\x08\x32_\n\tBittensor\x12(\n\x05Spike\x12\r.SpikeRequest\x1a\x0e.SpikeResponse\"\x00\x12(\n\x05Grade\x12\r.GradeRequest\x1a\x0e.GradeResponse\"\x00\x62\x06proto3')
 )
 
 
@@ -49,8 +49,8 @@ _SPIKEREQUEST = _descriptor.Descriptor(
       serialized_options=None, file=DESCRIPTOR),
     _descriptor.FieldDescriptor(
       name='payload', full_name='SpikeRequest.payload', index=2,
-      number=7, type=12, cpp_type=9, label=3,
-      has_default_value=False, default_value=[],
+      number=7, type=12, cpp_type=9, label=1,
+      has_default_value=False, default_value=_b(""),
       message_type=None, enum_type=None, containing_type=None,
       is_extension=False, extension_scope=None,
       serialized_options=None, file=DESCRIPTOR),
@@ -139,8 +139,8 @@ _GRADEREQUEST = _descriptor.Descriptor(
       serialized_options=None, file=DESCRIPTOR),
     _descriptor.FieldDescriptor(
       name='payload', full_name='GradeRequest.payload', index=2,
-      number=7, type=12, cpp_type=9, label=3,
-      has_default_value=False, default_value=[],
+      number=7, type=12, cpp_type=9, label=1,
+      has_default_value=False, default_value=_b(""),
       message_type=None, enum_type=None, containing_type=None,
       is_extension=False, extension_scope=None,
       serialized_options=None, file=DESCRIPTOR),
