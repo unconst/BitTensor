@@ -9,7 +9,6 @@ import tensorflow as tf
 
 EMBEDDING_SIZE = 128
 
-
 class Dendrite():
 
     def __init__(self, config, metagraph):
@@ -130,10 +129,14 @@ class Dendrite():
             except:
                 pass
 
+        return futures
+
+
+    def _fill_futures_or_none(self, futures):
         # Build result buffer.
         result = []
-        for _ in self.channels:
-            zeros = np.zeros((spikes.shape[0], EMBEDDING_SIZE))
+        for _ in futures:
+            zeros = np.zeros((self._batch_size, EMBEDDING_SIZE))
             result.append(zeros)
 
         # Fill futures or ttl.

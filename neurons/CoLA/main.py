@@ -22,6 +22,8 @@ CoLA_URL = "https://firebasestorage.googleapis.com/v0/b/mtl-sentence-representat
 
 # Downloads the CoLA dataset.
 def download_and_extract_cola():
+    if os.path.exists("neurons/CoLA/data/CoLA"):
+        return
     logger.info("Downloading and extracting CoLA into neurons/CoLA/data")
     data_file = "CoLA.zip"
     urllib.request.urlretrieve(CoLA_URL, data_file)
@@ -52,7 +54,7 @@ class Neuron():
         self._running = False
 
         # preprocessing queue.
-        self._queue = queue.Queue(maxsize=100)
+        self._queue = queue.Queue(maxsize=10)
 
         # Build graph.
         self._graph = tf.Graph()
@@ -60,6 +62,10 @@ class Neuron():
         with self._graph.as_default():
             self._build_training_graph()
             self._init = tf.compat.v1.global_variables_initializer()
+
+        # Summary writer for tensorboard.
+        self.summary_writer = tf.compat.v1.summary.FileWriter(
+            self._config.logdir, self._graph)
 
     def _preprocessing_loop(self):
         nounce = 0
@@ -77,7 +83,7 @@ class Neuron():
                     batch_labels = np.array(batch_labels)
 
                     # Query Bittensor Network
-                    embeddings = self._dendrite.spike(str(nounce), batch_text)
+                    futures = self._dendrite.spike(str(nounce), batch_text)
 
                     # Put item into the queue. If optional args block is true and
                     # timeout is None (the default), block if necessary until a
@@ -91,7 +97,7 @@ class Neuron():
                                     'nounce': str(nounce),
                                     'text': batch_text,
                                     'labels': batch_labels,
-                                    'embeddings': embeddings
+                                    'futures': futures
                                 },
                                 timeout=5,
                                 block=True)
@@ -104,6 +110,8 @@ class Neuron():
 
     def _build_training_graph(self):
         # Inputs.
+        # Global step.
+        self._global_step = tf.compat.v1.train.create_global_step()
         self._nounce = tf.compat.v1.placeholder(tf.string, shape=[])
         self._text = tf.compat.v1.placeholder(tf.string, shape=[self._batch_size, 1])
         self._labels = tf.compat.v1.placeholder(tf.float32, shape=[self._batch_size, 1])
@@ -128,13 +136,39 @@ class Neuron():
 
         # Loss calculation.
         self._loss = tf.losses.log_loss(self._labels, y)
+        tf.compat.v1.summary.scalar('loss', self._loss)
 
         # Optimizer and downstream gradients.
         optimizer = tf.compat.v1.train.AdagradOptimizer(self._config.alpha)
         grads_and_vars = optimizer.compute_gradients(self._loss, var_list=self._inputs)
         self._gradients = [grad for (grad, var) in grads_and_vars]
-        self._step = optimizer.minimize(self._loss)
+        self._train = optimizer.minimize(self._loss)
 
+    def _fill_futures_or_none(self, futures):
+        # Build result buffer.
+        result = []
+        for _ in futures:
+            zeros = np.zeros((self._batch_size, EMBEDDING_SIZE))
+            result.append(zeros)
+
+        # Fill futures or ttl.
+        while True:
+            remaining = len(futures)
+            for i, future in enumerate(futures):
+                if future == None:
+                    remaining -= 1
+                elif future.done():
+                    remaining -= 1
+                    try:
+                        response = future.result()
+                        dspikes = pickle.loads(response.payload)
+                        result[i] = dspikes.reshape(-1, EMBEDDING_SIZE)
+                    except Exception as e:
+                        pass
+            if remaining == 0:
+                break
+
+        return result
 
     def _training_loop(self):
         try:
@@ -148,7 +182,9 @@ class Neuron():
                     nounce = sample['nounce']
                     text = sample['text']
                     labels = sample['labels']
-                    embeddings = sample['embeddings']
+                    futures = sample['futures']
+
+                    _next_inputs = self._fill_futures_or_none(futures)
 
                     # Build feeds.
                     feeds = {
@@ -159,12 +195,13 @@ class Neuron():
 
                     # feeds for each embedding channel.
                     for i, channel in enumerate(self._inputs):
-                        feeds[channel] = sample['embeddings'][i]
+                        feeds[channel] = _next_inputs[i]
 
                     # Build fetches.
                     fetches = {
+                        'train': self._train,
                         'loss': self._loss,
-                        'step': self._step,
+                        'step': self._global_step,
                         'gradients': self._gradients
                     }
 
@@ -176,10 +213,11 @@ class Neuron():
                     step = _output['step']
                     gradients = _output['gradients']
 
-                    logger.info('step: {} loss: {}', nounce, loss)
-
                     # Train network.
                     self._dendrite.grad(nounce, text, gradients)
+
+                    # Write summaries.
+                    logger.info('step: {} loss: {}', nounce, loss)
 
         except Exception as e:
             logger.error(e)
