@@ -55,7 +55,7 @@ class Dendrite():
         hash.update(spikes_bytes)
         message_hash = hash.digest()
 
-        logger.info('grad: nounce {} spikes {} grads {} hash {}', nounce, spikes, grads, message_hash)
+        #logger.info('nounce {} hash {}', nounce, message_hash)
 
         # Query downstream.
         for (i, channel) in enumerate(self.channels):
@@ -72,11 +72,14 @@ class Dendrite():
                 message_id=message_hash,
                 payload=grad_bytes)
 
-            # Build stub.
-            stub = bittensor.proto.bittensor_pb2_grpc.BittensorStub(channel)
+            try:
+                # Build stub.
+                stub = bittensor.proto.bittensor_pb2_grpc.BittensorStub(channel)
 
-            # Send non-waiting Grade request.
-            stub.Grade.future(request)
+                # Send non-waiting Grade request.
+                stub.Grade.future(request)
+            except:
+                pass
 
         return
 
@@ -97,7 +100,7 @@ class Dendrite():
         hash.update(payload_bytes)
         message_hash = hash.digest()
 
-        logger.info('spike: nounce {} spikes {} hash {}', nounce, spikes, message_hash)
+        #logger.info('nounce {} hash {}', nounce, message_hash)
 
         # Build request proto.
         request = bittensor.proto.bittensor_pb2.SpikeRequest(
@@ -113,12 +116,15 @@ class Dendrite():
                 futures.append(None)
                 continue
 
-            # Build channel
-            # TODO(const): having prebuilt stubs would be better.
-            stub = bittensor.proto.bittensor_pb2_grpc.BittensorStub(channel)
+            try:
+                # Build channel
+                # TODO(const): having prebuilt stubs would be better.
+                stub = bittensor.proto.bittensor_pb2_grpc.BittensorStub(channel)
 
-            # Send non-waiting spike request.
-            futures.append(stub.Spike.future(request))
+                # Send non-waiting spike request.
+                futures.append(stub.Spike.future(request, timeout=1))
+            except:
+                pass
 
         # Build result buffer.
         result = []
@@ -132,14 +138,14 @@ class Dendrite():
             for i, future in enumerate(futures):
                 if future == None:
                     remaining -= 1
-                elif futures.done():
+                elif future.done():
                     remaining -= 1
                     try:
                         response = future.result()
                         dspikes = pickle.loads(response.payload)
                         result[i] = dspikes.reshape(-1, EMBEDDING_SIZE)
                     except Exception as e:
-                        logger.error(e)
+                        pass
             if remaining == 0:
                 break
 
