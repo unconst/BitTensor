@@ -13,6 +13,7 @@ import queue
 class Buffer:
 
     def __init__(self,
+                 source_id=None,
                  parent_id=None,
                  message_id=None,
                  create_time=None,
@@ -21,6 +22,7 @@ class Buffer:
                  dspikes=None,
                  lgrads=None):
 
+        self.source_id = source_id
         self.parent_id = parent_id
         self.message_id = message_id
         self.create_time = create_time
@@ -30,6 +32,7 @@ class Buffer:
         self.lgrads = lgrads
 
     def set(self,
+            source_id=None
             parent_id=None,
             message_id=None,
             create_time=None,
@@ -38,6 +41,8 @@ class Buffer:
             dspikes=None,
             lgrads=None):
 
+        if not self.source_id:
+            self.source_id = source_id
         if not self.parent_id:
             self.parent_id = parent_id
         if not self.message_id:
@@ -165,7 +170,8 @@ class Neuron(bittensor.proto.bittensor_pb2_grpc.BittensorServicer):
                 return response
 
             # Build new message buffer.
-            msg_buffer = Buffer(parent_id=parent_id,
+            msg_buffer = Buffer(source_id=source_id,
+                                parent_id=parent_id,
                                 message_id=message_id,
                                 create_time=time.time())
 
