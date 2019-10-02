@@ -68,6 +68,8 @@ class Dendrite():
 
             # Create request proto.
             request = bittensor.proto.bittensor_pb2.GradeRequest(
+                version=1.0,
+                source_id=self.config.identity,
                 parent_id=self.config.identity,
                 message_id=message_hash,
                 payload=grad_bytes)
@@ -104,6 +106,8 @@ class Dendrite():
 
         # Build request proto.
         request = bittensor.proto.bittensor_pb2.SpikeRequest(
+            version=1.0,
+            source_id=self.config.identity,
             parent_id=self.config.identity,
             message_id=message_hash,
             payload=payload_bytes)
