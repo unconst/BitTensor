@@ -1,1 +1,1 @@
-FROM unconst/bittensor
+FROM unconst/bittensor:latest

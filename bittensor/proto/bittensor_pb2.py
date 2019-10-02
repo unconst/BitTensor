@@ -20,7 +20,7 @@ DESCRIPTOR = _descriptor.FileDescriptor(
   package='',
   syntax='proto3',
   serialized_options=None,
-  serialized_pb=_b('\n\x1f\x62ittensor/proto/bittensor.proto\"F\n\x0cSpikeRequest\x12\x11\n\tparent_id\x18\x03 \x01(\t\x12\x12\n\nmessage_id\x18\x06 \x01(\x0c\x12\x0f\n\x07payload\x18\x07 \x01(\x0c\"F\n\rSpikeResponse\x12\x10\n\x08\x63hild_id\x18\x03 \x01(\t\x12\x12\n\nmessage_id\x18\x06 \x01(\x0c\x12\x0f\n\x07payload\x18\x07 \x01(\x0c\"F\n\x0cGradeRequest\x12\x11\n\tparent_id\x18\x03 \x01(\t\x12\x12\n\nmessage_id\x18\x06 \x01(\x0c\x12\x0f\n\x07payload\x18\x07 \x01(\x0c\"\x1f\n\rGradeResponse\x12\x0e\n\x06\x61\x63\x63\x65pt\x18\x01 \x01(\x08\x32_\n\tBittensor\x12(\n\x05Spike\x12\r.SpikeRequest\x1a\x0e.SpikeResponse\"\x00\x12(\n\x05Grade\x12\r.GradeRequest\x1a\x0e.GradeResponse\"\x00\x62\x06proto3')
+  serialized_pb=_b('\n\x1f\x62ittensor/proto/bittensor.proto\"j\n\x0cSpikeRequest\x12\x0f\n\x07version\x18\x01 \x01(\x02\x12\x11\n\tsource_id\x18\x02 \x01(\t\x12\x11\n\tparent_id\x18\x04 \x01(\t\x12\x12\n\nmessage_id\x18\x07 \x01(\x0c\x12\x0f\n\x07payload\x18\x08 \x01(\x0c\"j\n\rSpikeResponse\x12\x0f\n\x07version\x18\x01 \x01(\x02\x12\x11\n\tsource_id\x18\x02 \x01(\t\x12\x10\n\x08\x63hild_id\x18\x04 \x01(\t\x12\x12\n\nmessage_id\x18\x07 \x01(\x0c\x12\x0f\n\x07payload\x18\x08 \x01(\x0c\"j\n\x0cGradeRequest\x12\x0f\n\x07version\x18\x01 \x01(\x02\x12\x11\n\tsource_id\x18\x02 \x01(\t\x12\x11\n\tparent_id\x18\x04 \x01(\t\x12\x12\n\nmessage_id\x18\x07 \x01(\x0c\x12\x0f\n\x07payload\x18\x08 \x01(\x0c\"0\n\rGradeResponse\x12\x0f\n\x07version\x18\x01 \x01(\x02\x12\x0e\n\x06\x61\x63\x63\x65pt\x18\x02 \x01(\x08\x32_\n\tBittensor\x12(\n\x05Spike\x12\r.SpikeRequest\x1a\x0e.SpikeResponse\"\x00\x12(\n\x05Grade\x12\r.GradeRequest\x1a\x0e.GradeResponse\"\x00\x62\x06proto3')
 )
 
 
@@ -34,22 +34,36 @@ _SPIKEREQUEST = _descriptor.Descriptor(
   containing_type=None,
   fields=[
     _descriptor.FieldDescriptor(
-      name='parent_id', full_name='SpikeRequest.parent_id', index=0,
-      number=3, type=9, cpp_type=9, label=1,
+      name='version', full_name='SpikeRequest.version', index=0,
+      number=1, type=2, cpp_type=6, label=1,
+      has_default_value=False, default_value=float(0),
+      message_type=None, enum_type=None, containing_type=None,
+      is_extension=False, extension_scope=None,
+      serialized_options=None, file=DESCRIPTOR),
+    _descriptor.FieldDescriptor(
+      name='source_id', full_name='SpikeRequest.source_id', index=1,
+      number=2, type=9, cpp_type=9, label=1,
       has_default_value=False, default_value=_b("").decode('utf-8'),
       message_type=None, enum_type=None, containing_type=None,
       is_extension=False, extension_scope=None,
       serialized_options=None, file=DESCRIPTOR),
     _descriptor.FieldDescriptor(
-      name='message_id', full_name='SpikeRequest.message_id', index=1,
-      number=6, type=12, cpp_type=9, label=1,
+      name='parent_id', full_name='SpikeRequest.parent_id', index=2,
+      number=4, type=9, cpp_type=9, label=1,
+      has_default_value=False, default_value=_b("").decode('utf-8'),
+      message_type=None, enum_type=None, containing_type=None,
+      is_extension=False, extension_scope=None,
+      serialized_options=None, file=DESCRIPTOR),
+    _descriptor.FieldDescriptor(
+      name='message_id', full_name='SpikeRequest.message_id', index=3,
+      number=7, type=12, cpp_type=9, label=1,
       has_default_value=False, default_value=_b(""),
       message_type=None, enum_type=None, containing_type=None,
       is_extension=False, extension_scope=None,
       serialized_options=None, file=DESCRIPTOR),
     _descriptor.FieldDescriptor(
-      name='payload', full_name='SpikeRequest.payload', index=2,
-      number=7, type=12, cpp_type=9, label=1,
+      name='payload', full_name='SpikeRequest.payload', index=4,
+      number=8, type=12, cpp_type=9, label=1,
       has_default_value=False, default_value=_b(""),
       message_type=None, enum_type=None, containing_type=None,
       is_extension=False, extension_scope=None,
@@ -67,7 +81,7 @@ _SPIKEREQUEST = _descriptor.Descriptor(
   oneofs=[
   ],
   serialized_start=35,
-  serialized_end=105,
+  serialized_end=141,
 )
 
 
@@ -79,22 +93,36 @@ _SPIKERESPONSE = _descriptor.Descriptor(
   containing_type=None,
   fields=[
     _descriptor.FieldDescriptor(
-      name='child_id', full_name='SpikeResponse.child_id', index=0,
-      number=3, type=9, cpp_type=9, label=1,
+      name='version', full_name='SpikeResponse.version', index=0,
+      number=1, type=2, cpp_type=6, label=1,
+      has_default_value=False, default_value=float(0),
+      message_type=None, enum_type=None, containing_type=None,
+      is_extension=False, extension_scope=None,
+      serialized_options=None, file=DESCRIPTOR),
+    _descriptor.FieldDescriptor(
+      name='source_id', full_name='SpikeResponse.source_id', index=1,
+      number=2, type=9, cpp_type=9, label=1,
       has_default_value=False, default_value=_b("").decode('utf-8'),
       message_type=None, enum_type=None, containing_type=None,
       is_extension=False, extension_scope=None,
       serialized_options=None, file=DESCRIPTOR),
     _descriptor.FieldDescriptor(
-      name='message_id', full_name='SpikeResponse.message_id', index=1,
-      number=6, type=12, cpp_type=9, label=1,
+      name='child_id', full_name='SpikeResponse.child_id', index=2,
+      number=4, type=9, cpp_type=9, label=1,
+      has_default_value=False, default_value=_b("").decode('utf-8'),
+      message_type=None, enum_type=None, containing_type=None,
+      is_extension=False, extension_scope=None,
+      serialized_options=None, file=DESCRIPTOR),
+    _descriptor.FieldDescriptor(
+      name='message_id', full_name='SpikeResponse.message_id', index=3,
+      number=7, type=12, cpp_type=9, label=1,
       has_default_value=False, default_value=_b(""),
       message_type=None, enum_type=None, containing_type=None,
       is_extension=False, extension_scope=None,
       serialized_options=None, file=DESCRIPTOR),
     _descriptor.FieldDescriptor(
-      name='payload', full_name='SpikeResponse.payload', index=2,
-      number=7, type=12, cpp_type=9, label=1,
+      name='payload', full_name='SpikeResponse.payload', index=4,
+      number=8, type=12, cpp_type=9, label=1,
       has_default_value=False, default_value=_b(""),
       message_type=None, enum_type=None, containing_type=None,
       is_extension=False, extension_scope=None,
@@ -111,8 +139,8 @@ _SPIKERESPONSE = _descriptor.Descriptor(
   extension_ranges=[],
   oneofs=[
   ],
-  serialized_start=107,
-  serialized_end=177,
+  serialized_start=143,
+  serialized_end=249,
 )
 
 
@@ -124,54 +152,37 @@ _GRADEREQUEST = _descriptor.Descriptor(
   containing_type=None,
   fields=[
     _descriptor.FieldDescriptor(
-      name='parent_id', full_name='GradeRequest.parent_id', index=0,
-      number=3, type=9, cpp_type=9, label=1,
+      name='version', full_name='GradeRequest.version', index=0,
+      number=1, type=2, cpp_type=6, label=1,
+      has_default_value=False, default_value=float(0),
+      message_type=None, enum_type=None, containing_type=None,
+      is_extension=False, extension_scope=None,
+      serialized_options=None, file=DESCRIPTOR),
+    _descriptor.FieldDescriptor(
+      name='source_id', full_name='GradeRequest.source_id', index=1,
+      number=2, type=9, cpp_type=9, label=1,
       has_default_value=False, default_value=_b("").decode('utf-8'),
       message_type=None, enum_type=None, containing_type=None,
       is_extension=False, extension_scope=None,
       serialized_options=None, file=DESCRIPTOR),
     _descriptor.FieldDescriptor(
-      name='message_id', full_name='GradeRequest.message_id', index=1,
-      number=6, type=12, cpp_type=9, label=1,
-      has_default_value=False, default_value=_b(""),
+      name='parent_id', full_name='GradeRequest.parent_id', index=2,
+      number=4, type=9, cpp_type=9, label=1,
+      has_default_value=False, default_value=_b("").decode('utf-8'),
       message_type=None, enum_type=None, containing_type=None,
       is_extension=False, extension_scope=None,
       serialized_options=None, file=DESCRIPTOR),
     _descriptor.FieldDescriptor(
-      name='payload', full_name='GradeRequest.payload', index=2,
+      name='message_id', full_name='GradeRequest.message_id', index=3,
       number=7, type=12, cpp_type=9, label=1,
       has_default_value=False, default_value=_b(""),
       message_type=None, enum_type=None, containing_type=None,
       is_extension=False, extension_scope=None,
       serialized_options=None, file=DESCRIPTOR),
-  ],
-  extensions=[
-  ],
-  nested_types=[],
-  enum_types=[
-  ],
-  serialized_options=None,
-  is_extendable=False,
-  syntax='proto3',
-  extension_ranges=[],
-  oneofs=[
-  ],
-  serialized_start=179,
-  serialized_end=249,
-)
-
-
-_GRADERESPONSE = _descriptor.Descriptor(
-  name='GradeResponse',
-  full_name='GradeResponse',
-  filename=None,
-  file=DESCRIPTOR,
-  containing_type=None,
-  fields=[
     _descriptor.FieldDescriptor(
-      name='accept', full_name='GradeResponse.accept', index=0,
-      number=1, type=8, cpp_type=7, label=1,
-      has_default_value=False, default_value=False,
+      name='payload', full_name='GradeRequest.payload', index=4,
+      number=8, type=12, cpp_type=9, label=1,
+      has_default_value=False, default_value=_b(""),
       message_type=None, enum_type=None, containing_type=None,
       is_extension=False, extension_scope=None,
       serialized_options=None, file=DESCRIPTOR),
@@ -188,7 +199,45 @@ _GRADERESPONSE = _descriptor.Descriptor(
   oneofs=[
   ],
   serialized_start=251,
-  serialized_end=282,
+  serialized_end=357,
+)
+
+
+_GRADERESPONSE = _descriptor.Descriptor(
+  name='GradeResponse',
+  full_name='GradeResponse',
+  filename=None,
+  file=DESCRIPTOR,
+  containing_type=None,
+  fields=[
+    _descriptor.FieldDescriptor(
+      name='version', full_name='GradeResponse.version', index=0,
+      number=1, type=2, cpp_type=6, label=1,
+      has_default_value=False, default_value=float(0),
+      message_type=None, enum_type=None, containing_type=None,
+      is_extension=False, extension_scope=None,
+      serialized_options=None, file=DESCRIPTOR),
+    _descriptor.FieldDescriptor(
+      name='accept', full_name='GradeResponse.accept', index=1,
+      number=2, type=8, cpp_type=7, label=1,
+      has_default_value=False, default_value=False,
+      message_type=None, enum_type=None, containing_type=None,
+      is_extension=False, extension_scope=None,
+      serialized_options=None, file=DESCRIPTOR),
+  ],
+  extensions=[
+  ],
+  nested_types=[],
+  enum_types=[
+  ],
+  serialized_options=None,
+  is_extendable=False,
+  syntax='proto3',
+  extension_ranges=[],
+  oneofs=[
+  ],
+  serialized_start=359,
+  serialized_end=407,
 )
 
 DESCRIPTOR.message_types_by_name['SpikeRequest'] = _SPIKEREQUEST
@@ -233,8 +282,8 @@ _BITTENSOR = _descriptor.ServiceDescriptor(
   file=DESCRIPTOR,
   index=0,
   serialized_options=None,
-  serialized_start=284,
-  serialized_end=379,
+  serialized_start=409,
+  serialized_end=504,
   methods=[
   _descriptor.MethodDescriptor(
     name='Spike',

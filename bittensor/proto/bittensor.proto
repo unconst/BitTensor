@@ -121,5 +121,5 @@ message GradeResponse {
 	float version = 1;
 
 	// Boolean, Gradient accepted message.
-  bool accept = 1;
+  bool accept = 2;
 }
