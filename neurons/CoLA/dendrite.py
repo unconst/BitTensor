@@ -9,6 +9,8 @@ import tensorflow as tf
 
 EMBEDDING_SIZE = 128
 
+def _delete_callback(future):
+    del future
 
 class Dendrite():
 
@@ -80,7 +82,9 @@ class Dendrite():
                 stub = bittensor.proto.bittensor_pb2_grpc.BittensorStub(channel)
 
                 # Send non-waiting Grade request.
-                stub.Grade.future(request)
+                future = stub.Grade.future(request)
+                future.add_done_callback(_delete_callback)
+
             except:
                 logger.info('exception')
                 pass
