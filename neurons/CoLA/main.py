@@ -55,7 +55,7 @@ class Neuron():
         self._running = False
 
         # preprocessing queue.
-        self._queue = queue.Queue(maxsize=10)
+        self._queue = queue.Queue(maxsize=1)
 
         # Build graph.
         self._graph = tf.Graph()
@@ -172,23 +172,33 @@ class Neuron():
                     # are filled we add them to the feed dict, if they are none
                     # we fill the feed dict with zeros.
                     # TODO(const): futures timeout there is no timeout.
+                    ttl = 1.0
+                    start = time.time()
+                    done = [False for _ in futures]
+                    filled = [False for _ in futures]
                     while True:
-                        remaining = len(self._inputs)
                         for i, channel in enumerate(self._inputs):
-                            if futures[i] == None:
-                                remaining -= 1
+                            if done[i]:
+                                continue
+                            elif futures[i] == None:
+                                done[i] = True
                                 feeds[channel] = np.zeros((self._batch_size, EMBEDDING_SIZE))
                             elif futures[i].done():
-                                remaining -= 1
+                                done[i] = True
                                 try:
                                     response = futures[i].result()
                                     dspikes = pickle.loads(response.payload)
                                     feeds[channel] = dspikes.reshape(self._batch_size, EMBEDDING_SIZE)
+                                    filled[i] = True
                                 except Exception as e:
-                                    pass
-                        if remaining == 0:
+                                    feeds[channel] = np.zeros((self._batch_size, EMBEDDING_SIZE))
+                            elif (time.time() - start) > ttl:
+                                done[i] = True
+                                feeds[channel] = np.zeros((self._batch_size, EMBEDDING_SIZE))
+                        if all(done):
                             break
 
+                    logger.info(filled)
 
                     # Build fetches.
                     fetches = {

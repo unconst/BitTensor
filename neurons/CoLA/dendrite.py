@@ -9,6 +9,7 @@ import tensorflow as tf
 
 EMBEDDING_SIZE = 128
 
+
 class Dendrite():
 
     def __init__(self, config, metagraph):
@@ -34,6 +35,7 @@ class Dendrite():
                 address = selected_node.address + ':' + selected_node.port
                 self.channels[i] = grpc.insecure_channel(address)
                 self.channel_nodes[i] = selected_node
+
 
     def grad(self, nounce, spikes, grads):
         # Type checks.
@@ -80,6 +82,7 @@ class Dendrite():
                 # Send non-waiting Grade request.
                 stub.Grade.future(request)
             except:
+                logger.info('exception')
                 pass
 
         return
@@ -125,35 +128,9 @@ class Dendrite():
                 stub = bittensor.proto.bittensor_pb2_grpc.BittensorStub(channel)
 
                 # Send non-waiting spike request.
-                futures.append(stub.Spike.future(request, timeout=1))
-            except:
+                futures.append(stub.Spike.future(request))
+            except Exception as e:
+                logger.error(e)
                 pass
 
         return futures
-
-
-    def _fill_futures_or_none(self, futures):
-        # Build result buffer.
-        result = []
-        for _ in futures:
-            zeros = np.zeros((self._batch_size, EMBEDDING_SIZE))
-            result.append(zeros)
-
-        # Fill futures or ttl.
-        while True:
-            remaining = len(futures)
-            for i, future in enumerate(futures):
-                if future == None:
-                    remaining -= 1
-                elif future.done():
-                    remaining -= 1
-                    try:
-                        response = future.result()
-                        dspikes = pickle.loads(response.payload)
-                        result[i] = dspikes.reshape(-1, EMBEDDING_SIZE)
-                    except Exception as e:
-                        pass
-            if remaining == 0:
-                break
-
-        return result

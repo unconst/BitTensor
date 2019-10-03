@@ -48,7 +48,7 @@ logdir="data/$identity/logs"
 remote="false"
 # Digital ocean API token for creating remote instances.
 token="none"
-# Neuron: The protocol client adhering to the Bittensor protocol.
+# Neuron: The client adhering to the Bittensor protocol.
 neuron="Boltzmann"
 
 # Read command line args

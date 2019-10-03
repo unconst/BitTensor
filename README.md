@@ -7,6 +7,7 @@
 - [Overview](#overview)
 - [To-Run-Locally](#to-run-locally)
 - [To-Run-Testnet](#to-run-testnet)
+- [To-Run-CoLA](#to-run-cola)
 - [Neurons](#neurons)
 - [License](#license)
 
@@ -38,12 +39,12 @@ $ ./start_eos.sh
 $ ./bittensor.sh
 
 # Run Node 2.
-$ ./bittensor.sh --neuron boltzmann
+$ ./bittensor.sh --neuron Boltzmann
 
 ...
 
 # Run Node N.
-$ ./bittensor.sh --neuron elmo
+$ ./bittensor.sh --neuron ELMO
 
 ```
 
@@ -64,6 +65,24 @@ $ ./bittensor.sh --remote --token $DIGITAL_OCEAN_TOKEN --eosurl http://142.93.17
 # Run a Local Node
 $ python src/upncp.py --port 9091  // To punch a hole in your router.
 $ ./bittensor.sh --port 9091 --eosurl http://142.93.177.245:8888
+
+```
+
+## To-Run-CoLA
+1. [Install Docker](https://docs.docker.com/install/)
+
+```
+$ git clone https://github.com/unconst/BitTensor
+$ cd BitTensor
+
+# Run a test EOS blockchain.
+$ ./start_eos.sh
+
+# Run Node 1.
+$ ./bittensor.sh --neuron ELMO
+
+# Run Node 2.
+$ ./bittensor.sh --neuron CoLA
 
 ```
 

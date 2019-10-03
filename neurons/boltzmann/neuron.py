@@ -147,7 +147,7 @@ class Neuron(bittensor.proto.bittensor_pb2_grpc.BittensorServicer):
         source_id = request.source_id
         parent_id = request.parent_id
         message_id = request.message_id
-        logger.info('spike {}{}', parent_id, message_id)
+        logger.info('spike {}', parent_id)
 
         # 1. Check and build message buffer. On recursion with loops we respond
         # with a null message if the message_id has been seen already.
@@ -214,12 +214,13 @@ class Neuron(bittensor.proto.bittensor_pb2_grpc.BittensorServicer):
 
 
     def Grade(self, request, context):
+        
         # Unpack request.
         source_id = request.source_id
         parent_id = request.parent_id
         message_id = request.message_id
         ugrades = pickle.loads(request.payload)
-        logger.info('grad {}{}', parent_id, message_id)
+        logger.info('grad {}', parent_id)
 
         # Check for lost or badly routed grades.
         if message_id not in self.memory:
