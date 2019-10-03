@@ -145,9 +145,26 @@ class Neuron():
         self._gradients = [grad for (grad, var) in grads_and_vars]
         self._train = optimizer.minimize(self._loss)
 
+        # Calculate contribution scores.
+        # ∆Lij≈ ∑ gx·∆dj + 1/2N * ∆dj ∑ (gx∗gx)
+        self._deltaLij = []
+        for i, gx in enumerate(self._gradients):
+            delta_d = -self._inputs[i]
+            #gx = tf.Print(gx, [gx], message='gx')
+            #delta_d = tf.Print(delta_d, [delta_d], message='delta_d')
+            g = tf.tensordot(delta_d, gx, axes=2)
+            #g = tf.Print(g, [g], message='g')
+            gxgx = tf.multiply(gx, gx)
+            #gxgx = tf.Print(gxgx, [gxgx], message='gxgx')
+            H = tf.tensordot(delta_d, gxgx, axes=2)
+            #H = tf.Print(H, [H], message='H')
+            score = tf.reduce_sum(g + H)
+            self._deltaLij.append(score)
+
 
     def _training_loop(self):
         try:
+            mavg_deltaLij = [0.0 for _ in range(self._config.k)]
             with self._coord.stop_on_exception():
                 while not self._coord.should_stop() and self._running:
 
@@ -172,17 +189,24 @@ class Neuron():
                     # are filled we add them to the feed dict, if they are none
                     # we fill the feed dict with zeros.
                     # TODO(const): futures timeout there is no timeout.
-                    ttl = 1.0
+                    ttl = 3.0
                     start = time.time()
                     done = [False for _ in futures]
                     filled = [False for _ in futures]
                     while True:
                         for i, channel in enumerate(self._inputs):
+                            # Init as zeros.
+                            feeds[channel] = np.zeros((self._batch_size, EMBEDDING_SIZE))
+
+                            # Check already done.
                             if done[i]:
                                 continue
+
+                            # Check nil.
                             elif futures[i] == None:
                                 done[i] = True
-                                feeds[channel] = np.zeros((self._batch_size, EMBEDDING_SIZE))
+
+                            # Check result.
                             elif futures[i].done():
                                 done[i] = True
                                 try:
@@ -190,22 +214,25 @@ class Neuron():
                                     dspikes = pickle.loads(response.payload)
                                     feeds[channel] = dspikes.reshape(self._batch_size, EMBEDDING_SIZE)
                                     filled[i] = True
-                                except Exception as e:
-                                    feeds[channel] = np.zeros((self._batch_size, EMBEDDING_SIZE))
+                                except:
+                                    pass
+
+                            # Check ttl.
                             elif (time.time() - start) > ttl:
                                 done[i] = True
-                                feeds[channel] = np.zeros((self._batch_size, EMBEDDING_SIZE))
+
                         if all(done):
                             break
 
-                    logger.info(filled)
+                    #logger.info(filled)
 
                     # Build fetches.
                     fetches = {
                         'train': self._train,
                         'loss': self._loss,
                         'step': self._global_step,
-                        'gradients': self._gradients
+                        'gradients': self._gradients,
+                        'deltaLij': self._deltaLij
                     }
 
                     # # Run Training graph.
@@ -216,11 +243,16 @@ class Neuron():
                     step = _output['step']
                     gradients = _output['gradients']
 
+                    # Update moving deltaij
+                    deltaLij = _output['deltaLij']
+                    for i in range(len(deltaLij)):
+                        mavg_deltaLij[i] = (0.95) * mavg_deltaLij[i] + (0.05 * abs(deltaLij[i]))
+
                     # Train network.
                     self._dendrite.grad(nounce, text, gradients)
 
                     # Write summaries.
-                    logger.info('step: {} loss: {}', nounce, loss)
+                    logger.info('step: {} loss: {} delatLij: {}', nounce, ("%.4f" % loss), [ ("%.4f" % dl) for dl in mavg_deltaLij])
 
         except Exception as e:
             logger.error(e)

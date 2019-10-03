@@ -86,7 +86,6 @@ class Dendrite():
                 future.add_done_callback(_delete_callback)
 
             except:
-                logger.info('exception')
                 pass
 
         return
@@ -134,7 +133,6 @@ class Dendrite():
                 # Send non-waiting spike request.
                 futures.append(stub.Spike.future(request))
             except Exception as e:
-                logger.error(e)
                 pass
 
         return futures
