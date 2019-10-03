@@ -17,7 +17,7 @@ here = path.abspath(path.dirname(__file__))
 
 # Get the long description from the README file
 with open(path.join(here, 'README.md'), encoding='utf-8') as f:
-  long_description = f.read()
+    long_description = f.read()
 
 # Arguments marked as "Required" below must be included for upload to PyPI.
 # Fields marked as "Optional" may be commented out.
@@ -42,25 +42,13 @@ setup(
         'Programming Language :: Python :: 3.6',
         'Programming Language :: Python :: 3.7',
     ],
-    packages=find_packages(exclude=['data', 'contract', 'assets', 'scripts', 'docs']),  # Required
+    packages=find_packages(
+        exclude=['data', 'contract', 'assets', 'scripts', 'docs']),  # Required
     python_requires='>=3.5',
     install_requires=[
-        'argparse',
-        'grpcio',
-        'grpcio-tools',
-        'libeospy',
-        'loguru',
-        'matplotlib',
-        'miniupnpc',
-        'networkx',
-        'numpy',
-        'pebble',
-        'pickle-mixin',
-        'pycrypto',
-        'sklearn',
-        'tensorflow',
-        'tensorflow_hub==0.4.0',
-        'timeloop',
-        'zipfile36'
-        ],  # Optional
+        'argparse', 'grpcio', 'grpcio-tools', 'libeospy', 'loguru',
+        'matplotlib', 'miniupnpc', 'networkx', 'numpy', 'pebble',
+        'pickle-mixin', 'pycrypto', 'sklearn', 'tensorflow',
+        'tensorflow_hub==0.4.0', 'timeloop', 'zipfile36'
+    ],  # Optional
 )

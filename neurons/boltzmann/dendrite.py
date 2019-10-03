@@ -8,6 +8,7 @@ class Dendrite:
 
     def __init__(self, config, metagraph):
         pass
+
     #     self.config = config
     #     self.metagraph = metagraph
     #     self.channels = [None for _ in range(self.config.k)]

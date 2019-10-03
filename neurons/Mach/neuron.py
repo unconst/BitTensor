@@ -32,7 +32,7 @@ class Buffer:
         self.lgrads = lgrads
 
     def set(self,
-            source_id=None
+            source_id=None,
             parent_id=None,
             message_id=None,
             create_time=None,
@@ -107,7 +107,6 @@ class Neuron(bittensor.proto.bittensor_pb2_grpc.BittensorServicer):
         self.server.start()
         logger.debug('Started Serving Neuron at: {}.', self.server_address)
 
-
     def _spike_future(self, channel, request):
         if channel == None:
             return None
@@ -137,7 +136,8 @@ class Neuron(bittensor.proto.bittensor_pb2_grpc.BittensorServicer):
                         remaining_futures -= 1
                         try:
                             result = futures[i].result()
-                            next_dspikes = pickle.loads(result.payload).reshape(-1, 128)
+                            next_dspikes = pickle.loads(result.payload).reshape(
+                                -1, 128)
                             dspikes[i] = next_dspikes
                         except:
                             pass
@@ -176,7 +176,6 @@ class Neuron(bittensor.proto.bittensor_pb2_grpc.BittensorServicer):
                                 create_time=time.time())
 
             self.memory[message_id] = msg_buffer
-
 
         finally:
             self.lock.release()
@@ -217,7 +216,6 @@ class Neuron(bittensor.proto.bittensor_pb2_grpc.BittensorServicer):
 
         # Return.
         return response
-
 
     def Grade(self, request, context):
         # Unpack request.

@@ -94,14 +94,15 @@ class Neuron():
                     # (block is false), put an item on the queue if a free slot
                     # is immediately available, else raise the Full exception
                     # (timeout is ignored in that case).
-                    self._queue.put( {
-                                    'nounce': str(nounce),
-                                    'text': batch_text,
-                                    'labels': batch_labels,
-                                    'futures': futures
-                                },
-                                timeout=5,
-                                block=True)
+                    self._queue.put(
+                        {
+                            'nounce': str(nounce),
+                            'text': batch_text,
+                            'labels': batch_labels,
+                            'futures': futures
+                        },
+                        timeout=5,
+                        block=True)
 
                     nounce += 1
 
@@ -114,13 +115,14 @@ class Neuron():
         # Global step.
         self._global_step = tf.compat.v1.train.create_global_step()
         self._nounce = tf.compat.v1.placeholder(tf.string, shape=[])
-        self._text = tf.compat.v1.placeholder(tf.string, shape=[self._batch_size, 1])
-        self._labels = tf.compat.v1.placeholder(tf.float32, shape=[self._batch_size, 1])
+        self._text = tf.compat.v1.placeholder(tf.string,
+                                              shape=[self._batch_size, 1])
+        self._labels = tf.compat.v1.placeholder(tf.float32,
+                                                shape=[self._batch_size, 1])
         self._inputs = []
         for i in range(self._config.k):
             input_i = tf.compat.v1.placeholder(
-                            tf.float32,
-                            shape=[self._batch_size, EMBEDDING_SIZE])
+                tf.float32, shape=[self._batch_size, EMBEDDING_SIZE])
             self._inputs.append(input_i)
 
         # Layer 1
@@ -141,7 +143,8 @@ class Neuron():
 
         # Optimizer and downstream gradients.
         optimizer = tf.compat.v1.train.AdagradOptimizer(self._config.alpha)
-        grads_and_vars = optimizer.compute_gradients(self._loss, var_list=self._inputs)
+        grads_and_vars = optimizer.compute_gradients(self._loss,
+                                                     var_list=self._inputs)
         self._gradients = [grad for (grad, var) in grads_and_vars]
         self._train = optimizer.minimize(self._loss)
 
@@ -160,7 +163,6 @@ class Neuron():
             #H = tf.Print(H, [H], message='H')
             score = tf.reduce_sum(g + H)
             self._deltaLij.append(score)
-
 
     def _training_loop(self):
         try:
@@ -196,7 +198,8 @@ class Neuron():
                     while True:
                         for i, channel in enumerate(self._inputs):
                             # Init as zeros.
-                            feeds[channel] = np.zeros((self._batch_size, EMBEDDING_SIZE))
+                            feeds[channel] = np.zeros(
+                                (self._batch_size, EMBEDDING_SIZE))
 
                             # Check already done.
                             if done[i]:
@@ -212,7 +215,8 @@ class Neuron():
                                 try:
                                     response = futures[i].result()
                                     dspikes = pickle.loads(response.payload)
-                                    feeds[channel] = dspikes.reshape(self._batch_size, EMBEDDING_SIZE)
+                                    feeds[channel] = dspikes.reshape(
+                                        self._batch_size, EMBEDDING_SIZE)
                                     filled[i] = True
                                 except:
                                     pass
@@ -236,7 +240,8 @@ class Neuron():
                     }
 
                     # # Run Training graph.
-                    _output = self._session.run(fetches=fetches, feed_dict=feeds)
+                    _output = self._session.run(fetches=fetches,
+                                                feed_dict=feeds)
 
                     # Unpack.
                     loss = _output['loss']
@@ -246,20 +251,22 @@ class Neuron():
                     # Update moving deltaij
                     deltaLij = _output['deltaLij']
                     for i in range(len(deltaLij)):
-                        mavg_deltaLij[i] = (0.95) * mavg_deltaLij[i] + (0.05 * abs(deltaLij[i]))
+                        mavg_deltaLij[i] = (0.95) * mavg_deltaLij[i] + (
+                            0.05 * abs(deltaLij[i]))
 
                     # Train network.
                     self._dendrite.grad(nounce, text, gradients)
 
                     # Write summaries.
-                    logger.info('step: {} loss: {} delatLij: {}', nounce, ("%.4f" % loss), [ ("%.4f" % dl) for dl in mavg_deltaLij])
+                    logger.info('step: {} loss: {} delatLij: {}', nounce,
+                                ("%.4f" % loss),
+                                [("%.4f" % dl) for dl in mavg_deltaLij])
 
         except Exception as e:
             logger.error(e)
             self._coord.request_stop(e)
 
         logger.info('Stopped training thread.')
-
 
     def _main(self):
         logger.debug('Started Nucleus training.')

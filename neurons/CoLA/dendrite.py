@@ -9,8 +9,10 @@ import tensorflow as tf
 
 EMBEDDING_SIZE = 128
 
+
 def _delete_callback(future):
     del future
+
 
 class Dendrite():
 
@@ -38,13 +40,12 @@ class Dendrite():
                 self.channels[i] = grpc.insecure_channel(address)
                 self.channel_nodes[i] = selected_node
 
-
     def grad(self, nounce, spikes, grads):
         # Type checks.
-        assert(type(nounce) == str)
-        assert(type(spikes) == type(np.array([])))
-        assert(type(grads) == list)
-        assert(type(grads[0]) == type(np.array([])))
+        assert (type(nounce) == str)
+        assert (type(spikes) == type(np.array([])))
+        assert (type(grads) == list)
+        assert (type(grads[0]) == type(np.array([])))
 
         # Encode nounce and source.
         nounce_bytes = bytes(nounce, 'utf-8')
@@ -92,8 +93,8 @@ class Dendrite():
 
     def spike(self, nounce, spikes):
         # Type checks.
-        assert(type(nounce) == str)
-        assert(type(spikes) == type(np.array([])))
+        assert (type(nounce) == str)
+        assert (type(spikes) == type(np.array([])))
 
         # Encode nounce and source.
         nounce_bytes = bytes(nounce, 'utf-8')
