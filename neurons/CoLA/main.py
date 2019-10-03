@@ -8,6 +8,7 @@ from itertools import cycle
 from loguru import logger
 import numpy as np
 import os
+import pickle
 import queue
 import time
 import tensorflow as tf
@@ -144,31 +145,6 @@ class Neuron():
         self._gradients = [grad for (grad, var) in grads_and_vars]
         self._train = optimizer.minimize(self._loss)
 
-    def _fill_futures_or_none(self, futures):
-        # Build result buffer.
-        result = []
-        for _ in futures:
-            zeros = np.zeros((self._batch_size, EMBEDDING_SIZE))
-            result.append(zeros)
-
-        # Fill futures or ttl.
-        while True:
-            remaining = len(futures)
-            for i, future in enumerate(futures):
-                if future == None:
-                    remaining -= 1
-                elif future.done():
-                    remaining -= 1
-                    try:
-                        response = future.result()
-                        dspikes = pickle.loads(response.payload)
-                        result[i] = dspikes.reshape(-1, EMBEDDING_SIZE)
-                    except Exception as e:
-                        pass
-            if remaining == 0:
-                break
-
-        return result
 
     def _training_loop(self):
         try:
@@ -176,26 +152,43 @@ class Neuron():
                 while not self._coord.should_stop() and self._running:
 
                     # Pull next sample from preprocessing queue.
-                    sample = self._queue.get(block=True, timeout=5)
+                    example = self._queue.get(block=True, timeout=5)
 
                     # Unpack.
-                    nounce = sample['nounce']
-                    text = sample['text']
-                    labels = sample['labels']
-                    futures = sample['futures']
-
-                    _next_inputs = self._fill_futures_or_none(futures)
+                    nounce = example['nounce']
+                    text = example['text']
+                    labels = example['labels']
+                    futures = example['futures']
 
                     # Build feeds.
                     feeds = {
-                        self._nounce: sample['nounce'],
-                        self._text: sample['text'],
-                        self._labels: sample['labels']
+                        self._nounce: nounce,
+                        self._text: text,
+                        self._labels: labels
                     }
 
-                    # feeds for each embedding channel.
-                    for i, channel in enumerate(self._inputs):
-                        feeds[channel] = _next_inputs[i]
+                    # Fill feeds from passed call futures. Iterates through
+                    # each channel checking done complete on futures. If they
+                    # are filled we add them to the feed dict, if they are none
+                    # we fill the feed dict with zeros.
+                    # TODO(const): futures timeout there is no timeout.
+                    while True:
+                        remaining = len(self._inputs)
+                        for i, channel in enumerate(self._inputs):
+                            if futures[i] == None:
+                                remaining -= 1
+                                feeds[channel] = np.zeros((self._batch_size, EMBEDDING_SIZE))
+                            elif futures[i].done():
+                                remaining -= 1
+                                try:
+                                    response = futures[i].result()
+                                    dspikes = pickle.loads(response.payload)
+                                    feeds[channel] = dspikes.reshape(self._batch_size, EMBEDDING_SIZE)
+                                except Exception as e:
+                                    pass
+                        if remaining == 0:
+                            break
+
 
                     # Build fetches.
                     fetches = {
