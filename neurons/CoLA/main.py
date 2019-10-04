@@ -34,6 +34,19 @@ def download_and_extract_cola():
     logger.info("\tCompleted!")
 
 
+def next_batch(size, generator):
+    # Build batch.
+    batch_text = []
+    batch_labels = []
+    for _ in range(size):
+        sample = next(generator)
+        batch_text.append([sample['inputs']])
+        batch_labels.append([sample['label']])
+    batch_text = np.array(batch_text)
+    batch_labels = np.array(batch_labels)
+    return batch_text, batch_labels
+
+
 EMBEDDING_SIZE = 128
 
 
@@ -43,7 +56,7 @@ class Neuron():
         self._config = config
         self._dendrite = dendrite
         self._cola = cola.Cola()
-        self._cola_generator = cycle(
+        self._generator = cycle(
             self._cola.example_generator('neurons/CoLA/data/CoLA/train.tsv'))
 
         # batch_size
@@ -73,18 +86,12 @@ class Neuron():
         try:
             with self._coord.stop_on_exception():
                 while not self._coord.should_stop() and self._running:
-                    # Build batch.
-                    batch_text = []
-                    batch_labels = []
-                    for _ in range(self._batch_size):
-                        sample = next(self._cola_generator)
-                        batch_text.append([sample['inputs']])
-                        batch_labels.append([sample['label']])
-                    batch_text = np.array(batch_text)
-                    batch_labels = np.array(batch_labels)
+
+                    # Create a batch of examples from our data generator.
+                    text, labels = next_batch(self._batch_size, self._generator)
 
                     # Query Bittensor Network
-                    futures = self._dendrite.spike(str(nounce), batch_text)
+                    futures = self._dendrite.spike(str(nounce), text)
 
                     # Put item into the queue. If optional args block is true and
                     # timeout is None (the default), block if necessary until a
@@ -97,8 +104,8 @@ class Neuron():
                     self._queue.put(
                         {
                             'nounce': str(nounce),
-                            'text': batch_text,
-                            'labels': batch_labels,
+                            'text': text,
+                            'labels': labels,
                             'futures': futures
                         },
                         timeout=5,
@@ -153,14 +160,9 @@ class Neuron():
         self._deltaLij = []
         for i, gx in enumerate(self._gradients):
             delta_d = -self._inputs[i]
-            #gx = tf.Print(gx, [gx], message='gx')
-            #delta_d = tf.Print(delta_d, [delta_d], message='delta_d')
             g = tf.tensordot(delta_d, gx, axes=2)
-            #g = tf.Print(g, [g], message='g')
             gxgx = tf.multiply(gx, gx)
-            #gxgx = tf.Print(gxgx, [gxgx], message='gxgx')
             H = tf.tensordot(delta_d, gxgx, axes=2)
-            #H = tf.Print(H, [H], message='H')
             score = tf.reduce_sum(g + H)
             self._deltaLij.append(score)
 
@@ -190,11 +192,10 @@ class Neuron():
                     # each channel checking done complete on futures. If they
                     # are filled we add them to the feed dict, if they are none
                     # we fill the feed dict with zeros.
-                    # TODO(const): futures timeout there is no timeout.
-                    ttl = 3.0
+                    ttl = 1.0
                     start = time.time()
-                    done = [False for _ in futures]
-                    filled = [False for _ in futures]
+                    is_done = [False for _ in futures]
+                    is_filled = [False for _ in futures]
                     while True:
                         for i, channel in enumerate(self._inputs):
                             # Init as zeros.
@@ -202,33 +203,32 @@ class Neuron():
                                 (self._batch_size, EMBEDDING_SIZE))
 
                             # Check already done.
-                            if done[i]:
+                            if is_done[i]:
                                 continue
 
                             # Check nil.
                             elif futures[i] == None:
-                                done[i] = True
+                                is_done[i] = True
 
                             # Check result.
                             elif futures[i].done():
-                                done[i] = True
+                                is_done[i] = True
                                 try:
                                     response = futures[i].result()
                                     dspikes = pickle.loads(response.payload)
                                     feeds[channel] = dspikes.reshape(
                                         self._batch_size, EMBEDDING_SIZE)
-                                    filled[i] = True
+                                    is_filled[i] = True
                                 except:
                                     pass
 
                             # Check ttl.
                             elif (time.time() - start) > ttl:
-                                done[i] = True
+                                is_done[i] = True
 
-                        if all(done):
+                        # Break fill when all are done or timedout.
+                        if all(is_done):
                             break
-
-                    #logger.info(filled)
 
                     # Build fetches.
                     fetches = {
