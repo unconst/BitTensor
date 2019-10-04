@@ -25,6 +25,7 @@ class Nucleus():
 
         self.graph = tf.Graph()
         with self.graph.as_default(), tf.device('/cpu:0'):
+            self.build_tokeni
             self.build_graph()
 
         # Create TF Session.
@@ -35,12 +36,12 @@ class Nucleus():
 
         self.session.run(self.table_init)
 
-    def spike(self, uspikes, dspikes):
+
+    def distill(self, uspikes):
 
         # Build Feeds dictionary.
-        feeds = {self.text_placeholder: uspikes}
-        for i in range(self.config.k):
-            feeds[self.dspikes[i]] = dspikes[i]
+        feeds = {self.text_placeholder: uspikes,
+                 self.is_distill: True}
 
         # Build Fetches dictionary.
         fetches = {'output': self.output}
@@ -50,6 +51,7 @@ class Nucleus():
 
         # Return spikes.
         return run_output['output']
+
 
     def grade(self, ugrades, uspikes, dspikes):
 
@@ -87,28 +89,70 @@ class Nucleus():
         # Run graph. No output.
         self.session.run(fetches, feeds)
 
-    def build_graph(self):
+    def spike(self, uspikes, dspikes):
 
-        # Text input placeholder.
+        # Build Feeds dictionary.
+        feeds = {self.text_placeholder: uspikes}
+        for i in range(self.config.k):
+            feeds[self.dspikes[i]] = dspikes[i]
+
+        # Build Fetches dictionary.
+        fetches = {'output': self.output}
+
+        # Run graph.
+        run_output = self.session.run(fetches, feeds)
+
+        # Return spikes.
+        return run_output['output']
+
+    def tokenize(self, text):
+        # Build Feeds dictionary.
+        feeds = {self.text_placeholder: text}
+
+        # Build Fetches dictionary.
+        fetches = {'token_embedding': self.token_embedding}
+
+        # Run graph.
+        run_output = self.session.run(fetches, feeds)
+
+        # Return spikes.
+        return run_output['token_embedding']
+
+    def tokenization_graph(self):
+        # Text placeholder. Text should be unicoded encoded strings. Here
+        # we are treating them as single words.
+        # TODO(const): tokenize larger strings.
         self.text_placeholder = tf.compat.v1.placeholder(
             tf.string, shape=[None, 1], name="text_placeholder")
-        input_text = tf.reshape(self.text_placeholder, [-1])
+        text = tf.reshape(self.text_placeholder, [-1])
 
-        # Tokenization.
+        # Tokenization with loopup table. This is the simplest form of
+        # tokenization which simply looks up the word in a table to retrieve a
+        # 1 x vocabulary sized vector.
+        # string map, is a list of strings ordered by count.
         vocabulary_table = tf.contrib.lookup.index_table_from_tensor(
             mapping=tf.constant(self.string_map),
             num_oov_buckets=1,
             default_value=0)
+
+        # Apply tokenizer lookup.
         input_tokens = vocabulary_table.lookup(input_text)
 
-        # Token spikes.
-        embedding_matrix = tf.Variable(
+        # Token embedding matrix is a matrix of vectors. During lookup we pull
+        # the vector corresponding to the 1-hot encoded vector from the
+        # vocabulary table.
+        token_embedding_matrix = tf.Variable(
             tf.random.uniform([self.vocabulary_size, self.embedding_size], -1.0,
                               1.0))
-        self.token_spikes = tf.nn.embedding_lookup(embedding_matrix,
-                                                   input_tokens)
-        self.token_spikes = tf.reshape(self.token_spikes,
-                                       [-1, self.embedding_size])
+
+        # Apply table lookup to retrieve the embedding.
+        embedding = tf.nn.embedding_lookup(embedding_matrix, input_tokens)
+
+        # reshape and return.
+        self.token_embedding = tf.reshape(embedding, [-1, self.embedding_size])
+        return self.token_embedding
+
+    def nucleus_graph(self, token_embedding):
 
         # Placeholders for downstream spikes.
         self.dspikes = []
@@ -121,7 +165,7 @@ class Nucleus():
 
         # activation_spikes = [None, embedding_size * (self.config.k + 1)]
         self.activation_size = self.embedding_size * (self.config.k + 1)
-        self.activation_spikes = tf.concat([self.token_spikes] + self.dspikes,
+        self.activation_spikes = tf.concat([token_embedding] + self.dspikes,
                                            axis=1)
 
         # Layer 1.
