@@ -25,8 +25,9 @@ class Nucleus():
 
         self.graph = tf.Graph()
         with self.graph.as_default(), tf.device('/cpu:0'):
-            self.build_tokeni
-            self.build_graph()
+            token_embedding = self.tokenization_graph()
+            downstream_embeddings = self.downstream_graph()
+            self.nucleus_graph(token_embedding, downstream_embeddings)
 
         # Create TF Session.
         self.session = tf.compat.v1.Session(graph=self.graph)
@@ -152,8 +153,8 @@ class Nucleus():
         self.token_embedding = tf.reshape(embedding, [-1, self.embedding_size])
         return self.token_embedding
 
-    def nucleus_graph(self, token_embedding):
 
+    def downstream_spikes(self):
         # Placeholders for downstream spikes.
         self.dspikes = []
         for i in range(self.config.k):
@@ -163,24 +164,6 @@ class Nucleus():
                 name="dspikes_placeholder" + str(i))
             self.dspikes.append(downstream_spikes)
 
-        # activation_spikes = [None, embedding_size * (self.config.k + 1)]
-        self.activation_size = self.embedding_size * (self.config.k + 1)
-        self.activation_spikes = tf.concat([token_embedding] + self.dspikes,
-                                           axis=1)
-
-        # Layer 1.
-        w1 = tf.Variable(
-            tf.random.uniform([self.activation_size, self.embedding_size], -1.0,
-                              1.0))
-        b1 = tf.Variable(tf.zeros([self.embedding_size]))
-        local_spikes = tf.sigmoid(tf.matmul(self.activation_spikes, w1) + b1)
-
-        # Representation. Output Spikes,
-        self.output = tf.identity(local_spikes, name="output")
-
-        # Upstream gradient placeholder.
-        self.output_grad = tf.placeholder(tf.float32,
-                                          [None, self.embedding_size])
 
         # Build downstream grad tensors.
         self.downstream_grads = []
@@ -191,7 +174,82 @@ class Nucleus():
                                         name="dgrads" + str(i))
             self.downstream_grads.append(dspikes_grad)
 
-        # Build optimizer.
+        return self.dspikes
+
+
+
+    def student(self, token_embedding):
+        '''Builds the student model, returns the students's embedding'''
+        weights = {
+            'w1':
+                tf.Variable(
+                    tf.truncated_normal([config.n_inputs, config.s_hidden1],
+                                        stddev=0.1)),
+            'w2':
+                tf.Variable(
+                    tf.truncated_normal([config.s_hidden1, config.s_hidden2],
+                                        stddev=0.1)),
+            'w3':
+                tf.Variable(
+                    tf.truncated_normal([config.s_hidden2, config.n_embedding],
+                                        stddev=0.1)),
+        }
+
+        biases = {
+            'b1': tf.Variable(tf.constant(0.1, shape=[config.s_hidden1])),
+            'b2': tf.Variable(tf.constant(0.1, shape=[config.s_hidden2])),
+            'b3': tf.Variable(tf.constant(0.1, shape=[config.n_embedding])),
+        }
+
+        layer_1 = tf.nn.relu(
+            tf.add(tf.matmul(token_embedding, weights['w1']), biases['b1']))
+        layer_2 = tf.nn.relu(tf.add(tf.matmul(layer_1, weights['w2']),
+                                    biases['b2']))
+        student_embedding = tf.add(tf.matmul(layer_2, weights['w3']), biases['b3'])
+        return student_embedding
+
+
+
+    def teacher(self, token_embedding, student_embedding, hparams):
+        '''Builds the teacher model, returns the teacher's embedding'''
+
+        teacher_inputs = tf.concat([token_embedding, student_embedding], axis=1)
+        n_teacher_inputs = hparams.n_inputs + hparams.n_embedding
+
+        weights = {
+            'w1':
+                tf.Variable(
+                    tf.truncated_normal([n_teacher_inputs, hparams.t_hidden1],
+                                        stddev=0.1)),
+            'w2':
+                tf.Variable(
+                    tf.truncated_normal([hparams.t_hidden1, hparams.t_hidden2],
+                                        stddev=0.1)),
+            'w3':
+                tf.Variable(
+                    tf.truncated_normal([hparams.t_hidden2, hparams.n_embedding],
+                                        stddev=0.1)),
+        }
+
+        biases = {
+            'b1': tf.Variable(tf.constant(0.1, shape=[hparams.t_hidden1])),
+            'b2': tf.Variable(tf.constant(0.1, shape=[hparams.t_hidden2])),
+            'b3': tf.Variable(tf.constant(0.1, shape=[hparams.n_embedding])),
+        }
+
+        layer_1 = tf.nn.relu(
+            tf.add(tf.matmul(teacher_inputs, weights['w1']), biases['b1']))
+        layer_2 = tf.nn.relu(tf.add(tf.matmul(layer_1, weights['w2']),
+                                    biases['b2']))
+        teacher_embedding = tf.nn.relu(
+            tf.add(tf.matmul(layer_2, weights['w3']), biases['b3']))
+
+        return teacher_embedding
+
+    def classroom(self, downstream_spikes):
+        return tf.add_n(downstream_spikes)
+
+    def loss(self, embedding):
         self.optimizer = tf.train.GradientDescentOptimizer(self.config.alpha)
         gradients = self.optimizer.compute_gradients(loss=self.output,
                                                      grad_loss=self.output_grad)
@@ -207,6 +265,45 @@ class Nucleus():
                 (grad_placeholder, gradient_variable[1]))
 
         self.step = self.optimizer.apply_gradients(self.placeholder_gradients)
+        return self.step
+
+    def logits(self, embedding, hparams):
+        '''Calculates the teacher and student logits from embeddings.'''
+        w = tf.Variable(
+            tf.truncated_normal([hparams.n_embedding, hparams.n_targets],
+                                stddev=0.1))
+        b = tf.Variable(tf.constant(0.1, shape=[hparams.n_targets])),
+        logits = tf.add(tf.matmul(embedding, w), b)
+        return logits
+
+    def target_loss(self, logits, targets):
+        '''Calculates the target loss w.r.t a set of logits.'''
+        target_loss = tf.reduce_mean(
+            tf.nn.softmax_cross_entropy_with_logits_v2(labels=targets,
+                                                       logits=logits))
+        return target_loss
+
+    def distillation_loss(self, student_embedding, teacher_embedding):
+        '''Calculates the distilled loss between the teacher and student embedding'''
+        distillation_loss = tf.reduce_mean(
+            tf.nn.l2_loss(tf.stop_gradient(teacher_embedding) - student_embedding))
+        return distillation_loss
+
+    def nucleus_graph(self, downstream_embeddings, token_embedding):
+
+        self.classroom_embedding = self.classroom(downstream_embeddings)
+
+        self.student_embedding = self.student(token_embedding)
+
+        self.distillation_loss = self.distillation_loss(self.student_embedding, self.classroom_embedding)
+
+        self.teacher_embedding = self.teacher(token_embedding, self.student_embedding)
+
+        self.logits = self.logits(self.teacher_embedding)
+
+        self.target_loss = self.target_loss(self.logits)
+
+        self.step = self.optimizer(self.target_loss, self.distillation_loss)
 
         # Init vars.
         self.var_init = tf.compat.v1.global_variables_initializer()
