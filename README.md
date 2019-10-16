@@ -35,16 +35,16 @@ $ cd BitTensor
 # Run a test EOS blockchain.
 $ ./start_eos.sh
 
-# Run Node 1.
-$ ./bittensor.sh
+# Run Node 1. A pretrained ELMO model.
+$ ./bittensor.sh --neuron ELMO
 
-# Run Node 2.
+# Run Node 2. An intermediate node which learns from its children.
 $ ./bittensor.sh --neuron Boltzmann
 
 ...
 
-# Run Node N.
-$ ./bittensor.sh --neuron ELMO
+# Run Node N. A component training against the CoLA text classification dataset.
+$ ./bittensor.sh --neuron CoLA
 
 ```
 
@@ -91,7 +91,7 @@ $ ./bittensor.sh --neuron CoLA
 We use [Yapf](https://github.com/google/yapf) for code format. Please run the following.
 ```
 $ pip install yapf
-$ yapf --style google -r -vv -i <filename>
+$ yapf --style google -r -vv -i .
 ```
 
 ## Neurons
@@ -103,6 +103,8 @@ $ yapf --style google -r -vv -i <filename>
 1. Elmo: Untrainable Elmo NN.
 
 1. GoogleUSE: Google's universal sentence encoder. Non-trainable. Trained on question and answer text.
+
+1. CoLA: CoLA dataset node, learning to classify speech. 
 
 ## Further Reading
 
