@@ -1,6 +1,5 @@
 import bittensor
 
-from config import Config
 from metagraph import Metagraph
 from nucleus import Nucleus
 from neuron import Neuron
@@ -48,10 +47,9 @@ def main(hparams):
     tl.start(block=False)
     logger.info('Started Timers.')
 
-    def tear_down(_hparams, _neuron, _dendrite, _nucleus, _metagraph):
+    def tear_down(_hparams, _neuron, _nucleus, _metagraph):
         logger.debug('tear down.')
         del _neuron
-        del _dendrite
         del _nucleus
         del _metagraph
         del _hparams
@@ -64,11 +62,11 @@ def main(hparams):
 
     except KeyboardInterrupt:
         logger.debug('Neuron stopped with keyboard interrupt.')
-        tear_down(hparams, neuron, dendrite, nucleus, metagraph)
+        tear_down(hparams, neuron, nucleus, metagraph)
 
     except Exception as e:
         logger.error('Neuron stopped with interrupt on error: ' + str(e))
-        tear_down(hparams, neuron, dendrite, nucleus, metagraph)
+        tear_down(hparams, neuron, nucleus, metagraph)
 
 
 if __name__ == '__main__':
@@ -114,12 +112,12 @@ if __name__ == '__main__':
         type=str,
         help='Path to corpus of text. Default corpus_path=neurons/Mach/data/text8.zip')
     parser.add_argument(
-        '--vocabulary_size',
+        '--n_vocabulary',
         default=50000,
         type=int,
         help='Size fof corpus vocabulary. Default vocabulary_size=50000')
     parser.add_argument(
-        '--num_sampled',
+        '--n_sampled',
         default=64,
         type=int,
         help='Number of negative examples to sample during training. Default num_sampled=64')
@@ -134,20 +132,20 @@ if __name__ == '__main__':
         type=float,
         help='Component learning rate. Default learning_rate=1e-4')
     parser.add_argument(
+        '--n_targets',
+        default=1,
+        type=int,
+        help='Number of targets to sample. Default n_targets=1')
+    parser.add_argument(
         '--n_embedding',
         default=128,
         type=int,
         help='Size of embedding between components. Default n_embedding=128')
     parser.add_argument(
-        '--n_components',
+        '--n_children',
         default=2,
         type=int,
-        help='The number of training iterations. Default n_components=2')
-    parser.add_argument(
-        '--n_iterations',
-        default=10000,
-        type=int,
-        help='The number of training iterations. Default n_iterations=10000')
+        help='The number of graph neighbors. Default n_children=2')
     parser.add_argument('--n_hidden1',
                         default=512,
                         type=int,

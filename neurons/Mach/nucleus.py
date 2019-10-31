@@ -1,5 +1,6 @@
 import collections
 from loguru import logger
+import random
 import tensorflow as tf
 import zipfile
 
@@ -11,36 +12,38 @@ class Nucleus():
         self._build_vocabulary()
         self._graph = tf.Graph()
         self._session = tf.compat.v1.Session(graph=self._graph)
-        with self.graph.as_default(), tf.device('/cpu:0'):
+        with self._graph.as_default(), tf.device('/cpu:0'):
             self._model_fn()
             self._session.run(tf.compat.v1.global_variables_initializer())
             self._session.run(tf.compat.v1.tables_initializer(
                 name='init_all_tables'))
 
-    def train(self):
+    def next_batch(self, batch_size):
         batch_words = []
         batch_labels = []
-        for i in range(self._hparams.batch_size):
+        for i in range(batch_size):
             index = random.randint(0, len(self._words) - 2)
             batch_words.append([self._words[index]])
             batch_labels.append([self._words[index + 1]])
+        return batch_words, batch_labels
 
+    def train(self, spikes, dspikes, targets):
         feeds = {
-            self._spikes: batch_words,
-            self._targets: batch_labels,
+            self._spikes: spikes,
+            self._targets: targets,
             self._use_synthetic: False
         }
+        for i in range(self._hparams.n_children):
+            feeds[self._dspikes[i]] = dspikes[i]
 
         fetches = {
             "downstream_grads:" : self._tdgrads,
-            "target_loss" : self.target_loss,
+            "target_loss" : self._target_loss,
             "train_step" : self._tstep,
             "synthetic_step" : self._syn_step
         }
         run_output = self._session.run(fetches, feeds)
         logger.info(run_output['target_loss'])
-
-        return run_output['downstream_grads']
 
     def spike(self, uspikes, dspikes, use_synthetic):
 
@@ -204,13 +207,13 @@ class Nucleus():
             't_w1':
                 tf.Variable(
                     tf.random.truncated_normal([
-                        self._hparams.n_embedding,
-                        self._hparams.n_target
+                        self._hparams.n_vocabulary,
+                        self._hparams.n_embedding
                     ]))
         }
         t_biases = {
             't_b1':
-                tf.Variable(tf.constant(0.1, shape=[self._hparams.n_target])),
+                tf.Variable(tf.constant(0.1, shape=[self._hparams.n_vocabulary])),
         }
         ltvars = list(t_weights.values()) + list(t_biases.values())
 
@@ -229,7 +232,7 @@ class Nucleus():
         # Token embedding matrix is a matrix of vectors. During lookup we pull
         # the vector corresponding to the 1-hot encoded vector from the
         # vocabulary table.
-        token_embedding_matrix = tf.Variable(
+        embedding_matrix = tf.Variable(
             tf.random.uniform([self._hparams.n_vocabulary, self._hparams.n_embedding], -1.0,
                               1.0))
 
@@ -289,19 +292,19 @@ class Nucleus():
 
         # Target: softmax cross entropy over local network embeddings.
         # Representation Weights & Sampled Softmax Loss.
-        self._target_loss = tf.nn.sampled_softmax_loss(
+        self._target_loss = tf.reduce_mean(tf.nn.sampled_softmax_loss(
             weights=t_weights['t_w1'],
             biases=t_biases['t_b1'],
-            labels=label_tokens,
+            labels=tf.reshape(label_tokens, [-1, 1]),
             inputs=self._embedding,
-            num_sampled=self._hparams.num_sampled,
-            num_classes=self._hparams.vocabulary_size,
-            num_true=1,
+            num_sampled=self._hparams.n_sampled,
+            num_classes=self._hparams.n_vocabulary,
+            num_true=self._hparams.n_targets,
             sampled_values=None,
             remove_accidental_hits=True,
             partition_strategy='mod',
             name='sampled_softmax_loss',
-            seed=None)
+            seed=None))
 
         # Optimizer: The optimizer for this component.
         optimizer = tf.compat.v1.train.AdamOptimizer(
@@ -365,7 +368,7 @@ class Nucleus():
 
         counts = [('UNK', -1)]
         counts.extend(
-            collections.Counter(self._words).most_common(self._hparams.vocabulary_size -
+            collections.Counter(self._words).most_common(self._hparams.n_vocabulary -
                                                         2))
         self._string_map = [c[0] for c in counts]
 

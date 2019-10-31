@@ -1,12 +1,15 @@
 import bittensor
 
+from Crypto.Hash import SHA256
 from concurrent import futures
 import grpc
 from loguru import logger
 import numpy as np
 import pickle
+import random
 import time
 from threading import Lock
+import threading
 import queue
 
 
@@ -61,15 +64,14 @@ class Buffer:
 
 class Neuron(bittensor.proto.bittensor_pb2_grpc.BittensorServicer):
 
-    def __init__(self, config, dendrite, nucleus, metagraph):
+    def __init__(self, config, nucleus, metagraph):
         self.config = config
-        self.dendrite = dendrite
         self.nucleus = nucleus
         self.metagraph = metagraph
+        self._is_training = True
 
         self.lock = Lock()
         self.memory = {}
-        self.gradient_queue = queue.LifoQueue(maxsize=-1)
 
         # Init server.
         self.server_address = self.config.bind_address + ":" + self.config.port
@@ -78,12 +80,12 @@ class Neuron(bittensor.proto.bittensor_pb2_grpc.BittensorServicer):
             self, self.server)
         self.server.add_insecure_port(self.server_address)
 
-        self.channels = [None for _ in range(self.config.k)]
-        self.channel_ids = [None for _ in range(self.config.k)]
+        self.channels = [None for _ in range(self.config.n_children)]
+        self.channel_ids = [None for _ in range(self.config.n_children)]
         self.connect()
 
     def connect(self):
-        for i in range(self.config.k):
+        for i in range(self.config.n_children):
             if self.channels[i] == None:
                 self._set_channel(i)
 
@@ -101,13 +103,15 @@ class Neuron(bittensor.proto.bittensor_pb2_grpc.BittensorServicer):
 
     def __del__(self):
         self.server.stop(0)
+        self._stop_training()
         logger.debug('Stopped Serving Neuron at: {}.', self.server_address)
 
     def serve(self):
         self.server.start()
+        self._start_training()
         logger.debug('Started Serving Neuron at: {}.', self.server_address)
 
-    def _spike_future(self, channel, request):
+    def _spike_future(self, channel, source_id, message_id, payload):
         if channel == None:
             return None
         try:
@@ -117,10 +121,10 @@ class Neuron(bittensor.proto.bittensor_pb2_grpc.BittensorServicer):
             # Create spike request proto.
             request = bittensor.proto.bittensor_pb2.SpikeRequest(
                 version=1.0,
-                source_id=request.source_id,
+                source_id=source_id,
                 parent_id=self.config.identity,
-                message_id=request.message_id,
-                payload=request.payload)
+                message_id=message_id,
+                payload=payload)
 
             # Send TCP spike request with futures callback.
             return stub.Spike.future(request)
@@ -129,8 +133,8 @@ class Neuron(bittensor.proto.bittensor_pb2_grpc.BittensorServicer):
 
     def _fill_dspikes(self, dspikes, futures):
         while True:
-            remaining_futures = self.config.k
-            for i in range(self.config.k):
+            remaining_futures = self.config.n_children
+            for i in range(self.config.n_children):
                 if futures[i] != None:
                     if futures[i].done():
                         remaining_futures -= 1
@@ -184,13 +188,13 @@ class Neuron(bittensor.proto.bittensor_pb2_grpc.BittensorServicer):
         # futures is a list of callbacks from each downstream call.
         futures = []
         for channel in self.channels:
-            futures.append(self._spike_future(channel, request))
+            futures.append(self._spike_future(channel, source_id, message_id, request.payload))
 
         # 3. Deserialize upstream spikes.
         uspikes = pickle.loads(request.payload)
 
         # 4. Fill downstream spikes.
-        dspikes = [np.zeros((len(uspikes), 128)) for _ in range(self.config.k)]
+        dspikes = [np.zeros((len(uspikes), 128)) for _ in range(self.config.n_children)]
         dspikes = self._fill_dspikes(dspikes, futures)
 
         # 5. Inference local neuron.
@@ -271,5 +275,45 @@ class Neuron(bittensor.proto.bittensor_pb2_grpc.BittensorServicer):
 
         return bittensor.proto.bittensor_pb2.GradeResponse(accept=True)
 
-    def Learn(self):
-        self.nucleus.train()
+    def _start_training(self):
+        self._is_training = True
+        self._thread = threading.Thread(target=self._run, daemon=True)
+        self._thread.start()
+
+    def _stop_training(self):
+        self._is_training = False
+        self._thread.join()
+
+    def _run(self):
+
+        while self._is_training:
+
+            # 1. Next training batch.
+            nounce = str(random.randint(0, 1000000000))
+            spikes, targets = self.nucleus.next_batch(self.config.batch_size)
+
+            # 2. Encode nounce and source
+            source_id = self.config.identity
+            nounce_bytes = bytes(nounce, 'utf-8')
+            source_bytes = bytes(source_id, 'utf-8')
+            payload_bytes = pickle.dumps(spikes, protocol=0)
+
+            # 3. Create unique message hash.
+            hash = SHA256.new()
+            hash.update(nounce_bytes)
+            hash.update(source_bytes)
+            hash.update(payload_bytes)
+            message_id = hash.digest()
+
+            # 3. Make recursive calls to downstream neighbors.
+            # futures is a list of callbacks from each downstream call.
+            futures = []
+            for channel in self.channels:
+                futures.append(self._spike_future(channel, source_id, message_id, payload_bytes))
+
+            # 4. Fill responses.
+            dspikes = [np.zeros((self.config.batch_size, self.config.n_embedding)) for _ in range(self.config.n_children)]
+            dspikes = self._fill_dspikes(dspikes, futures)
+
+            # 5. Train local model.
+            self.nucleus.train(spikes, dspikes, targets)

@@ -237,7 +237,7 @@ class Nucleus():
                 [self.vocabulary_size, self.embedding_size],
                 stddev=1.0 / math.sqrt(self.embedding_size)))
         softmax_biases = tf.Variable(tf.zeros([self.vocabulary_size]))
-        self.batch_loss = tf.nn.sampled_softmax_loss(
+        self.batch_loss = tf.reduce_mean(tf.nn.sampled_softmax_loss(
             weights=softmax_weights,
             biases=softmax_biases,
             labels=next_label_ids,
@@ -249,7 +249,7 @@ class Nucleus():
             remove_accidental_hits=True,
             partition_strategy='mod',
             name='sampled_softmax_loss',
-            seed=None)
+            seed=None))
 
         # Average loss.
         self.loss = tf.reduce_mean(self.batch_loss)
