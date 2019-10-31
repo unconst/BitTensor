@@ -156,6 +156,10 @@ class Neuron(bittensor.proto.bittensor_pb2_grpc.BittensorServicer):
         source_id = request.source_id
         parent_id = request.parent_id
         message_id = request.message_id
+        uspikes = pickle.loads(request.payload)
+
+
+        # TODO(const) spikes per second.
         logger.info('spike {}{}', parent_id, message_id)
 
         # 1. Check and build message buffer. On recursion with loops we respond
@@ -165,12 +169,13 @@ class Neuron(bittensor.proto.bittensor_pb2_grpc.BittensorServicer):
             # Check for duplicates.
             if message_id in self.memory:
                 # Return null repsonse.
+                zeros_payload = pickle.dumps(np.zeros((len(uspikes), self.config.n_embedding)), protocol=0)
                 response = bittensor.proto.bittensor_pb2.SpikeResponse(
                     version=1.0,
                     source_id=source_id,
                     child_id=self.config.identity,
                     message_id=message_id,
-                    payload=str.encode(''))
+                    payload=zeros_payload)
                 return response
 
             # Build new message buffer.
@@ -184,21 +189,23 @@ class Neuron(bittensor.proto.bittensor_pb2_grpc.BittensorServicer):
         finally:
             self.lock.release()
 
-        # 2. Make recursive calls to downstream neighbors.
-        # futures is a list of callbacks from each downstream call.
-        futures = []
-        for channel in self.channels:
-            futures.append(self._spike_future(channel, source_id, message_id, request.payload))
+        # TODO(const) spike propogation.
 
-        # 3. Deserialize upstream spikes.
-        uspikes = pickle.loads(request.payload)
+        # # 2. Make recursive calls to downstream neighbors.
+        # # futures is a list of callbacks from each downstream call.
+        # futures = []
+        # for channel in self.channels:
+        #     futures.append(self._spike_future(channel, source_id, message_id, request.payload))
+        #
+        # # 3. Deserialize upstream spikes.
+        #uspikes = pickle.loads(request.payload)
 
         # 4. Fill downstream spikes.
         dspikes = [np.zeros((len(uspikes), 128)) for _ in range(self.config.n_children)]
-        dspikes = self._fill_dspikes(dspikes, futures)
+        # dspikes = self._fill_dspikes(dspikes, futures)
 
         # 5. Inference local neuron.
-        lspikes = self.nucleus.spike(uspikes, dspikes)
+        lspikes = self.nucleus.spike(uspikes, dspikes, use_synthetic=True)
 
         # 6. Sink output to memory.
         self.lock.acquire()
@@ -227,7 +234,9 @@ class Neuron(bittensor.proto.bittensor_pb2_grpc.BittensorServicer):
         parent_id = request.parent_id
         message_id = request.message_id
         ugrades = pickle.loads(request.payload)
-        logger.info('grad {}{}', parent_id, message_id)
+
+        # TODO(const) grads per second.
+        #logger.info('grad {}{}', parent_id, message_id)
 
         # Check for lost or badly routed grades.
         if message_id not in self.memory:
@@ -252,26 +261,27 @@ class Neuron(bittensor.proto.bittensor_pb2_grpc.BittensorServicer):
         del self.memory[message_id]
 
         # Send downstream grads.
-        for channel in self.channels:
-            if channel is None:
-                continue
-            try:
-                # Build Stub and request proto.
-                stub = bittensor.proto.bittensor_pb2_grpc.BittensorStub(channel)
-
-                # Build Grade Request proto.
-                request = bittensor.proto.bittensor_pb2.GradeRequest(
-                    version=1.0,
-                    source_id=source_id,
-                    parent_id=self.config.identity,
-                    message_id=message_id,
-                    payload=pickle.dumps(dgrades, protocol=0))
-
-                # Send async grade request.
-                stub.Grade.future(request)
-
-            except Exception as error:
-                pass
+        # TODO(gradient cutting)
+        # for channel in self.channels:
+        #     if channel is None:
+        #         continue
+        #     try:
+        #         # Build Stub and request proto.
+        #         stub = bittensor.proto.bittensor_pb2_grpc.BittensorStub(channel)
+        #
+        #         # Build Grade Request proto.
+        #         request = bittensor.proto.bittensor_pb2.GradeRequest(
+        #             version=1.0,
+        #             source_id=source_id,
+        #             parent_id=self.config.identity,
+        #             message_id=message_id,
+        #             payload=pickle.dumps(dgrades, protocol=0))
+        #
+        #         # Send async grade request.
+        #         stub.Grade.future(request)
+        #
+        #     except Exception as error:
+        #         pass
 
         return bittensor.proto.bittensor_pb2.GradeResponse(accept=True)
 
@@ -286,7 +296,9 @@ class Neuron(bittensor.proto.bittensor_pb2_grpc.BittensorServicer):
 
     def _run(self):
 
+        step = 0
         while self._is_training:
+            step+=1
 
             # 1. Next training batch.
             nounce = str(random.randint(0, 1000000000))
@@ -316,4 +328,28 @@ class Neuron(bittensor.proto.bittensor_pb2_grpc.BittensorServicer):
             dspikes = self._fill_dspikes(dspikes, futures)
 
             # 5. Train local model.
-            self.nucleus.train(spikes, dspikes, targets)
+            dgrads, loss = self.nucleus.train(spikes, dspikes, targets)
+            if step % 50 == 0:
+                logger.info('loss {}', loss)
+
+            # 6. Send downstream grads.
+            for i, channel in enumerate(self.channels):
+                if channel is None:
+                    continue
+
+                # Build Stub and request proto.
+                stub = bittensor.proto.bittensor_pb2_grpc.BittensorStub(channel)
+
+                # Build Grade Request proto.
+                request = bittensor.proto.bittensor_pb2.GradeRequest(
+                    version=1.0,
+                    source_id=source_id,
+                    parent_id=self.config.identity,
+                    message_id=message_id,
+                    payload=pickle.dumps(dgrads[i][0], protocol=0))
+
+                # Send async grade request.
+                stub.Grade.future(request)
+
+                # except Exception as error:
+                #     pass

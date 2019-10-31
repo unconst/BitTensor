@@ -25,11 +25,6 @@ def set_timed_loops(tl, config, neuron, metagraph):
     def connect():
         neuron.connect()
 
-    # Apply a gradient step.
-    @tl.job(interval=timedelta(seconds=3))
-    def learn():
-        neuron.Learn()
-
 
 def main(hparams):
 

@@ -37,13 +37,14 @@ class Nucleus():
             feeds[self._dspikes[i]] = dspikes[i]
 
         fetches = {
-            "downstream_grads:" : self._tdgrads,
+            "downstream_grads" : self._tdgrads,
             "target_loss" : self._target_loss,
             "train_step" : self._tstep,
             "synthetic_step" : self._syn_step
         }
         run_output = self._session.run(fetches, feeds)
-        logger.info(run_output['target_loss'])
+
+        return run_output['downstream_grads'], run_output['target_loss']
 
     def spike(self, uspikes, dspikes, use_synthetic):
 
