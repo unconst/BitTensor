@@ -242,13 +242,10 @@ class Neuron(bittensor.proto.bittensor_pb2_grpc.BittensorServicer):
         uspikes = mem_buffer.uspikes
 
         # Get downstream grads and local grads.
-        dgrades, lgrads = self.nucleus.grade(ugrades, uspikes, dspikes)
+        dgrades = self.nucleus.grade(ugrades, uspikes, dspikes)
 
         # delete memory:
         del self.memory[message_id]
-
-        # Put gradients on LIFO queue.
-        self.gradient_queue.put(lgrads)
 
         # Send downstream grads.
         for channel in self.channels:
@@ -275,30 +272,4 @@ class Neuron(bittensor.proto.bittensor_pb2_grpc.BittensorServicer):
         return bittensor.proto.bittensor_pb2.GradeResponse(accept=True)
 
     def Learn(self):
-        # Function clears the message buffer of all outdated memory objects
-        # and applies gradients from memory.
-        logger.info('Learn.')
-
-        # Clean the memory.
-        self.lock.acquire()
-        try:
-            time_now = time.time()
-            to_delete = []
-            for row in self.memory.values():
-                if (time_now - row.create_time) > self.config.time_till_expire:
-                    to_delete.append(row.message_id)
-
-            for message_id in to_delete:
-                del self.memory[message_id]
-
-        except Exception as e:
-            logger.error('Neuron failed on memory clean with Error: ' + str(e))
-
-        finally:
-            self.lock.release()
-
-        # Apply the batch.
-        logger.info('Grad queue size: {}', self.gradient_queue.qsize())
-        while not self.gradient_queue.empty():
-            grad = self.gradient_queue.get()
-            self.nucleus.learn(grad)
+        self.nucleus.train()
