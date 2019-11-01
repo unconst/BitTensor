@@ -40,11 +40,12 @@ class Nucleus():
             "downstream_grads" : self._tdgrads,
             "target_loss" : self._target_loss,
             "train_step" : self._tstep,
-            "synthetic_step" : self._syn_step
+            "synthetic_step" : self._syn_step,
+            "scores" : self._scores
         }
         run_output = self._session.run(fetches, feeds)
 
-        return run_output['downstream_grads'], run_output['target_loss']
+        return run_output['downstream_grads'], run_output['target_loss'], run_output['scores']
 
     def spike(self, uspikes, dspikes, use_synthetic):
 
@@ -345,7 +346,7 @@ class Nucleus():
         # FIM: Fishers information estimation.
         # Calculate contribution scores.
         # ∆Lij≈ ∑ gx·∆dj + 1/2N * ∆dj ∑ (gx∗gx)
-        self._deltaLij = []
+        self._scores = []
         for i, (gx, var) in enumerate(self._tdgrads):
             delta_d = -self._dspikes[i]
             g = tf.tensordot(delta_d, gx, axes=2)
@@ -353,7 +354,7 @@ class Nucleus():
             H = tf.tensordot(delta_d, gxgx, axes=2)
             score = tf.reduce_sum(g + H)
             #score = tf.Print(score, [i, score, delta_d])
-            self._deltaLij.append(score)
+            self._scores.append(score)
 
     def _build_vocabulary(self):
         """ Parses the dummy corpus into a single sequential array.

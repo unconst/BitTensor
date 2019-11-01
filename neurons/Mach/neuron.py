@@ -5,6 +5,7 @@ from concurrent import futures
 import grpc
 from loguru import logger
 import numpy as np
+import math
 import pickle
 import random
 import time
@@ -72,6 +73,9 @@ class Neuron(bittensor.proto.bittensor_pb2_grpc.BittensorServicer):
 
         self.lock = Lock()
         self.memory = {}
+
+        # child scores.
+        self._scores = [0 for _ in range(self.config.n_children)]
 
         # Init server.
         self.server_address = self.config.bind_address + ":" + self.config.port
@@ -160,7 +164,7 @@ class Neuron(bittensor.proto.bittensor_pb2_grpc.BittensorServicer):
 
 
         # TODO(const) spikes per second.
-        logger.info('spike {}{}', parent_id, message_id)
+        #logger.info('spike {}{}', parent_id, message_id)
 
         # 1. Check and build message buffer. On recursion with loops we respond
         # with a null message if the message_id has been seen already.
@@ -328,9 +332,7 @@ class Neuron(bittensor.proto.bittensor_pb2_grpc.BittensorServicer):
             dspikes = self._fill_dspikes(dspikes, futures)
 
             # 5. Train local model.
-            dgrads, loss = self.nucleus.train(spikes, dspikes, targets)
-            if step % 50 == 0:
-                logger.info('loss {}', loss)
+            dgrads, loss, scores = self.nucleus.train(spikes, dspikes, targets)
 
             # 6. Send downstream grads.
             for i, channel in enumerate(self.channels):
@@ -351,5 +353,23 @@ class Neuron(bittensor.proto.bittensor_pb2_grpc.BittensorServicer):
                 # Send async grade request.
                 stub.Grade.future(request)
 
-                # except Exception as error:
-                #     pass
+            # Set graph scores.
+            for i, score in enumerate(scores):
+                prev_score = (self._scores[i] * (1 - self.config.score_ema))
+                next_score = score * (self.config.score_ema)
+                self._scores[i] = prev_score + next_score
+
+            # Print.
+            if step % 50 == 0:
+
+                zip_scores = [(self.config.identity, 1/(len(self.channel_ids)+1))]
+                count = 0
+                for i, identity in enumerate(self.channel_ids):
+                    if identity:
+                        count +=1
+                zip_scores = [(self.config.identity, 1/(count+1))]
+                for i, identity in enumerate(self.channel_ids):
+                    if identity:
+                        zip_scores.append( (identity, 1/(count+1)))
+                self.metagraph.attributions = zip_scores
+                logger.info('loss {} scores {}', loss, zip_scores)

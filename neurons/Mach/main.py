@@ -20,6 +20,11 @@ def set_timed_loops(tl, config, neuron, metagraph):
     def pull_metagraph():
         metagraph.pull_metagraph()
 
+    # Publish attributions (Edges, Weights.)
+    @tl.job(interval=timedelta(seconds=3))
+    def publish_attributions():
+        metagraph.publish_attributions()
+
     # Reselect channels.
     @tl.job(interval=timedelta(seconds=10))
     def connect():
@@ -100,7 +105,7 @@ if __name__ == '__main__':
         type=str,
         help="logging output directory. Default logdir=/tmp/")
 
-    # Nucleus parameters.
+    # Word embedding parameters.
     parser.add_argument(
         '--corpus_path',
         default='neurons/Mach/data/text8.zip',
@@ -116,6 +121,16 @@ if __name__ == '__main__':
         default=64,
         type=int,
         help='Number of negative examples to sample during training. Default num_sampled=64')
+
+    # Scoring parameters.
+    parser.add_argument(
+        '--score_ema',
+        default=0.05,
+        type=float,
+        help='Moving average param for score calc. Default score_ema=0.05')
+
+
+    # Training params.
     parser.add_argument(
         '--batch_size',
         default=50,
