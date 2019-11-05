@@ -27,30 +27,7 @@ The learning modules use two techniques (1) delayed gradients and (2) synthetic 
 
 Running the software connects your instance to this machine learning model and rewards you for producing information significant in reducing the overall error in the network.
 
-## To-Run-Locally
-1. [Install Docker](https://docs.docker.com/install/)
-
-```
-$ git clone https://github.com/unconst/BitTensor
-$ cd BitTensor
-
-# Run a test EOS blockchain.
-$ ./start_eos.sh
-
-# Run Node 1. A pretrained ELMO model.
-$ ./bittensor.sh --neuron ELMO
-
-# Run Node 2. An intermediate node which learns from its children.
-$ ./bittensor.sh --neuron Boltzmann
-
-...
-
-# Run Node N. A component training against the CoLA text classification dataset.
-$ ./bittensor.sh --neuron CoLA
-
-```
-
-## To-Run-Testnet
+## To-Run
 
 1. [Install Docker](https://docs.docker.com/install/)
 1. [Make account on Digital Ocean](https://www.digitalocean.com/)
@@ -62,35 +39,13 @@ $ cd BitTensor
 
 # Run a Remote Node
 $ ./bittensor.sh --remote --token $DIGITAL_OCEAN_TOKEN --eosurl http://142.93.177.245:8888
-
-
-# Run a Local Node
-$ python src/upncp.py --port 9091  // To punch a hole in your router.
-$ ./bittensor.sh --port 9091 --eosurl http://142.93.177.245:8888
-
-```
-
-## To-Run-CoLA
-1. [Install Docker](https://docs.docker.com/install/)
-
-```
-$ git clone https://github.com/unconst/BitTensor
-$ cd BitTensor
-
-# Run a test EOS blockchain.
-$ ./start_eos.sh
-
-# Run Node 1.
-$ ./bittensor.sh --neuron ELMO
-
-# Run Node 2.
-$ ./bittensor.sh --neuron CoLA
-
 ```
 
 ## Pull Requests
 
-We use [Yapf](https://github.com/google/yapf) for code format. Please run the following.
+In the interest of speed, just directly commit to the repo. To make that feasible, try to keep your work as modular as possible. I like to iterate fast by creating another sub project where tests can grow. For instance, in this repo, the sync_kgraph, and async_kgraph are separate independent implementations. Yes this creates code copying and rewrite, but allows fast development.
+
+Also, use [Yapf](https://github.com/google/yapf) for code formatting. You can run the following to format before a commit.
 ```
 $ pip install yapf
 $ yapf --style google -r -vv -i .
@@ -98,6 +53,8 @@ $ yapf --style google -r -vv -i .
 
 ## Neurons
 
+1. Mach: General purpose neuron which learns a language embedding, shares this with its neighbors.
+ 
 1. Boltzmann: Trainable Feed-forward NN, tokenizes requests on a word level basis responds with 128 dimensional embedding vectors. Applies gradients on 3 second interval without averages.
 
 1. Feynmann: Trains a embedding model over the network using a dummy corpus from text.zip. Serves trained model to network. Does not apply gradients.
@@ -107,11 +64,6 @@ $ yapf --style google -r -vv -i .
 1. GoogleUSE: Google's universal sentence encoder. Non-trainable. Trained on question and answer text.
 
 1. CoLA: CoLA dataset node, learning to classify speech. 
-
-## Further Reading
-
-The system description can be found in docs/Bittensor_Biological_Scale_NeuralNetworks
-
 
 ## License
 
