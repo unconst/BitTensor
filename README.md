@@ -5,9 +5,7 @@
 ## Table of Contents
 
 - [Overview](#overview)
-- [To-Run-Locally](#to-run-locally)
-- [To-Run-Testnet](#to-run-testnet)
-- [To-Run-CoLA](#to-run-cola)
+- [To-Run](#to-run)
 - [Neurons](#neurons)
 - [License](#license)
 
