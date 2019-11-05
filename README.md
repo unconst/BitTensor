@@ -21,7 +21,7 @@ This repository contains a peer-to-peer machine learning model that combines an 
 
 The nature of trust-less computing necessitates that these computers are driven by incentives rather than direct control from any one computer. 
 
-This software uses digital token to carry that incentive signal through the network. Its magnitude is a function of the informational significance of the receiving computer.
+This software uses a digital token to carry that incentive signal through the network. Its magnitude is a function of the informational significance of the receiving computer.
 
 The learning modules use two techniques (1) delayed gradients and (2) synthetic inputs to make the system robust and efficient. 
 
