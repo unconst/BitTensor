@@ -15,13 +15,17 @@
 
 ## Overview
 
-A method of training computers connected across the internet, instead of within a closed environment, could allow us to build Machine Intelligence systems with hitherto unseen size and complexity. 
+A machine intelligence trained with access to the internet could unify compute, machine knowledge, and data, currently untapped by its predecessors. 
 
-We propose BitTensor as new class of Machine Learning model to do this, one which trains across a peer-to-peer network and enables any computer and any engineer in the world to contribute to its training. 
+This repository contains a peer-to-peer machine learning model that combines an unbounded number of computers across the web. 
 
-The nature of trust-less computing necessitates that these contributions are driven by incentives rather than by direct control from any one computer. We use a digital token to carry that incentive signal through the network where its magnitude is a function of informational significance. 
+The nature of trust-less computing necessitates that these computers are driven by incentives rather than direct control from any one computer. 
 
-In addition, BitTensor uses local-learning techniques to remove the need for centralized coordination, as such it remains robust and efficient during both horizontal and vertical scaling across the web.
+This software uses digital token to carry that incentive signal through the network. Its magnitude is a function of the informational significance of the receiving computer.
+
+The learning modules use two techniques (1) delayed gradients and (2) synthetic inputs to make the system robust and efficient. 
+
+Running the software connects your instance to this machine learning model and rewards you for producing information significant in reducing the overall error in the network.
 
 ## To-Run-Locally
 1. [Install Docker](https://docs.docker.com/install/)
