@@ -15,7 +15,7 @@
 
 A machine intelligence trained with access to the internet could harness resources of data, machine knowledge and computer power untapped by its predecessors. 
 
-This repo contains a protocol implementation for a trustless, decentralized and incentivised peer-to-peer model that can connect an unlimited number of computers and engineers, allowing each the opportunity to own, contribute to and profit from the resulting system.
+This repo contains a protocol implementation for a trustless, decentralized and incentivised peer-to-peer model that can connect an unlimited number of computers and engineers across the web. 
 
 In absence of centralized control, the network uses a digital token to provide incentive for intelligence contribution. The reward give the reciever more sway over the network's mathematical objective. 
 
