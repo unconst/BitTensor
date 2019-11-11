@@ -17,7 +17,7 @@ A machine intelligence trained with access to the internet could harness resourc
 
 This repo contains a protocol implementation for a trustless, decentralized and incentivised peer-to-peer model that can connect an unlimited number of computers and engineers across the web. 
 
-In absence of centralized control, the network uses a digital token to provide incentive for intelligence contribution. The reward give the reciever more sway over the network's mathematical objective. 
+In absence of centralized control, the network uses a digital token to provide incentive for intelligence contribution. The the reciever has more sway over the network's mathematical objective.
 
 Each learning module use a variety of techniques to make the system robust and efficient:  (1) delayed gradients and (2) synthetic inputs allow us to cut independence between node in the network, and (3) Fishers Information pruning allows us to evaluate the contribution of our neighbors.
 
