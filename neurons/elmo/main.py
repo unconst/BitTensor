@@ -45,9 +45,11 @@ class Neuron(bittensor.proto.bittensor_pb2_grpc.BittensorServicer):
 
     def Spike(self, request, context):
         # Unpack message.
+        version = request.version
+        source_id = request.source_id
         parent_id = request.parent_id
         message_id = request.message_id
-        inputs = pickle.loads(request.payload)
+        inputs = numpy.asarray(pickle.loads(request.payload))
         logger.info('s {}', parent_id)
 
         # Inference through EMLO.

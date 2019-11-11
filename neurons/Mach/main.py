@@ -153,7 +153,7 @@ if __name__ == '__main__':
         help='Size of embedding between components. Default n_embedding=128')
     parser.add_argument(
         '--n_children',
-        default=2,
+        default=5,
         type=int,
         help='The number of graph neighbors. Default n_children=2')
     parser.add_argument('--n_hidden1',

@@ -49,7 +49,7 @@ remote="false"
 # Digital ocean API token for creating remote instances.
 token="none"
 # Neuron: The client adhering to the Bittensor protocol.
-neuron="Boltzmann"
+neuron="Mach"
 
 # Read command line args
 while test 8 -gt 0; do

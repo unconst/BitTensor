@@ -1,12 +1,51 @@
 import argparse
 from loguru import logger
 from eospy.cleos import Cleos
-from metagraph import Node
-import visualization
+import networkx as nx
 
 parser = argparse.ArgumentParser(description='TF graph client args.')
 parser.add_argument('--command', default="info")
 parser.add_argument('--eosurl', default="http://host.docker.internal:8888")
+
+
+class Node():
+
+    def __init__(self, entry):
+        # EOS account name.
+        self.identity = entry['identity']
+        # Network Stake.
+        self.stake = entry['stake']
+        # Last emit.
+        self.last_emit = entry['last_emit']
+        # IP address.
+        self.address = entry['address']
+        # Port number.
+        self.port = entry['port']
+        # List of tuples (edge name, edge weight)
+        self.edges = entry['edges']
+
+    def __repr__(self):
+        return self.__str__()
+
+    def __str__(self):
+        edge_str = []
+        for el in self.edges:
+            edge_str.append((el['first'], "%.4f" % float(el['second'])))
+        edge_str = str(edge_str)
+        return "( " + self.identity + " | " + str(self.stake) + " | " + str(
+            self.last_emit) + " | " + self.address + ":" + str(
+                self.port) + ' | ' + edge_str + " )"
+
+    def __eq__(self, other):
+        if not other:
+            return False
+        return (self.identity == other.identity)
+
+    def __ne__(self, other):
+        return not self.__eq__(other)
+
+    def __hash__(self):
+        return hash(str(self.identity))
 
 
 def _make_plot_table(nodes):
@@ -81,6 +120,9 @@ def plot_table(table):
     for entry in table['rows']:
         next_node = Node(entry)
         nodes[entry['identity']] = next_node
+    if len(nodes) == 0:
+        logger.info('table is empty, check your eosurl is correct.')
+        return
     _make_plot_table(nodes)
 
 

@@ -193,20 +193,8 @@ class Neuron(bittensor.proto.bittensor_pb2_grpc.BittensorServicer):
         finally:
             self.lock.release()
 
-        # TODO(const) spike propogation.
-
-        # # 2. Make recursive calls to downstream neighbors.
-        # # futures is a list of callbacks from each downstream call.
-        # futures = []
-        # for channel in self.channels:
-        #     futures.append(self._spike_future(channel, source_id, message_id, request.payload))
-        #
-        # # 3. Deserialize upstream spikes.
-        #uspikes = pickle.loads(request.payload)
-
-        # 4. Fill downstream spikes.
+        # 4. Fill downstream spikes. (all zeros)
         dspikes = [np.zeros((len(uspikes), 128)) for _ in range(self.config.n_children)]
-        # dspikes = self._fill_dspikes(dspikes, futures)
 
         # 5. Inference local neuron.
         lspikes = self.nucleus.spike(uspikes, dspikes, use_synthetic=True)
@@ -263,29 +251,6 @@ class Neuron(bittensor.proto.bittensor_pb2_grpc.BittensorServicer):
 
         # delete memory:
         del self.memory[message_id]
-
-        # Send downstream grads.
-        # TODO(gradient cutting)
-        # for channel in self.channels:
-        #     if channel is None:
-        #         continue
-        #     try:
-        #         # Build Stub and request proto.
-        #         stub = bittensor.proto.bittensor_pb2_grpc.BittensorStub(channel)
-        #
-        #         # Build Grade Request proto.
-        #         request = bittensor.proto.bittensor_pb2.GradeRequest(
-        #             version=1.0,
-        #             source_id=source_id,
-        #             parent_id=self.config.identity,
-        #             message_id=message_id,
-        #             payload=pickle.dumps(dgrades, protocol=0))
-        #
-        #         # Send async grade request.
-        #         stub.Grade.future(request)
-        #
-        #     except Exception as error:
-        #         pass
 
         return bittensor.proto.bittensor_pb2.GradeResponse(accept=True)
 
