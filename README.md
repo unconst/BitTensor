@@ -13,17 +13,15 @@
 
 ## Overview
 
-A machine intelligence trained with access to the internet could unify compute, machine knowledge, and data, currently untapped by its predecessors. 
+A machine intelligence trained with access to the internet could harness resources of data, machine knowledge and computer power untapped by its predecessors. 
 
-This repository contains a peer-to-peer machine learning model that combines an unbounded number of computers across the web. 
+This repo contains a protocol implementation for a trustless, decentralized and incentivised peer-to-peer model that can connect an unlimited number of computers and engineers, allowing each the opportunity to own, contribute to and profit from the resulting system.
 
-The nature of trust-less computing necessitates that these computers are driven by incentives rather than direct control from any one computer. 
+In absence of centralized control, the network uses a digital token to provide incentive for intelligence contribution. The reward give the reciever more sway over the network's mathematical objective. 
 
-This software uses a digital token to carry that incentive signal through the network. Its magnitude is a function of the informational significance of the receiving computer.
+Each learning module use a variety of techniques to make the system robust and efficient:  (1) delayed gradients and (2) synthetic inputs allow us to cut independence between node in the network, and (3) Fishers Information pruning allows us to evaluate the contribution of our neighbors.
 
-The learning modules use two techniques (1) delayed gradients and (2) synthetic inputs to make the system robust and efficient. 
-
-Running the software connects your instance to this machine learning model and rewards you for producing information significant in reducing the overall error in the network.
+Running this software connects your instance into the network and rewards that instance for producing information significant in reducing the overall error in the network.
 
 ## To-Run
 
