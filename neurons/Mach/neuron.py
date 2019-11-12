@@ -246,9 +246,9 @@ class Neuron(bittensor.proto.bittensor_pb2_grpc.BittensorServicer):
         parent_id = request.parent_id
         message_id = request.message_id
         uspikes = pickle.loads(request.payload)
-        if not parent in self._metrics:
-            self._metrics[parent] = 0
-        self._metrics[parent] += 1
+        if parent_id not in self._metrics:
+            self._metrics[parent_id] = 0
+        self._metrics[parent_id] += 1
 
         # 1. Check and build message buffer. On recursion with loops we respond
         # with a null message if the message_id has been seen already.
@@ -427,8 +427,8 @@ class Neuron(bittensor.proto.bittensor_pb2_grpc.BittensorServicer):
                 self._tblogger.log_scalar("loss", loss, step)
 
                 # Metrics
-                for idn, count in enumerate(self._metrics):
-                    self._tblogger.log_scalar(idn, count, step)
+                for idn in self._metrics.keys():
+                    self._tblogger.log_scalar(idn, self._metrics[idn], step)
 
                 # Scores
                 for i, score in enumerate(scores):
