@@ -2,6 +2,8 @@ import argparse
 from loguru import logger
 from eospy.cleos import Cleos
 import networkx as nx
+import matplotlib.pyplot as plt
+import numpy
 
 parser = argparse.ArgumentParser(description='TF graph client args.')
 parser.add_argument('--command', default="info")

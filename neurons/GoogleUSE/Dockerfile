@@ -1,7 +1,7 @@
 FROM unconst/bittensor
 
 # Copy across the local files.
-COPY . bittensor/
+COPY neurons/GoogleUSE bittensor/neurons/GoogleUSE
 
 ENV TFHUB_CACHE_DIR /bittensor/cache
 

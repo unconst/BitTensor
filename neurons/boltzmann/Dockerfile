@@ -1,4 +1,4 @@
 FROM unconst/bittensor:latest
 
 # Copy across the local files.
-COPY . bittensor/
+COPY neurons/Boltzmann bittensor/neurons/Boltzmann

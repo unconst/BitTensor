@@ -1,7 +1,8 @@
 FROM unconst/bittensor
 
 # Copy across the local files.
-COPY . bittensor/
+
+COPY neurons/ELMO bittensor/neurons/ELMO
 
 ENV TFHUB_CACHE_DIR /bittensor/cache
 

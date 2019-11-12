@@ -1,4 +1,4 @@
 FROM unconst/bittensor
 
 # Copy across the local files.
-COPY . bittensor/
+COPY neurons/Feynman bittensor/neurons/Feynman

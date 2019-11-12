@@ -12,7 +12,6 @@ import random
 import time
 from timeloop import Timeloop
 
-
 def set_timed_loops(tl, config, neuron, metagraph):
 
     # Pull the updated graph state (Vertices, Edges, Weights)
