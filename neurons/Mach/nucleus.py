@@ -334,6 +334,7 @@ class Nucleus():
         self._tlgrads = optimizer.compute_gradients(loss=self._target_loss,
                                                     var_list=l_vars + jn_vars)
 
+
         # Train step for synthetic inputs.
         self._syn_step = optimizer.apply_gradients(self._syn_grads)
 
@@ -347,14 +348,15 @@ class Nucleus():
         # Calculate contribution scores.
         # ∆Lij≈ ∑ gx·∆dj + 1/2N * ∆dj ∑ (gx∗gx)
         self._scores = []
-        for i, (gx, var) in enumerate(self._tdgrads):
+        for i in range(self._hparams.n_children):
             delta_d = -self._dspikes[i]
+            gx = self._tdgrads[i][0]
             g = tf.tensordot(delta_d, gx, axes=2)
             gxgx = tf.multiply(gx, gx)
             H = tf.tensordot(delta_d, gxgx, axes=2)
             score = tf.reduce_sum(g + H)
-            #score = tf.Print(score, [i, score, delta_d])
             self._scores.append(score)
+
 
     def _build_vocabulary(self):
         """ Parses the dummy corpus into a single sequential array.

@@ -94,6 +94,7 @@ void bittensor::emit( const name this_user,
   uint64_t this_last_emit = node.last_emit;
 
   // (2) Assert edge set length.
+  // TODO(const): perhaps this should be increased?
   int MAX_ALLOWED_EDGES = 10;
   if (this_edges.size() <= 0 || this_edges.size() > MAX_ALLOWED_EDGES) {
     check(false, "Error: Edge set length must be >= 0 and <= MAX_ALLOWED_EDGES");
@@ -102,6 +103,11 @@ void bittensor::emit( const name this_user,
   // (3) Assert id is at position 0.
   if (this_edges.at(0).first.value != this_user.value) {
     check(false, "Error: First edge should point to self");
+  }
+
+  // Self edges cannot be zero or the recursion is infinite.
+  if (this_edges.at(0).second == 0.0) {
+    check(false, "Error: Self edge cannot be zero.");
   }
 
   float edge_sum = 0.0;
@@ -172,6 +178,8 @@ void bittensor::emit( const name this_user,
       // Calculate the emission along this edge.
       const name next_user= edge_itr->first;
       const float next_weight = edge_itr->second;
+
+      // NOTE (const) if self edge == 0 then we get an infinite recursion.
       const uint64_t next_emission = current_emission * next_weight;
       eosio::print("next_emission: ", next_user,  ", ", next_emission, "\n");
 

@@ -159,7 +159,7 @@ class Neuron(bittensor.proto.bittensor_pb2_grpc.BittensorServicer):
         self._metrics = {}
 
         # child scores.
-        self._scores = [0 for _ in range(self.config.n_children)]
+        self._scores = [0 for _ in range(self.config.n_children + 1)]
 
         # Init server.
         self.server_address = self.config.bind_address + ":" + self.config.port
@@ -221,7 +221,7 @@ class Neuron(bittensor.proto.bittensor_pb2_grpc.BittensorServicer):
 
     def _fill_dspikes(self, dspikes, futures):
         while True:
-            remaining_futures = self.config.n_children
+            remaining_futures = sum(1 for _ in filter(None.__ne__, self.channel_ids))
             for i in range(self.config.n_children):
                 if futures[i] != None:
                     if futures[i].done():
@@ -233,8 +233,6 @@ class Neuron(bittensor.proto.bittensor_pb2_grpc.BittensorServicer):
                             dspikes[i] = next_dspikes
                         except:
                             pass
-                else:
-                    remaining_futures -= 1
             if remaining_futures == 0:
                 break
         return dspikes
@@ -401,18 +399,23 @@ class Neuron(bittensor.proto.bittensor_pb2_grpc.BittensorServicer):
                 # Send async grade request.
                 stub.Grade.future(request)
 
-            # Set graph scores.
+            # Average score values.
             for i, score in enumerate(scores):
                 prev_score = (self._scores[i] * (1 - self.config.score_ema))
                 next_score = score * (self.config.score_ema)
                 self._scores[i] = prev_score + next_score
 
-
             # Logs
             if step % 50 == 49:
+                time_now = time.time()
+
+                # Clean mem.
+                for key in self.memory:
+                    val = self.memory[key]
+                    if val.create_time - time_now > 5:
+                        del self.memory[key]
 
                 # global step calulcation and log.
-                time_now = time.time()
                 steps_since_last_log = last_log_step - step
                 secs_since_last_log = last_log_time - time_now
                 last_log_step = step
@@ -430,18 +433,48 @@ class Neuron(bittensor.proto.bittensor_pb2_grpc.BittensorServicer):
                 for idn in self._metrics.keys():
                     self._tblogger.log_scalar(idn, self._metrics[idn], step)
 
-                # Scores
-                for i, score in enumerate(scores):
-                    self._tblogger.log_scalar("score-" + str(i), score, step)
+                # Clean and average the scores.
+                clean_scores = self._clean_scores(self.config.identity, 0.5, self.channel_ids, self._scores)
 
-                zip_scores = [(self.config.identity, 1/(len(self.channel_ids)+1))]
-                count = 0
-                for i, identity in enumerate(self.channel_ids):
-                    if identity:
-                        count +=1
-                zip_scores = [(self.config.identity, 1/(count+1))]
-                for i, identity in enumerate(self.channel_ids):
-                    if identity:
-                        zip_scores.append( (identity, 1/(count+1)))
-                self.metagraph.attributions = zip_scores
-                logger.info('gs {} mem {} loss {} scores {}', gs, len(self.memory), loss, list(zip(self.channel_ids, self._scores)))
+                # Post scores to tb.
+                for idn, score in clean_scores:
+                    self._tblogger.log_scalar(idn, score, step)
+
+                self.metagraph.attributions = clean_scores
+                logger.info('gs {} mem {} loss {} scores {}', gs, len(self.memory), loss, clean_scores)
+
+    def _clean_scores(self, in_id, in_loop, channel_ids, scores):
+
+        # Get non-null scores.
+        non_null_scores = []
+        non_null_ids = []
+        for i, idn in enumerate(channel_ids):
+            if idn != None:
+                non_null_scores.append(scores[i])
+                non_null_ids.append(idn)
+
+        # Null children return self loop = 1.
+        if len(non_null_ids) == 0:
+            return [(in_id, 1.0)]
+
+
+        logger.info('{}:', non_null_scores)
+
+        # Up shift.
+        min_non_null = abs(min(non_null_scores))
+        non_null_scores = [score + min_non_null for score in non_null_scores]
+        logger.info('{}:', non_null_scores)
+
+        # Normalize child scores.
+        norm_child_scores = []
+        if sum(non_null_scores) != 0:
+            norm_child_scores = [ score * in_loop / sum(non_null_scores) for score in non_null_scores]
+        else:
+            norm_child_scores = [ in_loop * (1 / len(non_null_scores)) for _ in non_null_scores]
+
+        logger.info('{}:', norm_child_scores)
+
+        # Zip it. Zip it good.
+        return_val = [(in_id, in_loop)]
+        return_val += list(zip(non_null_ids, norm_child_scores))
+        return return_val
