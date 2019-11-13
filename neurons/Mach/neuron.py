@@ -399,13 +399,13 @@ class Neuron(bittensor.proto.bittensor_pb2_grpc.BittensorServicer):
                 # Send async grade request.
                 stub.Grade.future(request)
 
-            # Average score values.
+            # 7. Average score values.
             for i, score in enumerate(scores):
                 prev_score = (self._scores[i] * (1 - self.config.score_ema))
                 next_score = score * (self.config.score_ema)
                 self._scores[i] = prev_score + next_score
 
-            # Logs
+            # 8. Logs
             if step % 50 == 49:
                 time_now = time.time()
 
@@ -457,13 +457,9 @@ class Neuron(bittensor.proto.bittensor_pb2_grpc.BittensorServicer):
         if len(non_null_ids) == 0:
             return [(in_id, 1.0)]
 
-
-        logger.info('{}:', non_null_scores)
-
         # Up shift.
         min_non_null = abs(min(non_null_scores))
-        non_null_scores = [score + min_non_null for score in non_null_scores]
-        logger.info('{}:', non_null_scores)
+        non_null_scores = [score + min_non_null*2 for score in non_null_scores]
 
         # Normalize child scores.
         norm_child_scores = []
@@ -471,8 +467,6 @@ class Neuron(bittensor.proto.bittensor_pb2_grpc.BittensorServicer):
             norm_child_scores = [ score * in_loop / sum(non_null_scores) for score in non_null_scores]
         else:
             norm_child_scores = [ in_loop * (1 / len(non_null_scores)) for _ in non_null_scores]
-
-        logger.info('{}:', norm_child_scores)
 
         # Zip it. Zip it good.
         return_val = [(in_id, in_loop)]
