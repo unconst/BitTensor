@@ -19,7 +19,7 @@ This repo contains a protocol implementation for a trustless, decentralized and 
 
 In absence of centralized control, the network uses a digital token to provide incentive for intelligence contribution. The reciever has more sway over the network's mathematical objective.
 
-Each learning module use (1) delayed gradients and (2) synthetic inputs to cut independence between nodes in the network, and (3) Fishers Information pruning to evaluate the contribution of our neighbors.
+Each learning module uses (1) delayed gradients and (2) synthetic inputs to cut independence between nodes in the network, and (3) Fishers Information pruning to evaluate the contribution of our neighbors.
 
 Version 1 focuses on language embeddings but the final result will focus on general multitask learning.
 
