@@ -10,6 +10,23 @@
 namespace eosio {
 
 // Subscribes a new account to the metagraph.
+// void bittensor::reset(const name this_user)
+// {
+//   eosio::print("unsubscribe \n");
+//   eosio::print(this_user, "\n" );
+//   require_auth(this_user);
+//   metagraph graph(get_self(), get_code().value);
+//   auto iterator = graph.find(this_user.value);
+//   check(iterator != graph.end(), "Record does not exist");
+//   graph.erase(iterator);
+//
+//   // Update total_stake.
+//   auto global = global_state.get();
+//   global.total_stake = 0;
+//   global_state.set(global, this_user);
+// }
+
+// Subscribes a new account to the metagraph.
 void bittensor::subscribe( const name this_user,
                            const std::string this_address,
                            const std::string this_port)

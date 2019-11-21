@@ -2,18 +2,28 @@ import argparse
 import miniupnpc
 from loguru import logger
 
-parser = argparse.ArgumentParser(description='UPnP Tool.')
-parser.add_argument('--port')
-args = parser.parse_args()
-
-
 # A Tool for punching a hole in UPNPC enabled routers.
-def main(args):
+def delete_port_map(args):
+    try:
+        logger.info('Using UPnP for port mapping...')
+        u = miniupnpc.UPnP()
+        u.discoverdelay = 200
+        logger.info('Discovering... delay=%ums' % u.discoverdelay)
+        ndevices = u.discover()
+        logger.info(str(ndevices) + ' device(s) detected')
+        u.selectigd()
+        logger.info('Deleting mapped port=%u' % args.port)
+        b = u.deleteportmapping(args.port, 'TCP')
+    except Exception as e:
+        logger.error('Exception in UPnP :', e)
+        exit(1)
+
+def create_port_map(args):
     try:
         u = miniupnpc.UPnP()
+        u.discoverdelay = 200
         logger.info('Using UPnP for port mapping...')
         logger.info('Discovering... delay=%ums' % u.discoverdelay)
-        u.discoverdelay = 200
         ndevices = u.discover()
         logger.info(str(ndevices) + ' device(s) detected')
 
@@ -44,10 +54,25 @@ def main(args):
         logger.error('Exception in UPnP :', e)
         exit(1)
 
-    print('--external_ip=' + str(external_ip) + ' --external_port=' +
-          str(external_port) + ' --local_ip=' + str(local_ip) +
-          ' --local_port=' + str(local_port))
+    print ('success' + ':' + str(external_ip) + ':' + str(external_port))
 
+def main(args):
+    if args.delete == True:
+        delete_port_map(args)
+    else:
+        create_port_map(args)
 
 if __name__ == '__main__':
+    parser = argparse.ArgumentParser(description='UPnP Tool.')
+    parser.add_argument(
+        '--port',
+        default=9090,
+        type=int,
+        help='The port to try porting or deleting Default port=9090')
+    parser.add_argument(
+        '--delete',
+        default=False,
+        type=bool,
+        help='Delete port or create port. Default delete=False')
+    args = parser.parse_args()
     main(args)

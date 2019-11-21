@@ -51,7 +51,7 @@ class Node():
 
 
 def _make_plot_table(nodes):
-    b_nodes = list(nodes.values())
+    logger.info(b_nodes)
     G = nx.DiGraph()
 
     total_stake = sum([node.stake for node in b_nodes])
@@ -116,8 +116,7 @@ def _make_plot_table(nodes):
 
     plt.show(figure)
 
-
-def plot_table(table):
+def tonodes(table):
     nodes = {}
     for entry in table['rows']:
         next_node = Node(entry)
@@ -125,17 +124,21 @@ def plot_table(table):
     if len(nodes) == 0:
         logger.info('table is empty, check your eosurl is correct.')
         return
-    _make_plot_table(nodes)
-
+    return nodes
 
 if __name__ == "__main__":
     args = parser.parse_args()
     cleos = Cleos(url=args.eosurl)
     if args.command == "info":
         logger.info(cleos.get_info())
+    elif args.command == "print":
+        cleos.get_info()
+        table = cleos.get_table('bittensoracc', 'bittensoracc', 'metagraph')
+        logger.info(tonodes(table))
     elif args.command == "table":
         cleos.get_info()
         table = cleos.get_table('bittensoracc', 'bittensoracc', 'metagraph')
-        plot_table(table)
+        nodes = tonodes(table)
+        _make_plot_table(nodes)
     else:
         logger.info('Command not found.')

@@ -25,6 +25,10 @@ namespace eosio {
          bittensor(name receiver, name code, datastream<const char*> ds):contract(receiver, code, ds), global_state(_self, _self.value) {}
 
          // -- BitTensor-- //
+         // Resets the token contract. Clears nodes and resets stake.
+         // [[eosio::action]]
+         // void reset();
+
          // Subscribes a new neuron to the Metagraph, publishes a new endpoint.
          [[eosio::action]]
          void subscribe(  const name user,
