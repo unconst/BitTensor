@@ -17,9 +17,9 @@ A machine intelligence trained with access to the internet could harness resourc
 
 This repo contains a protocol implementation for a trustless, decentralized and incentivised peer-to-peer model that can connect an unlimited number of computers and engineers across the web.
 
-In absence of centralized control, the network uses a digital token to provide incentive for intelligence contribution. The the reciever has more sway over the network's mathematical objective.
+In absence of centralized control, the network uses a digital token to provide incentive for intelligence contribution. The reciever has more sway over the network's mathematical objective.
 
-Each learning module use (1) delayed gradients and (2) synthetic inputs to cut independence between nodes in the network, and (3) Fishers Information pruning to evaluate the contribution of our neighbors.
+Each learning module uses (1) delayed gradients and (2) synthetic inputs to cut independence between nodes in the network, and (3) Fishers Information pruning to evaluate the contribution of our neighbors.
 
 Version 1 focuses on language embeddings but the final result will focus on general multitask learning.
 
@@ -28,8 +28,8 @@ Version 1 focuses on language embeddings but the final result will focus on gene
 Running this software creates and connects your instance into the network. To begin, you will need to:
 
 1. [Install Docker](https://docs.docker.com/install/)
-1. [Make account on Digital Ocean](https://www.digitalocean.com/)
-1. [Make a Digital Ocean API key](https://cloud.digitalocean.com/account/api/tokens)
+1. [Open an account on Digital Ocean](https://www.digitalocean.com/)
+1. [Create a Digital Ocean API key](https://cloud.digitalocean.com/account/api/tokens)
 
 Then:
 
@@ -38,7 +38,7 @@ $ git clone https://github.com/unconst/BitTensor
 $ cd BitTensor
 
 # Run a Remote Node
-$ ./bittensor.sh --remote --token $DIGITAL_OCEAN_TOKEN --eosurl http://142.93.177.245:8888
+$ ./bittensor.sh -n Mach --remote --token $DIGITAL_OCEAN_TOKEN --eosurl http://142.93.177.245:8888
 ```
 
 ## Pull Requests
