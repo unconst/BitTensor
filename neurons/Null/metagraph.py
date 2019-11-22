@@ -80,7 +80,6 @@ class Metagraph():
 
     # Push attribution scores.
     def publish_attributions(self):
-        logger.debug('Publish attributions: ' + str(self.attributions))
         transaction = self.publish_attributions_trx()
         try:
             # TODO (const) Rewrite the cleos library for our selves.
