@@ -2,13 +2,6 @@
 
 <img src="assets/mycellium.jpeg" width="1000" />
 
-## Table of Contents
-
-- [Overview](#overview)
-- [To-Run](#to-run)
-- [Neurons](#neurons)
-- [License](#license)
-
 ---
 
 ## Overview
@@ -19,27 +12,26 @@ This repo contains a protocol implementation for a trustless, decentralized and 
 
 In absence of centralized control, the network uses a digital token to provide incentive for intelligence contribution. The reciever has more sway over the network's mathematical objective.
 
-Each learning module uses (1) delayed gradients and (2) synthetic inputs to cut independence between nodes in the network, and (3) Fishers Information pruning to evaluate the contribution of our neighbors.
+Running this software connects your computer to this network. Unless otherwise changed, your node trains on a corpus of unlabaled langauge to train a multi-task language embedding.
 
-Version 1 focuses on language embeddings but the final result will focus on general multitask learning.
+---
 
-## To-Run
+## Install and Run
 
-Running this software creates and connects your instance into the network. To begin, you will need to:
+To begin, you will need to:
 
 1. [Install Docker](https://docs.docker.com/install/)
-1. [Open an account on Digital Ocean](https://www.digitalocean.com/)
-1. [Create a Digital Ocean API key](https://cloud.digitalocean.com/account/api/tokens)
 
 Then:
-
 ```
-$ git clone https://github.com/unconst/BitTensor
-$ cd BitTensor
-
-# Run a Remote Node
-$ ./bittensor.sh -n Mach --remote --token $DIGITAL_OCEAN_TOKEN --eosurl http://142.93.177.245:8888
+$ git clone https://github.com/unconst/BitTensor & cd BitTensor
+$ ./bittensor.sh --upnpc --eosurl http://159.65.102.106:8888
 ```
+---
+
+## Learn More
+
+Read the [paper](https://www.bittensor.com/) or join our [slack](https:// channnel.
 
 ## Pull Requests
 
@@ -50,21 +42,5 @@ Also, use [Yapf](https://github.com/google/yapf) for code formatting. You can ru
 $ pip install yapf
 $ yapf --style google -r -vv -i .
 ```
-
-## Neurons
-
-1. Mach: General purpose neuron which learns a language embedding, shares this with its neighbors.
-
-1. Boltzmann: Trainable Feed-forward NN, tokenizes requests on a word level basis responds with 128 dimensional embedding vectors. Applies gradients on 3 second interval without averages.
-
-1. Feynmann: Trains a embedding model over the network using a dummy corpus from text.zip. Serves trained model to network. Does not apply gradients.
-
-1. Elmo: Untrainable Elmo NN.
-
-1. GoogleUSE: Google's universal sentence encoder. Non-trainable. Previously trained on question and answer text.
-
-1. CoLA: CoLA dataset node, learning to classify speech.
-
-## License
 
 MIT
