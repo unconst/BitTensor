@@ -12,7 +12,7 @@ In absence of centralized control, that network uses a digital token to provide 
 For an in-depth description of this software, see https://www.bittensor.com/learn
 
 ---
-## Install and Run
+## Install and Run (Testnet)
 
 1. [Install Docker](https://docs.docker.com/install/)
 1. Then
