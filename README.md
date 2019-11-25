@@ -11,10 +11,7 @@ BitTensor is a machine intelligence system which can harness any internet connec
 For an in-depth description of this software, see https://www.bittensor.com/learn
 
 ---
-## Install and Run (Testnet)
-
-1. [Install Docker](https://docs.docker.com/install/)
-1. Then
+## Run
 ```
 $ git clone https://github.com/unconst/BitTensor & cd BitTensor
 $ ./bittensor.sh --upnpc --eosurl http://159.65.102.106:8888
