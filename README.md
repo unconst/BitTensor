@@ -6,21 +6,16 @@
 
 ## Overview
 
-A machine intelligence trained with access to the internet could harness resources of data, machine knowledge and computer power untapped by its predecessors.
+BitTensor is a machine intelligence system which harnesses any internet reachable computer, dataset or engineer. 
+In absence of centralized control, that network uses a digital token to provide incentive for intelligence contribution where the reciever has more sway over the network's mathematical objective. This repo contains the open source software which runs that resulting network and mines that token. 
 
-This repo contains a protocol implementation for a trustless, decentralized and incentivised peer-to-peer model that can connect an unlimited number of computers and engineers across the web.
-
-In absence of centralized control, the network uses a digital token to provide incentive for intelligence contribution. The reciever has more sway over the network's mathematical objective.
-
-Running this software connects your computer to this network. Unless otherwise changed, your node trains on a corpus of unlabaled langauge to train a multi-task language embedding.
+For an in-depth description of this software, see https://www.bittensor.com/learn
 
 ---
-
 ## Install and Run
 
-To begin, you will need to:
-
 1. [Install Docker](https://docs.docker.com/install/)
+1. Then
 ```
 $ git clone https://github.com/unconst/BitTensor & cd BitTensor
 $ ./bittensor.sh --upnpc --eosurl http://159.65.102.106:8888
@@ -29,9 +24,10 @@ $ ./bittensor.sh --upnpc --eosurl http://159.65.102.106:8888
 
 ## Learn More
 
-Read the [paper](https://www.bittensor.com/) or join our [slack](https://bittensor.slack.com/)
+Read the [paper](https://www.bittensor.com/learn) or join our [slack](https://bittensor.slack.com/)
 
 ---
+
 
 ## Pull Requests
 
@@ -44,5 +40,7 @@ $ yapf --style google -r -vv -i .
 ```
 
 ---
+
+## License
 
 MIT
