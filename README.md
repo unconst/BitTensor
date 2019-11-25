@@ -21,8 +21,6 @@ Running this software connects your computer to this network. Unless otherwise c
 To begin, you will need to:
 
 1. [Install Docker](https://docs.docker.com/install/)
-
-Then:
 ```
 $ git clone https://github.com/unconst/BitTensor & cd BitTensor
 $ ./bittensor.sh --upnpc --eosurl http://159.65.102.106:8888
