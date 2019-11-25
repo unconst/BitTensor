@@ -109,22 +109,6 @@ done
 function start_local_service() {
   log "=== run locally. ==="
 
-  # Trap control C (for clean docker container tear down.)
-  function teardown() {
-    log "=== stop bittensor_container ==="
-    docker stop bittensor-$identity
-
-    # deleting the port mapping.
-    if [ "$upnpc" == "true" ]; then
-      log "=== deleting TCP tunnel in your router. ==="
-      python scripts/upnpc.py --port $port --delete True
-    fi
-
-    exit 0
-  }
-  # NOTE(const) SIGKILL cannot be caught because it goes directly to the kernal.
-  trap teardown INT SIGHUP SIGINT SIGTERM ERR EXIT
-
   # Init image if non-existent.
   log "=== building bittensor image. ==="
   #docker pull unconst/bittensor:latest
@@ -160,11 +144,29 @@ function start_local_service() {
       port=$external_port
     else
       log "failure during port mapping."
+      log "Does your router support UPNPC?"
+      log "You may need to manually punch a hole in your router."
       log "=== deleting TCP tunnel in your router. ==="
       python scripts/upnpc.py --port $port --delete True
       exit
     fi
   fi
+
+  # Trap control C (for clean docker container tear down.)
+  function teardown() {
+    log "=== stop bittensor_container ==="
+    docker stop bittensor-$identity
+
+    # deleting the port mapping.
+    if [ "$upnpc" == "true" ]; then
+      log "=== deleting TCP tunnel in your router. ==="
+      python scripts/upnpc.py --port $port --delete True
+    fi
+
+    exit 0
+  }
+  # NOTE(const) SIGKILL cannot be caught because it goes directly to the kernal.
+  trap teardown INT SIGHUP SIGINT SIGTERM ERR EXIT
 
   # Build start command.
   script="./scripts/bittensor.sh"
