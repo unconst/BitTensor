@@ -6,7 +6,7 @@
 
 ## Overview
 
-BitTensor is a machine intelligence system which can harness any internet connected computer. In absence of centralized control, that network uses a digital token to provide incentive for intelligence contribution where the reciever has more sway over the network's mathematical objective. This repo contains the open source software which runs that resulting network and mines that token. 
+BitTensor is a machine intelligence system which can harness any internet connected computer. In absence of centralized control, that network uses a digital token to provide incentive for intelligence contribution where the receiver has more sway over the network's mathematical objective. This repo contains the open source software which runs that resulting network and mines that token. 
 
 For an in-depth description of this software, see https://www.bittensor.com/learn
 
