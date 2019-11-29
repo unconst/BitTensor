@@ -6,19 +6,20 @@
 
 ## Overview
 
-BitTensor is a machine intelligence system which can harness any internet connected computer. In absence of centralized control, that network uses a digital token to provide incentive for intelligence contribution where the reciever has more sway over the network's mathematical objective. This repo contains the open source software which runs that resulting network and mines that token. 
+BitTensor is neural network which trains across computers in a peer-to-peer fashion. In absence of centralized control, the network uses collaborative filtering to select computers with high informational significance. To these computers the network mints digital tokens which provide power over the network. 
+
+This repo contains an implementation of a peer in this network. It trains a self-supervised language representation using a dumpy corpus of text by taking as input the output of its peers in the network. In doing so, it mines the network native digital token.
 
 For an in-depth description of this software, see https://www.bittensor.com/learn
 
 ---
-## Install and Run (Testnet)
-
-1. [Install Docker](https://docs.docker.com/install/)
-1. Then
+## Run
 ```
 $ git clone https://github.com/unconst/BitTensor & cd BitTensor
 $ ./bittensor.sh --upnpc --eosurl http://159.65.102.106:8888
 ```
+**Note**: This script uses upnpc to punch a hole in your router. If that fails, you will need to login to your router and do so manually.
+
 ---
 
 ## Learn More
@@ -26,7 +27,6 @@ $ ./bittensor.sh --upnpc --eosurl http://159.65.102.106:8888
 Read the [paper](https://www.bittensor.com/learn) or join our [slack](https://bittensor.slack.com/)
 
 ---
-
 
 ## Pull Requests
 
