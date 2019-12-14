@@ -16,7 +16,7 @@ For an in-depth description of this software, see https://www.bittensor.com/lear
 ## Run
 ```
 $ git clone https://github.com/unconst/BitTensor & cd BitTensor
-$ ./bittensor.sh --upnpc --eosurl http://159.65.102.106:8888
+$ ./bittensor.sh --upnpc --eosurl http://104.248.10.149:8888
 ```
 **Note**: This script uses upnpc to punch a hole in your router. If that fails, you will need to login to your router and do so manually.
 
