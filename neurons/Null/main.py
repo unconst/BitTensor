@@ -26,13 +26,7 @@ class Neuron(bittensor.proto.bittensor_pb2_grpc.BittensorServicer):
         for node in self._metagraph.nodes.values():
             if node.identity == self._hparams.identity:
                 continue
-        elif node.identity not in self._channels:
-                grpc_channel = grpc.insecure_channel(address)
-                channel = {
-                    'identity': 
-                    'address':
-
-                }
+            elif node.identity not in self._channels:
                 address = node.address + ':' + node.port
                 self._channels.append(grpc.insecure_channel(address))
                 self._channel_ids.append(node.identity)

@@ -27,6 +27,58 @@ class Nucleus():
             batch_labels.append([self._words[index + 1]])
         return batch_words, batch_labels
 
+    def gate_outputs(self, spikes):
+        # Run gating to get outgoing tensors.
+        gate_feeds = {self._spikes: spikes}
+        gate_outputs = self._session.run(self._gate_outputs, gate_feeds)
+        return gate_outputs
+
+    def run_synthetic_graph(self, spikes, targets, apply_step):
+        feeds = {
+            self._spikes: spikes,
+            self._targets: targets,
+            self._use_synthetic: True,
+        }
+
+        # Build fetches.
+        fetches = {
+            'target_loss': self._target_loss, # Target accuracy.
+            "cgrads" : self._cgrads, # child gradients.
+        }
+        if apply_step:
+            fetches['target_step'] = self._tstep
+
+        # Run graph.
+        run_output = self._session.run(fetches, feeds)
+
+        # Return the batch accuracy.
+        return run_output
+
+    def run_graph(self, spikes, targets, cspikes, apply_step):
+        feeds = {
+            self._spikes: spikes,
+            self._targets: targets,
+            self._use_synthetic: False
+        }
+        for i, cspike in enumerate(cspikes):
+            feeds[self._cspikes[i]] = cspikes[i]
+
+        # Build fetches.
+        fetches = {
+            'target_loss': self._target_loss, # Target accuracy.
+            'load': self._load, # channel load.
+            'synthetic_loss': self._syn_loss, # synthetic model loss.
+            'child_grads': self._cgrads, # child gradients.
+        }
+        if apply_step:
+            fetches['local_step'] = self._local_step
+            fetches['gate_step'] = self._gate_step
+            fetches['synthetic_step'] = self._synthetic_step
+
+        # Return fetches.
+        return self._session.run(fetches, feeds)
+
+
     def train(self, spikes, dspikes, targets):
         feeds = {
             self._spikes: spikes,

@@ -190,7 +190,7 @@ function main() {
   # Start Tensorboard.
   start_tensorboard
 
-  # Start eh Neuron object.
+  # Start the Neuron object.
   start_neuron
 
   # Trap control C (for clean docker container tear down.)

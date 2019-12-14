@@ -1,8 +1,9 @@
+# A Tool for punching a hole in UPNPC enabled routers.
+
 import argparse
 import miniupnpc
 from loguru import logger
 
-# A Tool for punching a hole in UPNPC enabled routers.
 def delete_port_map(args):
     try:
         logger.info('Using UPnP for port mapping...')
