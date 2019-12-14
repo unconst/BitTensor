@@ -26,8 +26,6 @@ $ ./bittensor.sh
 # Start node 2.
 $ ./bittensor.sh
 ```
-**Note**: This script uses upnpc to punch a hole in your router. If that fails, you will need to login to your router and do so manually.
-
 ---
 
 ## Learn More
