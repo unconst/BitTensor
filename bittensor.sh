@@ -14,6 +14,9 @@ set -o errexit
 cd "$(dirname "$0")"
 source ./scripts/constant.sh
 
+# Check script check_requirements
+source scripts/check_requirements.sh
+
 function print_help () {
   echo "Script for starting Bittensor instances."
   echo "Usage ./bittensor.sh [OPTIONS]"
@@ -260,12 +263,6 @@ function start_remote_service() {
 
 # Main function.
 function main() {
-
-  # Test for docker
-  if [ -x "$(docker -v)" ]; then
-    log "You need to install docker: https://docs.docker.com/install/"
-    exit 0
-  fi
 
   log ".%%%%%...%%%%%%..%%%%%%..%%%%%%..%%%%%%..%%..%%...%%%%....%%%%...%%%%%.."
   log ".%%..%%....%%......%%......%%....%%......%%%.%%..%%......%%..%%..%%..%%."

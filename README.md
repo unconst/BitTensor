@@ -16,7 +16,6 @@ For an in-depth description of this software, see https://www.bittensor.com/lear
 ## Run Locally
 ```
 $ git clone https://github.com/unconst/BitTensor & cd BitTensor
-<<<<<<< HEAD
 
 # Start EOS chain.
 $ ./start_eos.sh  
@@ -26,9 +25,6 @@ $ ./bittensor.sh
 
 # Start node 2.
 $ ./bittensor.sh
-=======
-$ ./bittensor.sh --upnpc --eosurl http://104.248.10.149:8888
->>>>>>> 57f0f730d5132f3db66d825a12a0753bbeba6b34
 ```
 **Note**: This script uses upnpc to punch a hole in your router. If that fails, you will need to login to your router and do so manually.
 

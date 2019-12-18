@@ -6,6 +6,7 @@ cd "$(dirname "$0")"
 
 # Load constants.
 source scripts/constant.sh
+source scripts/check_requirements.sh
 
 # Default args.
 remote="false"
@@ -131,6 +132,8 @@ function run_remote() {
 }
 
 function main() {
+
+  check_requirements
 
   if [ "$remote" == "false" ]; then
       log "Running eos Local."

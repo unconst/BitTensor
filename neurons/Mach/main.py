@@ -29,7 +29,6 @@ def set_timed_loops(tl, config, neuron, metagraph):
     def connect():
         neuron.connect()
 
-
 def main(hparams):
 
     metagraph = Metagraph(hparams)
