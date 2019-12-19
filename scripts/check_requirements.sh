@@ -5,7 +5,7 @@ if [ -x python3 ]; then
 fi
 
 # Test for loguru
-if [ -x python3 -c "import loguru" ]; then
+if python3 -c "import package_name" &> /dev/null; then
   echo "You need to install loguru"
   pip3 install loguru
 fi

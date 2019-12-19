@@ -133,8 +133,6 @@ function run_remote() {
 
 function main() {
 
-  check_requirements
-
   if [ "$remote" == "false" ]; then
       log "Running eos Local."
       run_local
