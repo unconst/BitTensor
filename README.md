@@ -14,6 +14,9 @@ For an in-depth description of this software, read the draft [paper](https://ipf
 
 ---
 ## Run Locally
+1. Install [python3](https://realpython.com/installing-python/)
+1. Install [Docker](https://docs.docker.com/install/)
+
 ```
 $ git clone https://github.com/unconst/BitTensor & cd BitTensor
 
