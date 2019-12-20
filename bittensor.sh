@@ -136,7 +136,7 @@ function start_local_service() {
     log "Installing miniupnpc"
     pip install miniupnpc
     log "Punching hole in router."
-    external_ip_address_and_port=$(python scripts/upnpc.py --port $port)
+    external_ip_address_and_port=$(python3 scripts/upnpc.py --port $port)
     return_code="$(cut -d':' -f1 <<< "$external_ip_address_and_port")"
     external_ip="$(cut -d':' -f2 <<< "$external_ip_address_and_port")"
     external_port="$(cut -d':' -f3 <<< "$external_ip_address_and_port")"
@@ -150,7 +150,7 @@ function start_local_service() {
       log "Does your router support UPNPC?"
       log "You may need to manually punch a hole in your router."
       log "=== deleting TCP tunnel in your router. ==="
-      python scripts/upnpc.py --port $port --delete True
+      python3 scripts/upnpc.py --port $port --delete True
       exit
     fi
   fi
@@ -163,7 +163,7 @@ function start_local_service() {
     # deleting the port mapping.
     if [ "$upnpc" == "true" ]; then
       log "=== deleting TCP tunnel in your router. ==="
-      python scripts/upnpc.py --port $port --delete True
+      python3 scripts/upnpc.py --port $port --delete True
     fi
 
     exit 0
