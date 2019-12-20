@@ -38,13 +38,13 @@ identity=$(LC_CTYPE=C tr -dc 'a-z' < /dev/urandom | head -c 7 | xargs)
 # Bind the grpc server to this address with port
 bind_address="0.0.0.0"
 # Advertise this address on the EOS chain.
-serve_address="host.docker.internal"
+serve_address="172.17.0.1"
 # Bind and advertise this port.
 port=$(( ( RANDOM % 60000 ) + 5000 ))
 # Tensorboard port.
 tbport=$((port+1))
 # URL of eos chain for pulling updates. DEFAULT to localhost on host.
-eosurl="http://host.docker.internal:8888"
+eosurl="http://172.17.0.1:8888"
 # Directory for sinking logs and model updates.
 # TODO(const) Should be root dir.
 logdir="data/$identity/logs"
