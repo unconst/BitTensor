@@ -1,3 +1,5 @@
+echo "checking requirements"
+
 # Test for python3
 if [ -x python3 ]; then
   echo "You need to install python3: https://realpython.com/installing-python/"
