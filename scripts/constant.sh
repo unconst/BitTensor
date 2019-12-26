@@ -18,3 +18,15 @@ function success() {
 function failure() {
     python3 -c "from loguru import logger; logger.add(\"data/$IDENTITY/bittensor_logs.out\"); logger.error(\"$1\")"
 }
+
+function whichmachine() {
+    unameOut="$(uname -s)"
+    case "${unameOut}" in
+        Linux*)     machine=Linux;;
+        Darwin*)    machine=Mac;;
+        CYGWIN*)    machine=Cygwin;;
+        MINGW*)     machine=MinGw;;
+        *)          machine="UNKNOWN:${unameOut}"
+    esac
+    echo ${machine}
+}
