@@ -42,10 +42,17 @@ if [[ "$machine" == "Darwin" ||  "$machine" == "Mac" ]]; then
 else
     serve_address="172.17.0.1"
 fi
+# Bind and advertise this port.
+# This port SHOULD REMAIN STATIC as this will be used by ALL nodes 
+# to report their findings
+port=14142
+# Tensorboard port.
+tbport=14143
 
+logdir="data/tensorboard_container/logs"
 
 # Read command line args
-while test 9 -gt 0; do
+while test 5 -gt 0; do
   case "$1" in
     -h|--help)
       print_help
@@ -98,6 +105,8 @@ function start_local_service() {
     docker rm tensorboard_container || true
   fi
 
+
+
   # Trap control C (for clean docker container tear down.)
   function teardown() {
     log "=== stop bittensor_container ==="
@@ -109,12 +118,28 @@ function start_local_service() {
   # NOTE(const) SIGKILL cannot be caught because it goes directly to the kernal.
   trap teardown INT SIGHUP SIGINT SIGTERM ERR EXIT
 
-  # Build start command.
-  script="./scripts/tensorboard.sh"
+  # Build tensorboard command.
+  script="./scripts/tensorboard/tensorboard.sh"
+  COMMAND="$script $bind_address $port $tbport $logdir"
+  log "Run command: $COMMAND"
+
+  log "=== run the docker container locally ==="
+  log "=== container image: $DOCKER_IMAGE_NAME:$DOCKER_IMAGE_TAG ==="
+  docker run --rm --name tensorboard_container -d  -t \
+  -p $port:$port \
+  -p $tbport:$tbport \
+  --mount type=bind,src="$(pwd)"/scripts,dst=/bittensor/scripts \
+  --mount type=bind,src="$(pwd)"/data/cache,dst=/bittensor/cache \
+  --mount type=bind,src="$(pwd)"/neurons,dst=/bittensor/neurons \
+  $DOCKER_IMAGE_NAME:$DOCKER_IMAGE_TAG /bin/bash -c "$COMMAND"
+
+
+  log "=== follow logs ==="
+  docker logs tensorboard_container --follow
 }
 
 function main() {
-  log "%%%%%%%%.%%%%%%%.%.....%..%%%%%..%%%%%%%.%%%%%%..%%%%%%..%%%%%%%....%....%%%%%%..%%%%%%.."
+  log "%%%%%%%%.%%%%%%.%.....%..%%%%%..%%%%%%%.%%%%%%..%%%%%%..%%%%%%%....%....%%%%%%..%%%%%%.."
   log "...%....%.......%%....%.%.....%.%.....%.%.....%.%.....%.%.....%...%.%...%.....%.%.....%."
   log "...%....%.......%.%...%.%.......%.....%.%.....%.%.....%.%.....%..%...%..%.....%.%.....%."
   log "...%....%%%%%...%..%..%..%%%%%..%.....%.%%%%%%..%%%%%%..%.....%.%.....%.%%%%%%..%.....%."

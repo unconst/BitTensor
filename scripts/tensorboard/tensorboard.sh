@@ -20,6 +20,14 @@ function start_tensorboard() {
   TensorboardPID=$!
 }
 
+function start_node_listener() {
+
+  COMMAND="python3 ./scripts/tensorboard/node_stats_listener.py $PORT $LOGDIR"
+  log "Running command: $COMMAND"
+  eval $COMMAND &
+  LISTENERPID=$!
+}
+
 function main() {
 
   # Intro logs.
@@ -39,11 +47,18 @@ function main() {
   # Start Tensorboard.
   start_tensorboard
 
+  # start listening to incoming data from running nodes
+  start_node_listener
+
   # Trap control C (for clean docker container tear down.)
   function teardown() {
     # Perform program exit & housekeeping
     kill -9 $TensorboardPID
     log "=== stopped Tensorboard ==="
+
+    kill -9 $LISTENERPID
+    log "=== stopped node listener ==="
+
 
     exit 0
   }
@@ -52,6 +67,8 @@ function main() {
 
   # idle waiting for abort from user
   read -r -d '' _ </dev/tty
+
+
 }
 
 # Run.
