@@ -123,17 +123,3 @@ message GradeResponse {
 	// Boolean, Gradient accepted message.
   bool accept = 2;
 }
-
-// Send data to tensorboard container
-message TensorBoardReport {
-	// Protocol version 1.0
-	float version = 1;
-
-	// Source identifier. Where the message originated. Format is an EOS account
-	// address.
-	string source_id = 2;
-
-	// Message Payload. Zero or more fixed length byte strings. 
-	// These are the loss, mem, gs, and step values.
-	bytes payload = 3;
-}

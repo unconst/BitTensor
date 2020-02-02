@@ -18,8 +18,8 @@ source ./scripts/constant.sh
 source scripts/check_requirements.sh
 
 function print_help () {
-  echo "Script for starting Tensorboard instance."
-  echo "Usage ./tensorboard.sh [OPTIONS]"
+  echo "Script for starting Visualization instance."
+  echo "Usage ./start_visualizer.sh [OPTIONS]"
   echo ""
   echo "Options:"
   echo " -h, --help       Print this help message and exit"
@@ -49,7 +49,7 @@ port=14142
 # Tensorboard port.
 tbport=14143
 
-logdir="data/tensorboard_container/logs"
+logdir="data/visualizer_container/logs"
 
 # Read command line args
 while test 5 -gt 0; do
@@ -92,25 +92,25 @@ function start_local_service() {
 
   if [[ "$(docker images -q $DOCKER_IMAGE_NAME:$DOCKER_IMAGE_TAG 2> /dev/null)" == "" ]]; then
     log "Building $DOCKER_IMAGE_NAME:$DOCKER_IMAGE_TAG"
-    docker build -t $DOCKER_IMAGE_NAME:$DOCKER_IMAGE_TAG -f ./tensorboard/Dockerfile .
+    docker build -t $DOCKER_IMAGE_NAME:$DOCKER_IMAGE_TAG -f ./visualizer/Dockerfile .
   else
     # Build anyway
-    docker build -t $DOCKER_IMAGE_NAME:$DOCKER_IMAGE_TAG -f ./tensorboard/Dockerfile .
+    docker build -t $DOCKER_IMAGE_NAME:$DOCKER_IMAGE_TAG -f ./visualizer/Dockerfile .
   fi
 
   # Stop the container if it is already running.
-  if [[ "$(docker ps -a | grep tensorboard_container)" ]]; then
-    log "=== stopping tensorboard_container ==="
-    docker stop tensorboard_container || true
-    docker rm tensorboard_container || true
+  if [[ "$(docker ps -a | grep visualizer_container)" ]]; then
+    log "=== stopping visualizer_container ==="
+    docker stop visualizer_container || true
+    docker rm visualizer_container || true
   fi
 
 
 
   # Trap control C (for clean docker container tear down.)
   function teardown() {
-    log "=== stop bittensor_container ==="
-    docker stop tensorboard_container
+    log "=== stop visualizer_container ==="
+    docker stop visualizer_container
 
     exit 0
   }
@@ -119,13 +119,13 @@ function start_local_service() {
   trap teardown INT SIGHUP SIGINT SIGTERM ERR EXIT
 
   # Build tensorboard command.
-  script="./scripts/tensorboard/tensorboard.sh"
+  script="./scripts/visualizer/tensorboard.sh"
   COMMAND="$script $bind_address $port $tbport $logdir"
   log "Run command: $COMMAND"
 
   log "=== run the docker container locally ==="
   log "=== container image: $DOCKER_IMAGE_NAME:$DOCKER_IMAGE_TAG ==="
-  docker run --rm --name tensorboard_container -d  -t \
+  docker run --rm --name visualizer_container -d  -t \
   -p $port:$port \
   -p $tbport:$tbport \
   --mount type=bind,src="$(pwd)"/scripts,dst=/bittensor/scripts \
@@ -135,7 +135,7 @@ function start_local_service() {
 
 
   log "=== follow logs ==="
-  docker logs tensorboard_container --follow
+  docker logs visualizer_container --follow
 }
 
 function main() {
