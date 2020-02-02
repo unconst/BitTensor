@@ -131,6 +131,7 @@ function start_local_service() {
   --mount type=bind,src="$(pwd)"/scripts,dst=/bittensor/scripts \
   --mount type=bind,src="$(pwd)"/data/cache,dst=/bittensor/cache \
   --mount type=bind,src="$(pwd)"/neurons,dst=/bittensor/neurons \
+  --mount type=bind,src="$(pwd)"/visualizer,dst=/bittensor/visualizer \
   $DOCKER_IMAGE_NAME:$DOCKER_IMAGE_TAG /bin/bash -c "$COMMAND"
 
 
