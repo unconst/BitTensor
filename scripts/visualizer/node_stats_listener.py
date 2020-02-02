@@ -8,6 +8,7 @@ import json
 
 from config import Config
 from concurrent import futures
+from http import HTTPStatus
 
 class NodeStatsListener():
     
@@ -27,6 +28,8 @@ class NodeStatsListener():
         self.node_list = []
     
     def retrieve_all_nodes(self):
+        # Query the chain and retrieve all nodes that are "mining"
+        
         payload = dict(
             code = self.config.eos_code, 
             table = self.config.eos_table,
@@ -36,17 +39,24 @@ class NodeStatsListener():
             )
         
         payload_json = json.dumps(payload)
-        response = requests.post(url = self.config.eos_get_table_rows, data = payload_json)
-
-        if response.status_code == 200:
-            response_json = response.json()
-            rows = response_json['rows']
-            for row in rows:
-                node = dict(identity=row['identity'], url=row['address'], port=row['port'])
-                
-                # TODO: If node list already contains this node, don't append it.
-                self.node_list.append(node)
+        try:
+            response = requests.post(url = self.config.eos_get_table_rows, data = payload_json)
             
+            if response.status_code == HTTPStatus.OK:
+                response_json = response.json()
+                rows = response_json['rows']
+                
+                for row in rows:
+                    node = dict(identity=row['identity'], url=row['address'], port=row['port'])
+                    
+                    # TODO: If node list already contains this node, don't append it.
+                    self.node_list.append(node)
+            else:
+                print("Error: Could not retrieve the nodes connected to the chain.")
+        except Exception as e:
+            raise "Unexpected exception. Likely an issue connecting to the EOS chain"
+        
+        print("Found {} nodes.".format(len(self.node_list)))
     
     def Report(self, request, context):
         raise NotImplementedError
