@@ -23,7 +23,7 @@ message ReportRequest {
     // Message payload. Zero or more var length byte strings. 
     // Payload should just contain the fields we need a report back on. 
     // i.e. 'mem', 'loss', etc. 
-    bytes payload = 8;
+    bytes payload = 3;
 }
 
 // Reverse response from remote node, carries stats data and expects no tertiary response.
@@ -37,6 +37,6 @@ message ReportResponse {
     // Message payload. Zero or more fixed length byte strings. 
     // Will contain a vector representation of tf.float32 of the requested 
     // statistics
-    bytes payload = 8;
+    bytes payload = 3;
 }   
 
