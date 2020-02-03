@@ -47,8 +47,6 @@ else
 fi
 # Bind and advertise this port.
 port=$(( ( RANDOM % 60000 ) + 5000 ))
-# Tensorboard port.
-tbport=$((port+1))
 # URL of eos chain for pulling updates. DEFAULT to localhost on host.
 machine=$(whichmachine)
 if [[ "$machine" == "Darwin" ||  "$machine" == "Mac" ]]; then
@@ -184,7 +182,7 @@ function start_local_service() {
 
   # Build start command.
   script="./scripts/bittensor.sh"
-  COMMAND="$script $identity $serve_address $bind_address $port $tbport $eosurl $logdir $neuron"
+  COMMAND="$script $identity $serve_address $bind_address $port $eosurl $logdir $neuron"
   log "Run command: $COMMAND"
 
   # Run docker service.
@@ -192,7 +190,6 @@ function start_local_service() {
   log "=== container image: $DOCKER_IMAGE_NAME:$DOCKER_IMAGE_TAG ==="
   docker run --rm --name bittensor-$identity -d  -t \
   -p $port:$port \
-  -p $tbport:$tbport \
   --mount type=bind,src="$(pwd)"/scripts,dst=/bittensor/scripts \
   --mount type=bind,src="$(pwd)"/data/cache,dst=/bittensor/cache \
   --mount type=bind,src="$(pwd)"/neurons,dst=/bittensor/neurons \
@@ -258,7 +255,7 @@ function start_remote_service() {
 
   # Build start command.
   script="./scripts/bittensor.sh"
-  COMMAND="$script $identity $serve_address $bind_address $port $tbport $eosurl $logdir $neuron"
+  COMMAND="$script $identity $serve_address $bind_address $port $eosurl $logdir $neuron"
   log "Run command: $COMMAND"
 
   # Run docker service.
@@ -266,7 +263,6 @@ function start_remote_service() {
   log "=== container image: $DOCKER_IMAGE_NAME:$DOCKER_IMAGE_TAG ==="
   docker run --rm --name bittensor-$identity -d  -t \
   -p $port:$port \
-  -p $tbport:$tbport \
   $DOCKER_IMAGE_NAME:$DOCKER_IMAGE_TAG /bin/bash -c "$COMMAND"
 
   log "=== follow ==="
@@ -289,7 +285,6 @@ function main() {
   log "port: $port"
   log "server_address: $serve_address"
   log "bind_address: $bind_address"
-  log "tbport: $tbport"
   log "logdir: $logdir"
   log "neuron: $neuron"
   log "upnpc: $upnpc"

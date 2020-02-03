@@ -66,82 +66,6 @@ class Buffer:
         if not self.lgrads:
             self.lgrads = lgrads
 
-class TBLogger(object):
-    """Logging in tensorboard without tensorflow ops."""
-
-    def __init__(self, log_dir):
-        """Creates a summary writer logging to log_dir."""
-        self.writer = tf.summary.FileWriter(log_dir)
-
-    def log_scalar(self, tag, value, step):
-        """Log a scalar variable.
-        Parameter
-        ----------
-        tag : basestring
-            Name of the scalar
-        value
-        step : int
-            training iteration
-        """
-        summary = tf.Summary(value=[tf.Summary.Value(tag=tag,
-                                                     simple_value=value)])
-        self.writer.add_summary(summary, step)
-
-    def log_images(self, tag, images, step):
-        """Logs a list of images."""
-
-        im_summaries = []
-        for nr, img in enumerate(images):
-            # Write the image to a string
-            s = StringIO()
-            plt.imsave(s, img, format='png')
-
-            # Create an Image object
-            img_sum = tf.Summary.Image(encoded_image_string=s.getvalue(),
-                                       height=img.shape[0],
-                                       width=img.shape[1])
-            # Create a Summary value
-            im_summaries.append(tf.Summary.Value(tag='%s/%d' % (tag, nr),
-                                                 image=img_sum))
-
-        # Create and write Summary
-        summary = tf.Summary(value=im_summaries)
-        self.writer.add_summary(summary, step)
-
-
-    def log_histogram(self, tag, values, step, bins=1000):
-        """Logs the histogram of a list/vector of values."""
-        # Convert to a numpy array
-        values = np.array(values)
-
-        # Create histogram using numpy
-        counts, bin_edges = np.histogram(values, bins=bins)
-
-        # Fill fields of histogram proto
-        hist = tf.HistogramProto()
-        hist.min = float(np.min(values))
-        hist.max = float(np.max(values))
-        hist.num = int(np.prod(values.shape))
-        hist.sum = float(np.sum(values))
-        hist.sum_squares = float(np.sum(values**2))
-
-        # Requires equal number as bins, where the first goes from -DBL_MAX to bin_edges[1]
-        # See https://github.com/tensorflow/tensorflow/blob/master/tensorflow/core/framework/summary.proto#L30
-        # Thus, we drop the start of the first bin
-        bin_edges = bin_edges[1:]
-
-        # Add bin edges and counts
-        for edge in bin_edges:
-            hist.bucket_limit.append(edge)
-        for c in counts:
-            hist.bucket.append(c)
-
-        # Create and write Summary
-        summary = tf.Summary(value=[tf.Summary.Value(tag=tag, histo=hist)])
-        self.writer.add_summary(summary, step)
-        self.writer.flush()
-
-
 class Neuron(bittensor.proto.bittensor_pb2_grpc.BittensorServicer):
 
     def __init__(self, config, nucleus, metagraph):
@@ -150,8 +74,8 @@ class Neuron(bittensor.proto.bittensor_pb2_grpc.BittensorServicer):
         self.metagraph = metagraph
         self._is_training = True
         self.current_stats = {
-            'gs': None, 
-            'step': None, 
+            'gs': None,
+            'step': None,
             'mem': None,
             'loss': None,
             'metrics': None,
@@ -160,9 +84,6 @@ class Neuron(bittensor.proto.bittensor_pb2_grpc.BittensorServicer):
 
         self.lock = Lock()
         self.memory = {}
-
-        # Tensorboard logger
-        self._tblogger = TBLogger(self.config.logdir)
 
         # Metrics
         self._metrics = {}
@@ -431,24 +352,9 @@ class Neuron(bittensor.proto.bittensor_pb2_grpc.BittensorServicer):
                 last_log_step = step
                 last_log_time = time_now
                 gs = steps_since_last_log / secs_since_last_log
-                self._tblogger.log_scalar("gs", gs, step)
-
-                # Log memory size.
-                self._tblogger.log_scalar("mem", len(self.memory), step)
-
-                # Log loss
-                self._tblogger.log_scalar("loss", loss, step)
-
-                # Metrics
-                for idn in self.gs.keys():
-                    self._tblogger.log_scalar(idn, self._metrics[idn], step)
 
                 # Clean and average the scores.
                 clean_scores = self._clean_scores(self.config.identity, 0.5, self.channel_ids, self._scores)
-
-                # Post scores to tb.
-                for idn, score in clean_scores:
-                    self._tblogger.log_scalar(idn, score, step)
 
                 # Record stats for later consumption by visualizer
                 self.current_stats['gs'] = gs
@@ -490,13 +396,13 @@ class Neuron(bittensor.proto.bittensor_pb2_grpc.BittensorServicer):
         return_val = [(in_id, in_loop)]
         return_val += list(zip(non_null_ids, norm_child_scores))
         return return_val
-    
+
     def Report(self, request, context):
         source_id = request.source_id
         payload_bytes = pickle.dumps(self.current_stats)
-        
+
         return visualizer.visualizer_pb2.ReportResponse(
-            version=1.0, 
-            source_id="2", 
+            version=1.0,
+            source_id="2",
             payload=payload_bytes
         )

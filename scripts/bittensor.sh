@@ -11,14 +11,12 @@ SERVE_ADDRESS=$2
 BIND_ADDRESS=$3
 # Port to bind endpoint on.
 PORT=$4
-# Port to bind Tensorboard on.
-TBPORT=$5
 # URL of EOS endpoint.
-EOSURL=$6
+EOSURL=$5
 # Directory to save checkpoints and logs.
-LOGDIR=$7
+LOGDIR=$6
 # Python client to run.
-NEURON=$8
+NEURON=$7
 
 # Creates the system eoisio wallet. This is used to build our unique account.
 # In the future the eosio account will be replaced with your own.
@@ -108,15 +106,6 @@ function print_metagraph() {
   cleos -u $EOSURL get table bittensoracc bittensoracc metagraph
 }
 
-
-function start_tensorboard() {
-  log "=== start Tensorboard ==="
-  log "tensorboard --logdir=$LOGDIR --port=$TBPORT --host=$BIND_ADDRESS"
-  log "Tensorboard: http://$BIND_ADDRESS:$TBPORT"
-  tensorboard --logdir=$LOGDIR --port=$TBPORT --host=$BIND_ADDRESS &
-  TensorboardPID=$!
-}
-
 function start_neuron() {
   # The main command.
   # Start our Neuron object training, server graph, open dendrite etc.
@@ -142,7 +131,6 @@ function main() {
   log "   SERVE_ADDRESS: $SERVE_ADDRESS"
   log "   BIND_ADDRESS: $BIND_ADDRESS"
   log "   PORT: $PORT"
-  log "   TBPORT: $TBPORT"
   log "   LOGDIR: $LOGDIR"
   log "   NEURON: neurons/$NEURON/main.py"
   log "}"
@@ -187,17 +175,11 @@ function main() {
   # Build protos
   ./scripts/build_protos.sh
 
-  # Start Tensorboard.
-  start_tensorboard
-
   # Start the Neuron object.
   start_neuron
 
   # Trap control C (for clean docker container tear down.)
   function teardown() {
-    # Perform program exit & housekeeping
-    kill -9 $TensorboardPID
-    log "=== stopped Tensorboard ==="
 
     kill -9 $NueronPID
     log "=== stopped Nucleus ==="

@@ -9,6 +9,9 @@
 **/.ipynb_checkpoints/
 *.pyc
 
+# Tests
+testing/
+
 #compiled c++ files
 **/*.o
 
