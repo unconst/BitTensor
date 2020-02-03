@@ -440,7 +440,7 @@ class Neuron(bittensor.proto.bittensor_pb2_grpc.BittensorServicer):
                 self._tblogger.log_scalar("loss", loss, step)
 
                 # Metrics
-                for idn in self._metrics.keys():
+                for idn in self.gs.keys():
                     self._tblogger.log_scalar(idn, self._metrics[idn], step)
 
                 # Clean and average the scores.
@@ -492,7 +492,6 @@ class Neuron(bittensor.proto.bittensor_pb2_grpc.BittensorServicer):
         return return_val
     
     def Report(self, request, context):
-        logger.info("Reporting!")
         source_id = request.source_id
         payload_bytes = pickle.dumps(self.current_stats)
         
