@@ -1,4 +1,5 @@
 import bittensor
+import visualizer
 
 from Crypto.Hash import SHA256
 from concurrent import futures
@@ -148,6 +149,14 @@ class Neuron(bittensor.proto.bittensor_pb2_grpc.BittensorServicer):
         self.nucleus = nucleus
         self.metagraph = metagraph
         self._is_training = True
+        self.current_stats = {
+            'gs': None, 
+            'step': None, 
+            'mem': None,
+            'loss': None,
+            'metrics': None,
+            'scores': None
+        }
 
         self.lock = Lock()
         self.memory = {}
@@ -166,6 +175,7 @@ class Neuron(bittensor.proto.bittensor_pb2_grpc.BittensorServicer):
         self.server = grpc.server(futures.ThreadPoolExecutor(max_workers=10))
         bittensor.proto.bittensor_pb2_grpc.add_BittensorServicer_to_server(
             self, self.server)
+        visualizer.proto.visualizer_pb2_grpc.add_VisualizerServicer_to_server(self, self.server)
         self.server.add_insecure_port(self.server_address)
 
         self.channels = [None for _ in range(self.config.n_children)]
@@ -430,7 +440,7 @@ class Neuron(bittensor.proto.bittensor_pb2_grpc.BittensorServicer):
                 self._tblogger.log_scalar("loss", loss, step)
 
                 # Metrics
-                for idn in self._metrics.keys():
+                for idn in self.gs.keys():
                     self._tblogger.log_scalar(idn, self._metrics[idn], step)
 
                 # Clean and average the scores.
@@ -439,6 +449,14 @@ class Neuron(bittensor.proto.bittensor_pb2_grpc.BittensorServicer):
                 # Post scores to tb.
                 for idn, score in clean_scores:
                     self._tblogger.log_scalar(idn, score, step)
+
+                # Record stats for later consumption by visualizer
+                self.current_stats['gs'] = gs
+                self.current_stats['step'] = step
+                self.current_stats['mem'] = len(self.memory)
+                self.current_stats['loss'] = loss
+                self.current_stats['metrics'] = self._metrics
+                self.current_stats['score'] = clean_scores
 
                 self.metagraph.attributions = clean_scores
                 logger.info('gs {} mem {} loss {} scores {}', gs, len(self.memory), loss, clean_scores)
@@ -472,3 +490,13 @@ class Neuron(bittensor.proto.bittensor_pb2_grpc.BittensorServicer):
         return_val = [(in_id, in_loop)]
         return_val += list(zip(non_null_ids, norm_child_scores))
         return return_val
+    
+    def Report(self, request, context):
+        source_id = request.source_id
+        payload_bytes = pickle.dumps(self.current_stats)
+        
+        return visualizer.visualizer_pb2.ReportResponse(
+            version=1.0, 
+            source_id="2", 
+            payload=payload_bytes
+        )

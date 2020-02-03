@@ -27,7 +27,7 @@ message SpikeRequest {
 
 	// Parent identifier. The last hop this message took. Format is an EOS account
 	// address.
-  string parent_id = 4;
+  	string parent_id = 4;
 
 	// Parent proof. A signature linking the message id to the parent identity.
 	// RSA( Message_hash, Parent_Private_Key.)

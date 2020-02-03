@@ -1,0 +1,42 @@
+
+syntax = "proto3";
+
+
+// Visualizer protocol to define messages passed 
+// between nodes and visualizer server.
+
+service Visualizer {
+
+    // Query remote node for a report on its findings thus far, response is an object containing 
+    // loss, gs, step, mem, etc.
+    rpc Report(ReportRequest) returns (ReportResponse) {}
+}
+
+message ReportRequest {
+    // Protocol version 1.0
+    float version = 1;
+
+    // Source ID. Where the message originated. Format should be known IP of visualizer
+    // server
+    string source_id = 2;
+
+    // Message payload. Zero or more var length byte strings. 
+    // Payload should just contain the fields we need a report back on. 
+    // i.e. 'mem', 'loss', etc. 
+    bytes payload = 3;
+}
+
+// Reverse response from remote node, carries stats data and expects no tertiary response.
+message ReportResponse {
+    // Protocol version 1.0
+    float version = 1;
+
+    // Source ID. Where this message originated. Format is the IP of the remote node. 
+    string source_id = 2;
+
+    // Message payload. Zero or more fixed length byte strings. 
+    // Will contain a vector representation of tf.float32 of the requested 
+    // statistics
+    bytes payload = 3;
+}   
+
