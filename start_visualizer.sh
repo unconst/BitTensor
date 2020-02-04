@@ -119,7 +119,7 @@ function start_local_service() {
   trap teardown INT SIGHUP SIGINT SIGTERM ERR EXIT
 
   # Build tensorboard command.
-  script="./scripts/visualizer/tensorboard.sh"
+  script="./visualizer/tensorboard.sh"
   COMMAND="$script $bind_address $port $tbport $logdir"
   log "Run command: $COMMAND"
 

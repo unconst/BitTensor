@@ -21,8 +21,8 @@ function start_tensorboard() {
 }
 
 function start_node_listener() {
-
-  COMMAND="python3 ./scripts/visualizer/node_stats_listener.py $BIND_ADDRESS $PORT $LOGDIR"
+  
+  COMMAND="python3 visualizer/node_stats_listener.py $BIND_ADDRESS $PORT $LOGDIR"
   log "Running command: $COMMAND"
   eval $COMMAND &
   LISTENERPID=$!
