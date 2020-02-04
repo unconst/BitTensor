@@ -91,42 +91,44 @@ class NodeStatsListener():
                 # open up channels for running nodes
                 self.channel = grpc.insecure_channel(node_url)
                 self.stub = visualizer.visualizer_pb2_grpc.VisualizerStub(self.channel)
-                
-                response = self.stub.Report(
-                    visualizer.visualizer_pb2.ReportRequest(
-                        version = 1.0,
-                        source_id = '2',
-                        payload = request_payload_bytes
+                try:
+                    response = self.stub.Report(
+                        visualizer.visualizer_pb2.ReportRequest(
+                            version = 1.0,
+                            source_id = '2',
+                            payload = request_payload_bytes
+                        )
                     )
-                )
-                # Close the channel since we're done here.
-                self.channel.close()
-                
-                # Let's process the incoming data
-                payload = pickle.loads(response.payload)
-                step = payload['step']
-                _tblogger.log_scalar("gs", payload['gs'], step)
-                
-                # Log memory size.
-                _tblogger.log_scalar("mem", payload['mem'], step)
+                    # Close the channel since we're done here.
+                    self.channel.close()
+                    
+                    # Let's process the incoming data
+                    payload = pickle.loads(response.payload)
+                    step = payload['step']
+                    _tblogger.log_scalar("gs", payload['gs'], step)
+                    
+                    # Log memory size.
+                    _tblogger.log_scalar("mem", payload['mem'], step)
 
-                # Log loss
-                _tblogger.log_scalar("loss", payload['loss'], step)
+                    # Log loss
+                    _tblogger.log_scalar("loss", payload['loss'], step)
 
-                # Metrics
-                metrics = payload['metrics']
-                for idn in metrics.keys():
-                    _tblogger.log_scalar(idn, metrics[idn], step)
-                
-                # Post scores to tb.
-                scores = payload['scores']
-                if scores:
-                    for idn, score in scores:
-                        _tblogger.log_scalar(idn, score, step)
-                
-                logger.info('node {}: gs {} mem {} loss {} scores {}'.format(identity_dir, payload['gs'], payload['mem'], payload['loss'], scores))
-                
-                time.sleep(10)
+                    # Metrics
+                    metrics = payload['metrics']
+                    for idn in metrics.keys():
+                        _tblogger.log_scalar(idn, metrics[idn], step)
+                    
+                    # Post scores to tb.
+                    scores = payload['scores']
+                    if scores:
+                        for idn, score in scores:
+                            _tblogger.log_scalar(idn, score, step)
+                    
+                    logger.info('node {}: gs {} mem {} loss {} scores {}'.format(identity_dir, payload['gs'], payload['mem'], payload['loss'], scores))
+                    
+                    time.sleep(10)
+                except Exception as e:
+                    logger.exception("Ran into exception: {}".format(e))
             
             
     def __del__(self):
