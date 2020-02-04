@@ -29,8 +29,8 @@ setup(
     long_description=long_description,  # Optional
     long_description_content_type='text/markdown',  # Optional (see note above)
     url='https://github.com/unconst/bittensor',  # Optional
-    author='Jacob R. Steeves',  # Optional
-    author_email='jrsteeves@live.com',  # Optional
+    author='Jacob R. Steeves & Ala Shaabana',  # Optional
+    author_email='jake@bittensor.com,  # Optional
     classifiers=[  # Optional
         'Development Status :: 3 - Alpha',
         'Intended Audience :: Developers',
