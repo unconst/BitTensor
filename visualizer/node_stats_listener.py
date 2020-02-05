@@ -25,48 +25,65 @@ class NodeStatsListener():
         # Init server address.
         self._server_address = self._args.bind_address + ":" + self._args.port
 
-        # Init node list.
-        self._node_list = []
+        # Map from node_id to node attr dict.
+        self._nodes = {}
 
         # Map of node_id to channels.
         self._channels = {}
 
         # Map from node_id to logger.
-        self._loggers = {}
+        self._tbloggers = {}
 
-        # Boolean visualizer is running.
-        self._is_listening = True
+        # Global step counter.
+        self._global_step = 0
 
-    def __del__(self):
-        logger.debug('Stop Listening at: {} ...', self._server_address)
-        self._stop_listening()
+    def refresh(self):
+        logger.info('Refresh')
 
-    def _start_listening(self):
-        self._is_listening = True
-        self._run()
+        # Refresh state.
+        try:
+            self._retrieve_all_nodes()
+        except Exception as e:
+            logger.exception("Failed to retrieve all node. Likely an issue connecting to the EOS chain", e)
 
-    def _stop_listening(self):
-        self._is_listening = False
+        try:
+            self._refresh_all_channels()
+        except Exception as e:
+            logger.exception("Failed refresh channels with exception: {}", e)
 
-    def _run(self):
-        if self.config.visualization_mode == "tensorboard":
-            while self._is_listening:
+        try:
+            self._refresh_all_tbloggers()
+        except Exception as e:
+            logger.exception("Failed refresh loggers with exception: {}", e)
 
-                self._retrieve_all_nodes()
-                self._refresh_all_channels()
-                self._refresh_all_loggers()
-
-                for node in self._nodes:
-                    logger = self._loggers[node]
-                    channel = self._channels[node]
-                    response = self.query_node(node, channel)
-                    self._log_response(response, logger)
+        # Make queries.
+        if self._config.visualization_mode != "tensorboard":
+            logger.info("Unexpected visualization_mode: {}", self._config.visualization_mode)
         else:
-            logger.info("Unexpected visualization_mode: {}", self.config.visualization_mode)
+
+            # Update the visualizer step.
+            self._global_step += 1
+            for node_id in self._nodes.keys():
+                tblogger = self._tbloggers[node_id]
+                channel = self._channels[node_id]
+
+                # Try to query node.
+                try:
+                    response = self._query_node(node_id, channel)
+                except Exception as e:
+                    logger.info("Failed to query node: {}", node_id)
+                    continue
+
+                # Try to log response.
+                try:
+                    self._log_response(node_id, response, tblogger)
+                except Exception as e:
+                    logger.info("Failed to log response: {}, node: {}, error: {}", response, node_id, e)
+                    continue
 
     def _retrieve_all_nodes(self):
         # Refresh list of nodes in the network
-        self._node_list = []
+        self._nodes = {}
 
         # Query the chain and retrieve all nodes that are "mining"
         payload = dict(
@@ -78,110 +95,86 @@ class NodeStatsListener():
         )
 
         payload_json = json.dumps(payload)
-        try:
-            request_url = self._config.eos_get_table_rows
-            response = requests.post(url=request_url, data=payload_json)
+        request_url = self._config.eos_get_table_rows
+        response = requests.post(url=request_url, data=payload_json)
+        if response.status_code == HTTPStatus.OK:
+            response_json = response.json()
+            rows = response_json['rows']
+            for row in rows:
+                node_dict = dict(identity=row['identity'], url=row['address'], port=row['port'])
+                self._nodes[ row['identity'] ] = node_dict
+        else:
+            logger.error("Error: Could not retrieve the nodes connected to the chain.")
 
-            if response.status_code == HTTPStatus.OK:
-                response_json = response.json()
-                rows = response_json['rows']
-                for row in rows:
-                    node = dict(identity=row['identity'], url=row['address'], port=row['port'])
-                    self._node_list.append(node)
-            else:
-                logger.error("Error: Could not retrieve the nodes connected to the chain.")
-
-        except Exception as e:
-            logger.exception("Failed to retrieve all node. Likely an issue connecting to the EOS chain", e)
-
-        logger.info("Found {} nodes.".format(len(self._node_list)))
 
     def _refresh_all_channels(self):
-        try:
-            # Remove non-existent nodes.
-            for node in self._channels.keys():
-                if node not in self._node_list:
-                    self._channels[node].close()
-                    del self._channels[node]
+        for node_id in list(self._channels.keys()):
+            if node_id not in self._nodes:
+                self._channels[node_id].close()
+                del self._channels[node_id]
 
-            # Add new node channels.
-            for node in self._node_list:
-                if node not in self._channels.keys():
-                    node_url = "{}:{}".format(node['url'], node['port'])
-                    new_channel = grpc.insecure_channel(node_url)
-                    self._channels[node] = new_channel
+        # Add new node channels.
+        for node in self._nodes.values():
+            if node['identity'] not in self._channels:
+                node_url = "{}:{}".format(node['url'], node['port'])
+                new_channel = grpc.insecure_channel(node_url)
+                self._channels[node['identity']] = new_channel
 
-        except Exception as e:
-            logger.exception("Failed refresh channels with exception: {}", e)
+    def _refresh_all_tbloggers(self):
+        for node_id in list(self._tbloggers.keys()):
+            if node_id not in self._nodes:
+                del self._tbloggers[node_id]
 
-    def _refresh_all_loggers(self):
-        try:
-            # Remove non-existent nodes.
-            for node in self._loggers.keys():
-                if node not in self._node_list:
-                    del self._loggers[node]
+        # Add new node loggers.
+        for node_id in self._nodes.keys():
+            if node_id not in self._tbloggers:
+                log_dir = self._args.logdir + "/" + node_id
+                self._tbloggers[node_id] = TBLogger(log_dir)
 
-            # Add new node channels.
-            for node in self._node_list:
-                if node not in self._loggers.keys():
-                    identity_dir = node['identity']
-                    log_dir = self._args.logdir + "/" + identity_dir
-                    self._loggers[node] = TBLogger(log_dir)
-        except Exception as e:
-            logger.exception("Failed refresh loggers with exception: {}", e)
-
-    def _query_node(self, node, channel, logger):
-        try:
-            stub = visualizer.visualizer_pb2_grpc.VisualizerStub(channel)
-            request_payload_bytes = pickle.dumps("tb_metrics", protocol=0)
-            response = stub.Report(
-                visualizer.visualizer_pb2.ReportRequest(
-                    version = 1.0,
-                    source_id = '2',
-                    payload = request_payload_bytes
-                )
+    def _query_node(self, node_id, channel):
+        stub = visualizer.visualizer_pb2_grpc.VisualizerStub(channel)
+        request_payload_bytes = pickle.dumps("tb_metrics", protocol=0)
+        response = stub.Report(
+            visualizer.visualizer_pb2.ReportRequest(
+                version = 1.0,
+                source_id = '2',
+                payload = request_payload_bytes
             )
-            # Let's process the incoming data
-            response = pickle.loads(response.payload)
-        except:
-            logger.exception("Failed to query node: {}, with exception: {}", node, e)
-
+        )
+        # Let's process the incoming data
+        response = pickle.loads(response.payload)
         return response
 
-    def _log_response(self, response, logger):
-        try:
-            step = response['step']
-            logger.log_scalar("gs", response['gs'], step)
-            logger.log_scalar("mem", response['mem'], step)
-            logger.log_scalar("loss", response['loss'], step)
+    def _log_response(self, node_id, response, tblogger):
+        tblogger.log_scalar("step", response['step'], self._global_step)
+        tblogger.log_scalar("gs", response['gs'], self._global_step)
+        tblogger.log_scalar("mem", response['mem'], self._global_step)
+        tblogger.log_scalar("loss", response['loss'], self._global_step)
 
-            # Metrics
-            metrics = response['metrics']
-            for idn in metrics.keys():
-                logger.log_scalar(idn, metrics[idn], step)
+        # Metrics
+        metrics = response['metrics']
+        for idn in metrics.keys():
+            tblogger.log_scalar(idn, metrics[idn], self._global_step)
 
-            # Post scores to tb.
-            scores = response['scores']
-            if scores:
-                for idn, score in scores:
-                    logger.log_scalar(idn, score, step)
+        # Post scores to tb.
+        scores = response['scores']
+        if scores:
+            for idn, score in scores:
+                tblogger.log_scalar(idn, score, self._global_step)
 
-            logger.info('node {}: gs {} mem {} loss {} scores {}'.format(identity_dir, response['gs'], response['mem'], response['loss'], scores))
-        except:
-            logger.exception("Failed log response: {}, with exception: {}", response, e)
+        logger.info('Logging: node {}: step {} gs {} mem {} loss {} scores {}'.format(node_id, response['step'], response['gs'], response['mem'], response['loss'], scores))
 
 
-def main():
+def main(args):
     listener = NodeStatsListener(args)
-    listener._start_listening()
-
     try:
+        logger.info('Started listener ...')
         while True:
-            time.sleep(100)
+            listener.refresh()
+            time.sleep(5)
 
     except KeyboardInterrupt:
-        logger.info('Stopping visualizer with keyboard interrupt.')
-        listener._stop_listening()
+        logger.info('Stopping listener with keyboard interrupt.')
 
 def parse_args():
     parser = argparse.ArgumentParser()

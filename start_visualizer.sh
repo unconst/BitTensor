@@ -43,7 +43,7 @@ else
     serve_address="172.17.0.1"
 fi
 # Bind and advertise this port.
-# This port SHOULD REMAIN STATIC as this will be used by ALL nodes 
+# This port SHOULD REMAIN STATIC as this will be used by ALL nodes
 # to report their findings
 port=14142
 # Tensorboard port.
@@ -129,7 +129,7 @@ function start_local_service() {
   -p $port:$port \
   -p $tbport:$tbport \
   --mount type=bind,src="$(pwd)"/scripts,dst=/bittensor/scripts \
-  --mount type=bind,src="$(pwd)"/data/cache,dst=/bittensor/cache \
+  --mount type=bind,src="$(pwd)"/data/visualizer/logs,dst=/bittensor/data/visualizer/logs \
   --mount type=bind,src="$(pwd)"/neurons,dst=/bittensor/neurons \
   --mount type=bind,src="$(pwd)"/visualizer,dst=/bittensor/visualizer \
   $DOCKER_IMAGE_NAME:$DOCKER_IMAGE_TAG /bin/bash -c "$COMMAND"
