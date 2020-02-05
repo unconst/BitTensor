@@ -1,4 +1,5 @@
 FROM unconst/bittensor
 
-# Copy across the local files.
-COPY neurons/Mach/ bittensor/neurons/Mach
+# Copy BitTensor source to this image.
+COPY . bittensor/
+WORKDIR /bittensor
