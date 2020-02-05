@@ -1,5 +1,3 @@
 FROM unconst/bittensor
 
-# Copy BitTensor source to this image.
-COPY . bittensor/
-WORKDIR /bittensor
+COPY neurons/Mach bittensor/neurons/Mach
