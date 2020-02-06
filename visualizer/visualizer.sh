@@ -54,6 +54,18 @@ function start_node_listener() {
 
 }
 
+# Clean docker tear down.
+function teardown() {
+  # Perform program exit & housekeeping
+  kill -9 $TensorboardPID
+  log "=== stopped Tensorboard ==="
+
+  kill -9 $LISTENERPID
+  log "=== stopped node listener ==="
+
+  exit 0
+}
+
 function main() {
 
   # Build protos
@@ -65,23 +77,11 @@ function main() {
   # start listening to incoming data from running nodes
   start_node_listener
 
-  # Trap control C (for clean docker container tear down.)
-  function teardown() {
-    # Perform program exit & housekeeping
-    kill -9 $TensorboardPID
-    log "=== stopped Tensorboard ==="
-
-    kill -9 $LISTENERPID
-    log "=== stopped node listener ==="
-
-    exit 0
-  }
   # NOTE(const) SIGKILL cannot be caught because it goes directly to the kernal.
   trap teardown INT SIGHUP SIGINT SIGTERM
 
   # idle waiting for abort from user
   read -r -d '' _ </dev/tty
-
 }
 
 # Run.

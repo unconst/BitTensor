@@ -84,15 +84,15 @@ class NodeStatsListener():
 
         # Query the chain and retrieve all nodes that are "mining"
         payload = dict(
-            code = self._config.eos_code,
-            table = self._config.eos_table,
-            scope = self._config.eos_scope,
-            key_type = self._config.eos_key_type,
+            code = self._config.eos.code,
+            table = self._config.eos.table,
+            scope = self._config.eos.scope,
+            key_type = self._config.eos.key_type,
             json = "true"
         )
 
         payload_json = json.dumps(payload)
-        request_url = self._config.eos_url + self._config.eos_get_table_command
+        request_url = self._config.eos.url + self._config.eos.get_table_command
         response = requests.post(url=request_url, data=payload_json)
         if response.status_code == HTTPStatus.OK:
             response_json = response.json()

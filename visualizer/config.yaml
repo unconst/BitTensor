@@ -21,22 +21,23 @@ tbport: 14143
 logdir: data/visualizer/logs
 
 # (str) BitTensor contract account on EOS
-eos_account: bittensoracc
+eos:
+  account: bittensoracc
 
-# (str) Contract scope.
-eos_scope: bittensoracc
+  # (str) Contract scope.
+  scope: bittensoracc
 
-# (str) EOS contract code name.
-eos_code: bittensoracc
+  # (str) EOS contract code name.
+  code: bittensoracc
 
-# (str) EOS table which stores metagraph information.
-eos_table: metagraph
+  # (str) EOS table which stores metagraph information.
+  table: metagraph
 
-# (str) EOS chain key type.
-eos_key_type: i64
+  # (str) EOS chain key type.
+  key_type: i64
 
-# (str) URL of EOS chain.
-eos_url: http://host.docker.internal:8888
+  # (str) URL of EOS chain.
+  url: http://host.docker.internal:8888
 
-# (str) EOS endpoint command.
-eos_get_table_command: /v1/chain/get_table_rows
+  # (str) EOS endpoint command.
+  get_table_command: /v1/chain/get_table_rows
