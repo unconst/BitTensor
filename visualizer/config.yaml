@@ -1,0 +1,42 @@
+
+# (str) Visualizer script.
+script: ./visualizer/visualizer.sh
+
+# (int) Seconds between refresh.
+heartbeat: 5
+
+# (str) Visualization mode
+visualization_mode: tensorboard
+
+# (str) The address to bind the visualizer server.
+bind_address: 0.0.0.0
+
+# (str) The visualizer serving port.
+port: 14142
+
+# (str) The tensorboard serving port.
+tbport: 14143
+
+# (str) Visualizer logging directory.
+logdir: data/visualizer/logs
+
+# (str) BitTensor contract account on EOS
+eos_account: bittensoracc
+
+# (str) Contract scope.
+eos_scope: bittensoracc
+
+# (str) EOS contract code name.
+eos_code: bittensoracc
+
+# (str) EOS table which stores metagraph information.
+eos_table: metagraph
+
+# (str) EOS chain key type.
+eos_key_type: i64
+
+# (str) URL of EOS chain.
+eos_url: http://host.docker.internal:8888
+
+# (str) EOS endpoint command.
+eos_get_table_command: /v1/chain/get_table_rows

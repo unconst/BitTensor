@@ -8,6 +8,7 @@ import pickle
 import requests
 import subprocess
 import time
+import yaml
 
 from config import Config
 from concurrent import futures
@@ -17,13 +18,9 @@ from TBLogger import TBLogger
 
 class NodeStatsListener():
 
-    def __init__(self, args):
+    def __init__(self, config):
         # Init configurations and arguments
-        self._config = Config()
-        self._args = args
-
-        # Init server address.
-        self._server_address = self._args.bind_address + ":" + self._args.port
+        self._config = config
 
         # Map from node_id to node attr dict.
         self._nodes = {}
@@ -95,7 +92,7 @@ class NodeStatsListener():
         )
 
         payload_json = json.dumps(payload)
-        request_url = self._config.eos_get_table_rows
+        request_url = self._config.eos_url + self._config.eos_get_table_command
         response = requests.post(url=request_url, data=payload_json)
         if response.status_code == HTTPStatus.OK:
             response_json = response.json()
@@ -128,7 +125,7 @@ class NodeStatsListener():
         # Add new node loggers.
         for node_id in self._nodes.keys():
             if node_id not in self._tbloggers:
-                log_dir = self._args.logdir + "/" + node_id
+                log_dir = self._config.logdir + "/" + node_id
                 self._tbloggers[node_id] = TBLogger(log_dir)
 
     def _query_node(self, node_id, channel):
@@ -165,25 +162,25 @@ class NodeStatsListener():
         logger.info('Logging: node {}: step {} gs {} mem {} loss {} scores {}'.format(node_id, response['step'], response['gs'], response['mem'], response['loss'], scores))
 
 
-def main(args):
-    listener = NodeStatsListener(args)
+def main(config):
+    listener = NodeStatsListener(config)
     try:
         logger.info('Started listener ...')
         while True:
             listener.refresh()
-            time.sleep(5)
+            time.sleep(config.heartbeat)
 
     except KeyboardInterrupt:
         logger.info('Stopping listener with keyboard interrupt.')
 
-def parse_args():
-    parser = argparse.ArgumentParser()
-    parser.add_argument("bind_address", help="Address to which to bind the node listener gRPC server")
-    parser.add_argument("port", help="Port that the stats listener will be listening on")
-    parser.add_argument("logdir", help="Directory to which all tensorboard log files will be written.")
-    args = parser.parse_args()
-    return args
-
 if __name__ == "__main__":
-    args = parse_args()
-    main(args)
+    parser = argparse.ArgumentParser()
+    parser.add_argument(
+        '--config_path',
+        default='./visualizer/config.yaml',
+        type=str,
+        help='Path to config file.'
+    )
+    args = parser.parse_args()
+    config = Config.get_config_from_yaml(args.config_path)
+    main(config)

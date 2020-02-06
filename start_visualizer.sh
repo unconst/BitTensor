@@ -3,15 +3,6 @@ set -o errexit
 
 # change to script's directory
 cd "$(dirname "$0")"
-
-# Load constants
-source scripts/constant.sh
-
-#!/usr/bin/env bash
-set -o errexit
-
-# change to script's directory
-cd "$(dirname "$0")"
 source ./scripts/constant.sh
 
 # Check script check_requirements
@@ -23,58 +14,20 @@ function print_help () {
   echo ""
   echo "Options:"
   echo " -h, --help       Print this help message and exit"
-  echo " -l, --logdir     Logging directory."
-  echo " -p, --port       Bind side port for accepting requests."
-  echo " -r, --remote     Run instance locally."
-  echo " -t, --token      Digital ocean API token."
+  echo " -c, --config_path     Path to config yaml."
 }
 
-# [Default Arguments] #
-identity=$(LC_CTYPE=C tr -dc 'a-z' < /dev/urandom | head -c 7 | xargs)
-# Bind the grpc server to this address with port
-bind_address="0.0.0.0"
-
-# Advertise this address on the EOS chain.
-machine=$(whichmachine)
-echo "Detected host: $machine"
-if [[ "$machine" == "Darwin" ||  "$machine" == "Mac" ]]; then
-    serve_address="host.docker.internal"
-else
-    serve_address="172.17.0.1"
-fi
-# Bind and advertise this port.
-# This port SHOULD REMAIN STATIC as this will be used by ALL nodes
-# to report their findings
-port=14142
-# Tensorboard port.
-tbport=14143
-
-logdir="data/visualizer_container/logs"
+config_path='visualizer/config.yaml'
 
 # Read command line args
-while test 5 -gt 0; do
+while test 6 -gt 0; do
   case "$1" in
     -h|--help)
       print_help
       exit 0
       ;;
-    -p|--port)
-      port=`echo $2`
-      tbport=$((port+1))
-      shift
-      shift
-      ;;
-    -l|--logdir)
-      logdir=`echo $2`
-      shift
-      shift
-      ;;
-    -r|--remote)
-      remote="true"
-      shift
-      ;;
-    -t|--token)
-      token=`echo $2`
+    -c|--config_path)
+      config_path=`echo $2`
       shift
       shift
       ;;
@@ -84,11 +37,16 @@ while test 5 -gt 0; do
   esac
 done
 
+# read yaml file
+eval $(parse_yaml "$config_path" "config_")
+
 function start_local_service() {
   log "=== run locally. ==="
+  log ""
 
   # Init image if non-existent.
-  log "=== building bittensor image. ==="
+  log "=== build image. ==="
+  log ""
 
   if [[ "$(docker images -q $DOCKER_IMAGE_NAME:$DOCKER_IMAGE_TAG 2> /dev/null)" == "" ]]; then
     log "Building $DOCKER_IMAGE_NAME:$DOCKER_IMAGE_TAG"
@@ -100,17 +58,17 @@ function start_local_service() {
 
   # Stop the container if it is already running.
   if [[ "$(docker ps -a | grep visualizer_container)" ]]; then
-    log "=== stopping visualizer_container ==="
+    log "=== stop visualizer_container ==="
     docker stop visualizer_container || true
     docker rm visualizer_container || true
+    log ""
   fi
-
-
 
   # Trap control C (for clean docker container tear down.)
   function teardown() {
     log "=== stop visualizer_container ==="
     docker stop visualizer_container
+    log ""
 
     exit 0
   }
@@ -118,24 +76,24 @@ function start_local_service() {
   # NOTE(const) SIGKILL cannot be caught because it goes directly to the kernal.
   trap teardown INT SIGHUP SIGINT SIGTERM ERR EXIT
 
-  # Build tensorboard command.
-  script="./visualizer/tensorboard.sh"
-  COMMAND="$script $bind_address $port $tbport $logdir"
-  log "Run command: $COMMAND"
+  # Build start command.
+  log "=== run container === "
 
-  log "=== run the docker container locally ==="
-  log "=== container image: $DOCKER_IMAGE_NAME:$DOCKER_IMAGE_TAG ==="
+  script=$config_script$
+  COMMAND="$config_script --config_path $config_path"
+  log "Command: $COMMAND"
+  log "Image: $DOCKER_IMAGE_NAME:$DOCKER_IMAGE_TAG"
+
   docker run --rm --name visualizer_container -d  -t \
-  -p $port:$port \
-  -p $tbport:$tbport \
+  -p $config_port:$config_port \
+  -p $config_tbport:$config_tbport \
   --mount type=bind,src="$(pwd)"/scripts,dst=/bittensor/scripts \
   --mount type=bind,src="$(pwd)"/data/visualizer/logs,dst=/bittensor/data/visualizer/logs \
   --mount type=bind,src="$(pwd)"/neurons,dst=/bittensor/neurons \
   --mount type=bind,src="$(pwd)"/visualizer,dst=/bittensor/visualizer \
-  $DOCKER_IMAGE_NAME:$DOCKER_IMAGE_TAG /bin/bash -c "$COMMAND"
+  $DOCKER_IMAGE_NAME:$DOCKER_IMAGE_TAG /bin/bash -c "$config_script"
+  log ""
 
-
-  log "=== follow logs ==="
   docker logs visualizer_container --follow
 }
 

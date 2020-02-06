@@ -1,17 +1,20 @@
-class Config():
-    def __init__(self):
-        
-        # EOS Config
-        self.eos_account = "bittensoracc"
-        self.eos_table = "metagraph"
-        self.eos_scope = "bittensoracc"
-        self.eos_key_type = "i64"
-        self.eos_code = "bittensoracc"
-        self.eos_port = "8888"
-        self.eos_url = "http://host.docker.internal:{}".format(self.eos_port)
-        self.eos_get_table_rows = self.eos_url + "/v1/chain/get_table_rows"
-        
-        # Listening modes
-        self.visualization_mode = "tensorboard"
-        
-        
+import yaml
+import json
+import argparse
+
+from types import SimpleNamespace
+
+def dict_to_sns(d):
+    return SimpleNamespace(**d)
+
+class Config:
+    def get_config_from_yaml(path):
+        with open(path, 'r') as ymlfile:
+            cfg = yaml.safe_load(ymlfile)
+        config = dict_to_sns(cfg)
+        return config
+
+    def get_config_from_json(path):
+        with open(path) as fd:
+            config = json.load(fd, object_hook=dict_to_sns)
+        return config
