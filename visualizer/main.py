@@ -18,7 +18,7 @@ from TBLogger import TBLogger
 
 class NodeStatsListener():
 
-    def __init__(self, config):
+    def __init__(self, config, eos_url):
         # Init configurations and arguments
         self._config = config
 
@@ -33,6 +33,9 @@ class NodeStatsListener():
 
         # Global step counter.
         self._global_step = 0
+        
+        # EOS url
+        self._eos_url = eos_url
 
     def refresh(self):
         logger.info('Refresh')
@@ -92,7 +95,7 @@ class NodeStatsListener():
         )
 
         payload_json = json.dumps(payload)
-        request_url = self._config.eos.url + self._config.eos.get_table_command
+        request_url =  self._eos_url + self._config.eos.get_table_command
         response = requests.post(url=request_url, data=payload_json)
         if response.status_code == HTTPStatus.OK:
             response_json = response.json()
@@ -162,8 +165,8 @@ class NodeStatsListener():
         logger.info('Logging: node {}: step {} gs {} mem {} loss {} scores {}'.format(node_id, response['step'], response['gs'], response['mem'], response['loss'], scores))
 
 
-def main(config):
-    listener = NodeStatsListener(config)
+def main(config, eos_url):
+    listener = NodeStatsListener(config, eos_url)
     try:
         logger.info('Started listener ...')
         while True:
@@ -181,6 +184,12 @@ if __name__ == "__main__":
         type=str,
         help='Path to config file.'
     )
+    parser.add_argument(
+        '--eos_url',
+        default='http://host.docker.internal',
+        type=str,
+        help='EOS chain URL.'
+    )
     args = parser.parse_args()
     config = Config.get_config_from_yaml(args.config_path)
-    main(config)
+    main(config, args.eos_url)

@@ -246,32 +246,32 @@ DESCRIPTOR.message_types_by_name['GradeRequest'] = _GRADEREQUEST
 DESCRIPTOR.message_types_by_name['GradeResponse'] = _GRADERESPONSE
 _sym_db.RegisterFileDescriptor(DESCRIPTOR)
 
-SpikeRequest = _reflection.GeneratedProtocolMessageType('SpikeRequest', (_message.Message,), dict(
-  DESCRIPTOR = _SPIKEREQUEST,
-  __module__ = 'bittensor.proto.bittensor_pb2'
+SpikeRequest = _reflection.GeneratedProtocolMessageType('SpikeRequest', (_message.Message,), {
+  'DESCRIPTOR' : _SPIKEREQUEST,
+  '__module__' : 'bittensor.proto.bittensor_pb2'
   # @@protoc_insertion_point(class_scope:SpikeRequest)
-  ))
+  })
 _sym_db.RegisterMessage(SpikeRequest)
 
-SpikeResponse = _reflection.GeneratedProtocolMessageType('SpikeResponse', (_message.Message,), dict(
-  DESCRIPTOR = _SPIKERESPONSE,
-  __module__ = 'bittensor.proto.bittensor_pb2'
+SpikeResponse = _reflection.GeneratedProtocolMessageType('SpikeResponse', (_message.Message,), {
+  'DESCRIPTOR' : _SPIKERESPONSE,
+  '__module__' : 'bittensor.proto.bittensor_pb2'
   # @@protoc_insertion_point(class_scope:SpikeResponse)
-  ))
+  })
 _sym_db.RegisterMessage(SpikeResponse)
 
-GradeRequest = _reflection.GeneratedProtocolMessageType('GradeRequest', (_message.Message,), dict(
-  DESCRIPTOR = _GRADEREQUEST,
-  __module__ = 'bittensor.proto.bittensor_pb2'
+GradeRequest = _reflection.GeneratedProtocolMessageType('GradeRequest', (_message.Message,), {
+  'DESCRIPTOR' : _GRADEREQUEST,
+  '__module__' : 'bittensor.proto.bittensor_pb2'
   # @@protoc_insertion_point(class_scope:GradeRequest)
-  ))
+  })
 _sym_db.RegisterMessage(GradeRequest)
 
-GradeResponse = _reflection.GeneratedProtocolMessageType('GradeResponse', (_message.Message,), dict(
-  DESCRIPTOR = _GRADERESPONSE,
-  __module__ = 'bittensor.proto.bittensor_pb2'
+GradeResponse = _reflection.GeneratedProtocolMessageType('GradeResponse', (_message.Message,), {
+  'DESCRIPTOR' : _GRADERESPONSE,
+  '__module__' : 'bittensor.proto.bittensor_pb2'
   # @@protoc_insertion_point(class_scope:GradeResponse)
-  ))
+  })
 _sym_db.RegisterMessage(GradeResponse)
 
 
