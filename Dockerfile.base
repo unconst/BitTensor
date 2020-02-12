@@ -36,9 +36,9 @@ RUN pip3 install --upgrade pip && \
   pip3 install pebble && \
   pip3 install pickle-mixin && \
   pip3 install pycrypto && \
+  pip3 install --upgrade setuptools && \
   pip3 install timeloop && \
   pip3 install zipfile36
-
 
 # Copy BitTensor source to this image.
 RUN mkdir bittensor
@@ -48,5 +48,5 @@ WORKDIR /bittensor
 # Install Bittensor
 RUN pip3 install -e .
 
-RUN pip3 uninstall -y tb-nightly tensorboard tensorflow tensorflow-estimator tf-estimator-nightly
-RUN pip3 install "tensorflow==1.15.2" 
+RUN pip3 uninstall -y tensorboard tensorflow tensorflow-estimator
+RUN pip3 install "tensorflow==1.15.2"
