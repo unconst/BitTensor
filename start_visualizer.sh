@@ -13,14 +13,15 @@ function print_help () {
   echo "Usage ./start_visualizer.sh [OPTIONS]"
   echo ""
   echo "Options:"
-  echo " -h, --help       Print this help message and exit"
+  echo " -h, --help            Print this help message and exit"
   echo " -c, --config_path     Path to config yaml."
+  echo " -e, --eos_url         Path to EOS chain."
 }
 
 config_path='visualizer/config.yaml'
 
 # Read command line args
-while test 6 -gt 0; do
+while test 4 -gt 0; do
   case "$1" in
     -h|--help)
       print_help
@@ -29,6 +30,10 @@ while test 6 -gt 0; do
     -c|--config_path)
       config_path=`echo $2`
       shift
+      shift
+      ;;
+    -e|--eos_url)
+      eos_url=`echo $2`
       shift
       ;;
     *)
@@ -76,11 +81,13 @@ function start_local_service() {
   # NOTE(const) SIGKILL cannot be caught because it goes directly to the kernal.
   trap teardown INT SIGHUP SIGINT SIGTERM ERR EXIT
 
+  echo "Monitoring chain at $eos_url"
+
   # Build start command.
   log "=== run container === "
 
   script=$config_script$
-  COMMAND="$config_script --config_path $config_path"
+  COMMAND="$config_script --config_path $config_path --eos_url $eos_url"
   log "Command: $COMMAND"
   log "Image: $DOCKER_IMAGE_NAME:$DOCKER_IMAGE_TAG"
 
@@ -91,7 +98,7 @@ function start_local_service() {
   --mount type=bind,src="$(pwd)"/data/visualizer/logs,dst=/bittensor/data/visualizer/logs \
   --mount type=bind,src="$(pwd)"/neurons,dst=/bittensor/neurons \
   --mount type=bind,src="$(pwd)"/visualizer,dst=/bittensor/visualizer \
-  $DOCKER_IMAGE_NAME:$DOCKER_IMAGE_TAG /bin/bash -c "$config_script"
+  $DOCKER_IMAGE_NAME:$DOCKER_IMAGE_TAG /bin/bash -c "$COMMAND"
   log ""
 
   docker logs visualizer_container --follow

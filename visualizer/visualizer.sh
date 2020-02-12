@@ -3,17 +3,19 @@ source ./scripts/constant.sh
 
 function print_help () {
   echo "Script for starting Visualization instance."
-  echo "Usage ./start_visualizer.sh [OPTIONS]"
+  echo "Usage ./visualizer.sh [OPTIONS]"
   echo ""
   echo "Options:"
-  echo " -h, --help       Print this help message and exit"
+  echo " -h, --help            Print this help message and exit"
   echo " -c, --config_path     Path to config yaml."
+  echo " -e, --eos_url         EOS chain path"     
 }
 
 config_path='visualizer/config.yaml'
+eos_url='docker.host.internal'
 
 # Read command line args
-while test 6 -gt 0; do
+while test 4 -gt 0; do
   case "$1" in
     -h|--help)
       print_help
@@ -22,6 +24,10 @@ while test 6 -gt 0; do
     -c|--config_path)
       config_path=`echo $2`
       shift
+      shift
+      ;;
+    -e|--eos_url)
+      eos_url=`echo $2`
       shift
       ;;
     *)
@@ -46,7 +52,7 @@ function start_tensorboard() {
 function start_node_listener() {
 
   log "=== start Visualizer ==="
-  COMMAND="python3 visualizer/main.py --config_path=$config_path"
+  COMMAND="python3 visualizer/main.py --config_path=$config_path --eos_url=$eos_url"
   log "Command: $COMMAND"
   eval $COMMAND &
   LISTENERPID=$!
