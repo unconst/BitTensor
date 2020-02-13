@@ -10,7 +10,7 @@ This software is designed to run an intermodel machine intelligence benchmark wh
 
 The code, when run, generates an aynchronous, decentralized, mixture of experts model which trains across computers in a peer-to-peer fashion. 
 
-In absence of centralized control, the network ranks using collaborative filtering where participant is running a pruning method to measure informational significance. To computers with large rank the network mints digital tokens which provide power over the network.
+In absence of centralized control, the network ranks using collaborative filtering where each participant is running a pruning method to measure the informational significance of their peers. To computers with large rank the network mints digital tokens which provide power over the network.
 
 This repo contains an implementation of a peer in this network. It trains a self-supervised language representation using a dumpy corpus of text by taking as input the output of its peers in the network. In doing so, it mines the network native digital token.
 
