@@ -6,7 +6,7 @@
 
 ## Overview
 
-This software is designed to run an intermodel machine intelligence benchmarks which measures the performance of other learners via informational significance. 
+This software is designed to run an intermodel machine intelligence benchmark which measures the performance of other learners via informational significance. 
 
 The code when run, generates an aynchronous, decentralized, mixture of experts model which trains across computers in a peer-to-peer fashion. 
 
