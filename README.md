@@ -6,11 +6,13 @@
 
 ## Overview
 
-BitTensor is neural network which trains across computers in a peer-to-peer fashion. In absence of centralized control, the network uses collaborative filtering to select computers with high informational significance. To these computers the network mints digital tokens which provide power over the network.
+This software is designed to run an intermodel machine intelligence benchmark which measures the performance of other learners via informational significance. 
+
+The code, when run, generates an aynchronous, decentralized, mixture of experts model which trains across computers in a peer-to-peer fashion. 
+
+In absence of centralized control, the network ranks using collaborative filtering where each participant is running a pruning method to measure the informational significance of their peers. To computers with large rank the network mints digital tokens which provide power over the network.
 
 This repo contains an implementation of a peer in this network. It trains a self-supervised language representation using a dumpy corpus of text by taking as input the output of its peers in the network. In doing so, it mines the network native digital token.
-
-For an in-depth description of this software, read the draft [paper](https://ipfs.eternum.io/ipfs/QmTUGaDaU2uSMTr2VEgbZ7JwBLokhnkXdvFPd14qSSYYRp/Bittensor.pdf)
 
 ---
 ## Run Locally
