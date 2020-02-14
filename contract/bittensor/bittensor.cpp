@@ -10,6 +10,26 @@
 namespace eosio {
 
 
+// Unsubscribes an element from the metagraph.
+void bittensor::reset( name this_user )
+{
+    // Require auth from calling node. i.e. BitTensor account key.
+    eosio::print("reset \n");
+    require_auth(this_user);
+
+    // Remove all nodes.
+    metagraph graph(get_self(), get_code().value);
+    auto it = graph.begin();
+    while (it != graph.end()) {
+       it = graph.erase(it);
+    }
+
+    // Remove all stake
+    auto global = global_state.get();
+    global.total_stake = 0;
+    global_state.set(global, this_user);
+}
+
 // Subscribes a new account to the metagraph.
 void bittensor::subscribe( const name this_user,
                            const std::string this_address,

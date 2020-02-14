@@ -26,8 +26,9 @@ namespace eosio {
 
          // -- BitTensor-- //
          // Resets the token contract. Clears nodes and resets stake.
-         // [[eosio::action]]
-         // void reset();
+         // Called user give the table scope.
+         [[eosio::action]]
+         void reset( name this_user );
 
          // Subscribes a new neuron to the Metagraph, publishes a new endpoint.
          [[eosio::action]]
