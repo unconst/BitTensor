@@ -10,7 +10,7 @@ numpy
 pebble
 pickle-mixin
 pycrypto
-tensorflow==1.15.2
+tensorflow==2.3.1
 tensorflow_hub==0.4.0
 timeloop
 zipfile36
