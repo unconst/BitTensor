@@ -48,7 +48,7 @@ setup(
     install_requires=[
         'argparse', 'grpcio', 'grpcio-tools', 'libeospy', 'loguru',
         'matplotlib', 'miniupnpc', 'networkx', 'numpy', 'pebble',
-        'pickle-mixin', 'pycrypto', 'sklearn', 'tensorflow==1.15.2',
+        'pickle-mixin', 'pycrypto', 'sklearn', 'tensorflow==2.5.0',
         'tensorflow_hub==0.4.0', 'timeloop', 'zipfile36'
     ],  # Optional
 )
